@@ -1,0 +1,31 @@
+# === Secrets — NEVER commit ===
+get_link_pdf_.json
+*service-account*.json
+*credentials*.json
+
+# === Personal signature (excluded from public repo) ===
+chuky_tung.png
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# === PyInstaller build output ===
+build/
+dist/
+*.manifest
+
+# === Generated output ===
+MLHS_*.docx
+Muc_Luc_Ho_So.xlsx
+*.pdf
+
+# === OS / editor ===
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

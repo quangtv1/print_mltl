@@ -1,0 +1,51 @@
+name: Build Windows EXE
+
+# Build .exe trên Windows (PyInstaller không cross-compile từ macOS).
+# Đường build chính của project. Chạy khi push tag v* hoặc kích hoạt tay.
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build EXE (onedir)
+        run: pyinstaller packaging/mltl.spec --noconfirm
+
+      # styles/ đặt CẠNH exe để đọc/ghi được và copy sang máy khác dùng lại.
+      # KHÔNG copy khóa Google (get_link_pdf_.json) vào gói.
+      - name: Bundle styles next to exe
+        run: |
+          Copy-Item -Path styles -Destination dist/MucLucHoSo/styles -Recurse
+          # Chữ ký cá nhân không nằm trong repo (public) — copy nếu người dùng tự
+          # đặt vào; thiếu thì app vẫn chạy, chừa chỗ trống (docx_renderer xử lý).
+          if (Test-Path chuky_tung.png) {
+            Copy-Item -Path chuky_tung.png -Destination dist/MucLucHoSo/chuky_tung.png
+          }
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MucLucHoSo-windows
+          path: dist/MucLucHoSo
+          if-no-files-found: error
