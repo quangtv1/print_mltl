@@ -1,0 +1,269 @@
+[
+  {
+    "id": "mau01",
+    "name": "Mẫu 01 - Quảng Trị",
+    "vars": [
+      {
+        "v": "{don_vi}",
+        "col": "Đơn vị chủ quản",
+        "g": "Tài liệu (hồ sơ)"
+      },
+      {
+        "v": "{chi_nhanh}",
+        "col": "Chi nhánh",
+        "g": "Tài liệu (hồ sơ)"
+      },
+      {
+        "v": "{so_ho_so}",
+        "col": "Số, ký hiệu hồ sơ",
+        "g": "Tài liệu (hồ sơ)"
+      },
+      {
+        "v": "{stt}",
+        "col": "STT",
+        "g": "Hàng (bảng văn bản)"
+      },
+      {
+        "v": "{so_ky_hieu}",
+        "col": "Số, ký hiệu văn bản",
+        "g": "Hàng (bảng văn bản)"
+      },
+      {
+        "v": "{ngay_thang}",
+        "col": "Ngày tháng văn bản",
+        "g": "Hàng (bảng văn bản)"
+      },
+      {
+        "v": "{tac_gia}",
+        "col": "Tác giả",
+        "g": "Hàng (bảng văn bản)"
+      },
+      {
+        "v": "{trich_yeu}",
+        "col": "Trích yếu nội dung VB",
+        "g": "Hàng (bảng văn bản)"
+      },
+      {
+        "v": "{to_so}",
+        "col": "Tờ số",
+        "g": "Hàng (bảng văn bản)"
+      },
+      {
+        "v": "{ghi_chu}",
+        "col": "Ghi chú",
+        "g": "Hàng (bảng văn bản)"
+      },
+      {
+        "v": "{nguoi_lap}",
+        "col": "Người lập",
+        "g": "Tài liệu (hồ sơ)"
+      },
+      {
+        "v": "{trang_so}",
+        "col": "(tự động)",
+        "g": "Tài liệu (hồ sơ)",
+        "auto": true
+      },
+      {
+        "v": "{tong_so_trang}",
+        "col": "(tự động)",
+        "g": "Tài liệu (hồ sơ)",
+        "auto": true
+      }
+    ]
+  },
+  {
+    "id": "mau02",
+    "name": "Mẫu 02 - Quảng Ninh",
+    "vars": [
+      {
+        "v": "{so_ho_so}",
+        "col": "Số, ký hiệu hồ sơ",
+        "g": "Tài liệu (hồ sơ)"
+      },
+      {
+        "v": "{tieu_de}",
+        "col": "Tiêu đề hồ sơ",
+        "g": "Tài liệu (hồ sơ)"
+      },
+      {
+        "v": "{stt}",
+        "col": "STT",
+        "g": "Hàng (bảng văn bản)"
+      },
+      {
+        "v": "{so_ky_hieu}",
+        "col": "Số, ký hiệu văn bản",
+        "g": "Hàng (bảng văn bản)"
+      },
+      {
+        "v": "{ngay_thang}",
+        "col": "Ngày tháng văn bản",
+        "g": "Hàng (bảng văn bản)"
+      },
+      {
+        "v": "{tac_gia}",
+        "col": "Tác giả",
+        "g": "Hàng (bảng văn bản)"
+      },
+      {
+        "v": "{trich_yeu}",
+        "col": "Trích yếu nội dung VB",
+        "g": "Hàng (bảng văn bản)"
+      },
+      {
+        "v": "{to_so}",
+        "col": "Tờ số",
+        "g": "Hàng (bảng văn bản)"
+      },
+      {
+        "v": "{ghi_chu}",
+        "col": "Ghi chú",
+        "g": "Hàng (bảng văn bản)"
+      },
+      {
+        "v": "{trang_so}",
+        "col": "(tự động)",
+        "g": "Tài liệu (hồ sơ)",
+        "auto": true
+      },
+      {
+        "v": "{tong_so_trang}",
+        "col": "(tự động)",
+        "g": "Tài liệu (hồ sơ)",
+        "auto": true
+      }
+    ]
+  },
+  {
+    "id": "mau03",
+    "name": "Mẫu 03 - Đống Đa",
+    "vars": [
+      {
+        "v": "{so_ho_so}",
+        "col": "Số, ký hiệu hồ sơ",
+        "g": "Tài liệu (hồ sơ)"
+      },
+      {
+        "v": "{stt}",
+        "col": "STT",
+        "g": "Hàng (bảng văn bản)"
+      },
+      {
+        "v": "{so_ky_hieu}",
+        "col": "Số, ký hiệu văn bản",
+        "g": "Hàng (bảng văn bản)"
+      },
+      {
+        "v": "{ngay_thang}",
+        "col": "Ngày tháng văn bản",
+        "g": "Hàng (bảng văn bản)"
+      },
+      {
+        "v": "{loai_vb}",
+        "col": "Loại văn bản",
+        "g": "Hàng (bảng văn bản)"
+      },
+      {
+        "v": "{tac_gia}",
+        "col": "Tác giả",
+        "g": "Hàng (bảng văn bản)"
+      },
+      {
+        "v": "{trich_yeu}",
+        "col": "Trích yếu nội dung VB",
+        "g": "Hàng (bảng văn bản)"
+      },
+      {
+        "v": "{to_so}",
+        "col": "Tờ số",
+        "g": "Hàng (bảng văn bản)"
+      },
+      {
+        "v": "{sl_trang}",
+        "col": "Số lượng trang",
+        "g": "Hàng (bảng văn bản)"
+      },
+      {
+        "v": "{ghi_chu}",
+        "col": "Ghi chú",
+        "g": "Hàng (bảng văn bản)"
+      },
+      {
+        "v": "{trang_so}",
+        "col": "(tự động)",
+        "g": "Tài liệu (hồ sơ)",
+        "auto": true
+      },
+      {
+        "v": "{tong_so_trang}",
+        "col": "(tự động)",
+        "g": "Tài liệu (hồ sơ)",
+        "auto": true
+      }
+    ]
+  },
+  {
+    "id": "mau04",
+    "name": "Mẫu 04- Vĩnh Phúc",
+    "vars": [
+      {
+        "v": "{so_ho_so}",
+        "col": "Số, ký hiệu hồ sơ",
+        "g": "Tài liệu (hồ sơ)"
+      },
+      {
+        "v": "{tieu_de}",
+        "col": "Tiêu đề hồ sơ",
+        "g": "Tài liệu (hồ sơ)"
+      },
+      {
+        "v": "{stt}",
+        "col": "STT",
+        "g": "Hàng (bảng văn bản)"
+      },
+      {
+        "v": "{so_ky_hieu}",
+        "col": "Số, ký hiệu văn bản",
+        "g": "Hàng (bảng văn bản)"
+      },
+      {
+        "v": "{ngay_thang}",
+        "col": "Ngày tháng văn bản",
+        "g": "Hàng (bảng văn bản)"
+      },
+      {
+        "v": "{trich_yeu}",
+        "col": "Trích yếu nội dung VB",
+        "g": "Hàng (bảng văn bản)"
+      },
+      {
+        "v": "{tac_gia}",
+        "col": "Tác giả",
+        "g": "Hàng (bảng văn bản)"
+      },
+      {
+        "v": "{to_so}",
+        "col": "Tờ số",
+        "g": "Hàng (bảng văn bản)"
+      },
+      {
+        "v": "{ghi_chu}",
+        "col": "Ghi chú",
+        "g": "Hàng (bảng văn bản)"
+      },
+      {
+        "v": "{trang_so}",
+        "col": "(tự động)",
+        "g": "Tài liệu (hồ sơ)",
+        "auto": true
+      },
+      {
+        "v": "{tong_so_trang}",
+        "col": "(tự động)",
+        "g": "Tài liệu (hồ sơ)",
+        "auto": true
+      }
+    ]
+  }
+]
