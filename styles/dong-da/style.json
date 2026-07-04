@@ -1,0 +1,79 @@
+{
+  "name": "Quận Đống Đa (Mẫu 03)",
+  "template_file": "",
+  "grouping_column": "Hồ sơ số",
+  "output_filename_pattern": "MLHS_{ho_so_so}.pdf",
+  "settings": {
+    "co_quan_dong1": "UBND QUẬN ĐỐNG ĐA",
+    "co_quan_dong2": "PHÒNG NỘI VỤ",
+    "tieu_de": "MỤC LỤC HỒ SƠ",
+    "chuc_danh_ky": "Người lập",
+    "nguoi_ky": "",
+    "anh_chu_ky_path": "",
+    "font_name": "Times New Roman",
+    "footer_page_number": true,
+    "footer_format": "Trang {trang_so}/{tong_so_trang}"
+  },
+  "template_html": "<table border=\"0\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">\n<tr>\n<td width=\"50%\" align=\"center\">UBND QUẬN ĐỐNG ĐA<br/><b><u>PHÒNG NỘI VỤ</u></b></td>\n<td width=\"50%\" align=\"center\">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM<br/><b><u>Độc lập - Tự do - Hạnh phúc</u></b></td>\n</tr>\n</table>\n<p align=\"center\"><span style=\"font-size:15pt\"><b>MỤC LỤC HỒ SƠ</b></span></p>\n<p align=\"center\"><i>Số, ký hiệu hồ sơ: {ho_so_so}</i></p>\n<table border=\"1\" width=\"100%\" cellspacing=\"0\" cellpadding=\"3\">\n<tr><td width=\"5%\" align=\"center\"><b>STT</b></td><td width=\"11%\" align=\"center\"><b>Số ký hiệu VB</b></td><td width=\"10%\" align=\"center\"><b>Ngày ký</b></td><td width=\"10%\" align=\"center\"><b>Loại VB</b></td><td width=\"16%\" align=\"center\"><b>Tác giả VB</b></td><td width=\"26%\" align=\"center\"><b>Trích yếu nội dung VB</b></td><td width=\"6%\" align=\"center\"><b>Tờ số</b></td><td width=\"8%\" align=\"center\"><b>SL trang VB</b></td><td width=\"8%\" align=\"center\"><b>Ghi chú</b></td></tr>\n<tr><td width=\"5%\" align=\"center\">{stt}</td><td width=\"11%\" align=\"center\">{so_ky_hieu}</td><td width=\"10%\" align=\"center\">{ngay_ky}</td><td width=\"10%\" align=\"center\">{loai_vb}</td><td width=\"16%\" align=\"center\">{tac_gia}</td><td width=\"26%\" align=\"left\">{trich_yeu}</td><td width=\"6%\" align=\"center\">{to_so}</td><td width=\"8%\" align=\"center\">{sl_trang}</td><td width=\"8%\" align=\"center\">{ghi_chu}</td></tr>\n</table>\n<p></p>\n<table border=\"0\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">\n<tr><td width=\"58%\"></td>\n<td width=\"42%\" align=\"center\"><b>{chuc_danh_ky}</b><br/><br/><br/><br/><b>{nguoi_ky}</b></td></tr>\n</table>",
+  "document_fields": {
+    "ho_so_so": "Hồ sơ số"
+  },
+  "row_mapping": {
+    "stt": "STT",
+    "so_ky_hieu": "Số ký hiệu VB",
+    "ngay_ky": "Ngày ký",
+    "loai_vb": "Loại VB",
+    "tac_gia": "Tác giả VB",
+    "trich_yeu": "Trích yếu nội dung VB",
+    "to_so": "Tờ số",
+    "sl_trang": "SL trang VB",
+    "ghi_chu": "Ghi chú"
+  },
+  "columns": [
+    {
+      "header": "STT",
+      "var": "stt",
+      "width": 0.05
+    },
+    {
+      "header": "Số ký hiệu VB",
+      "var": "so_ky_hieu",
+      "width": 0.11
+    },
+    {
+      "header": "Ngày ký",
+      "var": "ngay_ky",
+      "width": 0.1
+    },
+    {
+      "header": "Loại VB",
+      "var": "loai_vb",
+      "width": 0.1
+    },
+    {
+      "header": "Tác giả VB",
+      "var": "tac_gia",
+      "width": 0.16
+    },
+    {
+      "header": "Trích yếu nội dung VB",
+      "var": "trich_yeu",
+      "width": 0.26
+    },
+    {
+      "header": "Tờ số",
+      "var": "to_so",
+      "width": 0.06
+    },
+    {
+      "header": "SL trang VB",
+      "var": "sl_trang",
+      "width": 0.08
+    },
+    {
+      "header": "Ghi chú",
+      "var": "ghi_chu",
+      "width": 0.08
+    }
+  ]
+}

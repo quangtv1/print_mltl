@@ -14,7 +14,9 @@ from app.models.style import StyleConfig
 STYLE_FILENAME = "style.json"
 
 # Khóa bắt buộc phải có trong style.json (validate sớm để báo lỗi rõ).
-REQUIRED_KEYS = ("template_file", "grouping_column", "row_mapping")
+# `template_file` đã bỏ khỏi bắt buộc: engine Native Qt dùng `template_html`
+# nhúng trong style.json, không cần file `.docx` rời (style cũ vẫn đọc được).
+REQUIRED_KEYS = ("grouping_column", "row_mapping")
 
 
 class StyleConfigError(Exception):

@@ -1,8 +1,4 @@
 PyQt5
-gspread
-google-auth
-docxtpl
-python-docx
-openpyxl
-PyMuPDF
 pandas
+openpyxl
+pyinstaller

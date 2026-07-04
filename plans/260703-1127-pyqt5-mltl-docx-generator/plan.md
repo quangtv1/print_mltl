@@ -16,6 +16,10 @@ source: skill
 
 ## Overview
 
+> **Ghi chú (2026-07-03):** Engine docx (P3 `docx_renderer`, P4 preview docx→PDF) của plan này
+> **được thay thế** bởi pivot HTML — xem `plans/260703-1651-html-template-designer-pivot/`.
+> Các phần sheets/excel/batch/UI-khung vẫn được tái dùng.
+
 Chuyển script CLI `print_mltl_parallel.py` (sinh docx "Mục lục văn bản, tài liệu" từ Google Sheet, style hardcode) thành app desktop PyQt5 cấu hình được. Kiến trúc **hybrid**: layout ở `template.docx` (docxtpl), settings/mapping ở `style.json` portable. Preview docx→PDF nhúng qua LibreOffice + PyMuPDF. Dev trên macOS, target chạy chính **Windows 11**, đóng gói `.exe` (PyInstaller).
 
 **Nguồn thiết kế:** `plans/reports/brainstorm-desktop-conversion-260703-1052-pyqt5-mltl-docx-generator-report.md`

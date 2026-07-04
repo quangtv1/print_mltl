@@ -1,0 +1,67 @@
+{
+  "name": "Sở Nông nghiệp - Quảng Ninh (Mẫu 02)",
+  "template_file": "",
+  "grouping_column": "Hồ sơ số",
+  "output_filename_pattern": "MLHS_{ho_so_so}.pdf",
+  "settings": {
+    "co_quan_dong1": "UBND TỈNH QUẢNG NINH",
+    "co_quan_dong2": "SỞ NÔNG NGHIỆP & PTNT",
+    "tieu_de": "MỤC LỤC VĂN BẢN TRONG HỒ SƠ",
+    "chuc_danh_ky": "Người lập",
+    "nguoi_ky": "",
+    "anh_chu_ky_path": "",
+    "font_name": "Times New Roman",
+    "footer_page_number": true,
+    "footer_format": "Trang {trang_so}/{tong_so_trang}"
+  },
+  "template_html": "<table border=\"0\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">\n<tr>\n<td width=\"50%\" align=\"center\">UBND TỈNH QUẢNG NINH<br/><b><u>SỞ NÔNG NGHIỆP & PTNT</u></b></td>\n<td width=\"50%\" align=\"center\">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM<br/><b><u>Độc lập - Tự do - Hạnh phúc</u></b></td>\n</tr>\n</table>\n<p align=\"center\"><span style=\"font-size:15pt\"><b>MỤC LỤC VĂN BẢN TRONG HỒ SƠ</b></span></p>\n<p align=\"center\"><i>Số, ký hiệu hồ sơ: {ho_so_so}</i></p>\n<table border=\"1\" width=\"100%\" cellspacing=\"0\" cellpadding=\"3\">\n<tr><td width=\"6%\" align=\"center\"><b>Tt</b></td><td width=\"15%\" align=\"center\"><b>Số và ký hiệu của văn bản</b></td><td width=\"14%\" align=\"center\"><b>Ngày, tháng, năm văn bản</b></td><td width=\"20%\" align=\"center\"><b>Tác giả văn bản</b></td><td width=\"28%\" align=\"center\"><b>Trích yếu nội dung</b></td><td width=\"8%\" align=\"center\"><b>Trang (từ-đến)</b></td><td width=\"8%\" align=\"center\"><b>Ghi chú</b></td></tr>\n<tr><td width=\"6%\" align=\"center\">{tt}</td><td width=\"15%\" align=\"center\">{so_ky_hieu}</td><td width=\"14%\" align=\"center\">{ngay_thang}</td><td width=\"20%\" align=\"center\">{tac_gia}</td><td width=\"28%\" align=\"left\">{trich_yeu}</td><td width=\"8%\" align=\"center\">{trang}</td><td width=\"8%\" align=\"center\">{ghi_chu}</td></tr>\n</table>\n<p></p>\n<table border=\"0\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">\n<tr><td width=\"58%\"></td>\n<td width=\"42%\" align=\"center\"><b>{chuc_danh_ky}</b><br/><br/><br/><br/><b>{nguoi_ky}</b></td></tr>\n</table>",
+  "document_fields": {
+    "ho_so_so": "Hồ sơ số"
+  },
+  "row_mapping": {
+    "tt": "Tt",
+    "so_ky_hieu": "Số và ký hiệu của văn bản",
+    "ngay_thang": "Ngày, tháng, năm văn bản",
+    "tac_gia": "Tác giả văn bản",
+    "trich_yeu": "Trích yếu nội dung",
+    "trang": "Trang (từ-đến)",
+    "ghi_chu": "Ghi chú"
+  },
+  "columns": [
+    {
+      "header": "Tt",
+      "var": "tt",
+      "width": 0.06
+    },
+    {
+      "header": "Số và ký hiệu của văn bản",
+      "var": "so_ky_hieu",
+      "width": 0.15
+    },
+    {
+      "header": "Ngày, tháng, năm văn bản",
+      "var": "ngay_thang",
+      "width": 0.14
+    },
+    {
+      "header": "Tác giả văn bản",
+      "var": "tac_gia",
+      "width": 0.2
+    },
+    {
+      "header": "Trích yếu nội dung",
+      "var": "trich_yeu",
+      "width": 0.29
+    },
+    {
+      "header": "Trang (từ-đến)",
+      "var": "trang",
+      "width": 0.08
+    },
+    {
+      "header": "Ghi chú",
+      "var": "ghi_chu",
+      "width": 0.08
+    }
+  ]
+}
