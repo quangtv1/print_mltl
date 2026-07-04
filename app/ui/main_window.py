@@ -16,6 +16,7 @@ from typing import List, Optional
 import pandas as pd
 from PyQt5.QtWidgets import (
     QHBoxLayout,
+    QLabel,
     QMainWindow,
     QMessageBox,
     QPushButton,
@@ -27,7 +28,9 @@ from PyQt5.QtWidgets import (
 from app.core.platform_utils import styles_root
 from app.core.style_config import list_styles, load_style
 from app.models.style import StyleConfig
-from app.ui.theme import StepHeader
+from app.ui.theme import BrandBar, StepHeader
+
+WINDOW_TITLE = "Tạo mục lục hồ sơ - SaoMai"
 
 
 @dataclass
@@ -52,8 +55,8 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Tạo Mục Lục Hồ Sơ")
-        self.resize(1040, 760)
+        self.setWindowTitle(WINDOW_TITLE)
+        self.resize(1160, 780)
 
         self.state = AppState()
         self._nav_locked = False
@@ -65,13 +68,14 @@ class MainWindow(QMainWindow):
         outer.setContentsMargins(0, 0, 0, 0)
         outer.setSpacing(0)
 
+        outer.addWidget(BrandBar(WINDOW_TITLE))
         self.header = StepHeader(self.STEP_TITLES)
         outer.addWidget(self.header)
 
         self.stack = QStackedWidget()
         body = QWidget()
         body_l = QVBoxLayout(body)
-        body_l.setContentsMargins(20, 16, 20, 16)
+        body_l.setContentsMargins(0, 0, 0, 0)
         body_l.addWidget(self.stack)
         outer.addWidget(body, 1)
 
@@ -96,15 +100,20 @@ class MainWindow(QMainWindow):
     def _build_action_bar(self) -> QWidget:
         bar = QWidget()
         bar.setObjectName("ActionBar")
+        bar.setFixedHeight(46)
         lay = QHBoxLayout(bar)
-        lay.setContentsMargins(24, 12, 24, 12)
-        self.btn_back = QPushButton("◀  Quay lại")
+        lay.setContentsMargins(16, 0, 16, 0)
+        lay.setSpacing(10)
+        self.status_label = QLabel("")
+        self.status_label.setProperty("hint", "true")
+        self.btn_back = QPushButton("◀ Quay lại")
         self.btn_back.clicked.connect(self._go_back)
-        self.btn_next = QPushButton("Tiếp theo  ▶")
+        self.btn_next = QPushButton("Tiếp theo ▶")
         self.btn_next.setObjectName("primary")
         self.btn_next.clicked.connect(self._go_next)
-        lay.addWidget(self.btn_back)
+        lay.addWidget(self.status_label)
         lay.addStretch(1)
+        lay.addWidget(self.btn_back)
         lay.addWidget(self.btn_next)
         return bar
 
@@ -115,9 +124,17 @@ class MainWindow(QMainWindow):
         self.stack.setCurrentIndex(index)
         self.header.set_current(index)
         self.btn_back.setEnabled(index > 0)
-        self.btn_next.setVisible(index < self.stack.count() - 1)
 
         widget = self.stack.widget(index)
+        # Bước cuối: nút primary đổi thành hành động của bước (vd "Bắt đầu tạo PDF").
+        is_last = index == self.stack.count() - 1
+        self.btn_next.setText(
+            getattr(widget, "primary_label", lambda: "Tiếp theo ▶")()
+            if is_last
+            else "Tiếp theo ▶"
+        )
+        self.status_label.setText(getattr(widget, "status_text", lambda: "")())
+
         if hasattr(widget, "on_enter"):
             widget.on_enter()
 
@@ -127,6 +144,11 @@ class MainWindow(QMainWindow):
 
     def _go_next(self) -> None:
         widget = self.stack.widget(self._index)
+        # Bước cuối: nút primary gọi hành động của bước (không có "next").
+        if self._index == self.stack.count() - 1:
+            if hasattr(widget, "primary_action"):
+                widget.primary_action()
+            return
         # validate_next trả None nếu OK, hoặc chuỗi lỗi để chặn.
         if hasattr(widget, "validate_next"):
             err = widget.validate_next()

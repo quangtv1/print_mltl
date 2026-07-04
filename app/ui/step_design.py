@@ -1,28 +1,28 @@
-"""Bước 2 — Thiết kế & Preview: trình soạn thảo WYSIWYG (`QTextEdit`) + panel biến
-+ **preview phân trang thật** (tái dùng renderer P2).
+"""Bước 2 — Thiết kế & Preview (khớp prototype).
 
-- Trái: `QTextEdit` (Chỉnh sửa) hoặc danh sách trang A4 render (Xem trước).
-- Toolbar: B/I/U, A−/A+, màu chữ, toggle Chỉnh sửa↔Xem trước, ◀ recLabel ▶.
-- Phải: panel biến theo nhóm (Tài liệu / Hàng / Gom nhóm / Tự động); footer-only bị
-  khóa (chỉ dùng ở footer). Bấm biến → chèn `{token}` tại con trỏ (chỉ khi Chỉnh sửa).
-- Lưu mẫu (`toHtml`→save_style, có strip `<img src=file:>`); Đặt lại mặc định (nạp
-  template gốc của mẫu). Validate đúng 1 dòng-mẫu trước khi rời bước (Red Team #11).
+Trái: toolbar (toggle Chỉnh sửa/Xem trước dạng segmented + ◀ recLabel ▶) + thanh
+định dạng (B/I/U, A−/A+, căn lề, ô màu) + canvas xám chứa "giấy" QTextEdit hoặc
+danh sách trang preview. Phải: palette 300px (header + hint + nút ghép biến + chip
+biến theo nhóm + biến tự động + hàng Lưu/Đặt lại). Preview dùng renderer P2.
 """
 
 from __future__ import annotations
 
 import re
-from typing import Any, Dict, List
+from typing import Any, List
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import QPoint, QRect, QSize, Qt
 from PyQt5.QtGui import QColor, QFont, QPixmap, QTextCharFormat, QTextCursor
 from PyQt5.QtWidgets import (
+    QButtonGroup,
     QColorDialog,
     QFrame,
     QHBoxLayout,
     QLabel,
+    QLayout,
     QPushButton,
     QScrollArea,
+    QSizePolicy,
     QStackedWidget,
     QTextEdit,
     QVBoxLayout,
@@ -33,9 +33,69 @@ from app.core import qt_pdf_renderer as R
 from app.core import variables as V
 from app.core.style_config import load_style, save_style
 
-# <img> có src KHÔNG phải data-URI (file:/đường dẫn tuyệt đối) → gỡ (Red Team #Q).
+# <img> src không phải data-URI → gỡ (Red Team #Q).
 _IMG_FILE_RE = re.compile(r'<img\b[^>]*\bsrc\s*=\s*"(?!data:)[^"]*"[^>]*>', re.IGNORECASE)
 _MAX_TEMPLATE_CHARS = 400_000
+_SWATCHES = ["#000000", "#c00000", "#0057b7", "#107c10", "#d97706", "#5c2d91"]
+
+
+class FlowLayout(QLayout):
+    """Layout cuộn dòng (chip tự xuống hàng khi hết chiều ngang)."""
+
+    def __init__(self, spacing: int = 6):
+        super().__init__()
+        self._items: List[Any] = []
+        self.setContentsMargins(0, 0, 0, 0)
+        self.setSpacing(spacing)
+
+    def addItem(self, item):
+        self._items.append(item)
+
+    def count(self):
+        return len(self._items)
+
+    def itemAt(self, i):
+        return self._items[i] if 0 <= i < len(self._items) else None
+
+    def takeAt(self, i):
+        return self._items.pop(i) if 0 <= i < len(self._items) else None
+
+    def expandingDirections(self):
+        return Qt.Orientations(Qt.Horizontal)
+
+    def hasHeightForWidth(self):
+        return True
+
+    def heightForWidth(self, w):
+        return self._do(QRect(0, 0, w, 0), True)
+
+    def setGeometry(self, rect):
+        super().setGeometry(rect)
+        self._do(rect, False)
+
+    def sizeHint(self):
+        return self.minimumSize()
+
+    def minimumSize(self):
+        s = QSize()
+        for it in self._items:
+            s = s.expandedTo(it.minimumSize())
+        return s
+
+    def _do(self, rect, test):
+        x, y, line_h = rect.x(), rect.y(), 0
+        sp = self.spacing()
+        for it in self._items:
+            hint = it.sizeHint()
+            if x + hint.width() > rect.right() and line_h > 0:
+                x = rect.x()
+                y += line_h + sp
+                line_h = 0
+            if not test:
+                it.setGeometry(QRect(QPoint(x, y), hint))
+            x += hint.width() + sp
+            line_h = max(line_h, hint.height())
+        return y + line_h - rect.y()
 
 
 class StepDesign(QWidget):
@@ -44,123 +104,226 @@ class StepDesign(QWidget):
         self.main = main
         self._loaded_style_dir = None
         self._panel_version = -1
-        self._groups: List[Any] = []  # list các records-nhóm
+        self._groups: List[Any] = []
         self._group_idx = 0
         self._preview_mode = False
 
-        root = QVBoxLayout(self)
-        root.setSpacing(10)
-        root.addLayout(self._build_toolbar())
-
-        body = QHBoxLayout()
-        body.setSpacing(12)
-        body.addWidget(self._build_left(), 3)
-        body.addWidget(self._build_right(), 1)
-        root.addLayout(body, 1)
-
-        root.addLayout(self._build_footer_bar())
+        row = QHBoxLayout(self)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(0)
+        row.addWidget(self._build_left(), 1)
+        row.addWidget(self._build_right())
 
     # ------------------------------------------------------------ build UI
-    def _build_toolbar(self) -> QHBoxLayout:
-        bar = QHBoxLayout()
-        bar.setSpacing(6)
-
-        def tool(text, slot, checkable=False, tip=""):
-            b = QPushButton(text)
-            b.setProperty("toolbtn", "true")
-            b.setCheckable(checkable)
-            b.setToolTip(tip)
-            b.clicked.connect(slot)
-            bar.addWidget(b)
-            return b
-
-        self.btn_bold = tool("B", self._toggle_bold, True, "Đậm")
-        self.btn_bold.setStyleSheet("font-weight:800;")
-        self.btn_italic = tool("I", self._toggle_italic, True, "Nghiêng")
-        self.btn_italic.setStyleSheet("font-style:italic;")
-        self.btn_underline = tool("U", self._toggle_underline, True, "Gạch chân")
-        self.btn_underline.setStyleSheet("text-decoration:underline;")
-        tool("A−", lambda: self._bump_size(-1), tip="Nhỏ chữ")
-        tool("A+", lambda: self._bump_size(+1), tip="To chữ")
-        tool("🎨 Màu", self._pick_color, tip="Màu chữ")
-
-        bar.addStretch(1)
-        self.btn_prev = tool("◀", self._prev_group, tip="Hồ sơ trước")
-        self.rec_label = QLabel("Hồ sơ 0/0")
-        self.rec_label.setProperty("hint", "true")
-        bar.addWidget(self.rec_label)
-        self.btn_next = tool("▶", self._next_group, tip="Hồ sơ sau")
-
-        self.btn_toggle = QPushButton("Xem trước")
-        self.btn_toggle.setObjectName("primary")
-        self.btn_toggle.clicked.connect(self._toggle_mode)
-        bar.addWidget(self.btn_toggle)
-        return bar
-
     def _build_left(self) -> QWidget:
-        self.stack = QStackedWidget()
-        self.editor = QTextEdit()
-        self.editor.setAcceptRichText(True)
-        self.stack.addWidget(self.editor)
+        panel = QWidget()
+        panel.setObjectName("DesignLeft")
+        panel.setStyleSheet("QWidget#DesignLeft{background:#e6e6e6;}")
+        v = QVBoxLayout(panel)
+        v.setContentsMargins(0, 0, 0, 0)
+        v.setSpacing(0)
+        v.addWidget(self._build_toolbar())
+        v.addWidget(self._build_format_bar())
 
+        canvas = QScrollArea()
+        canvas.setWidgetResizable(True)
+        canvas.setStyleSheet("background:#8f8f8f; border:none;")
+        self.stack = QStackedWidget()
+        self.stack.setStyleSheet("background:#8f8f8f;")
+
+        # Edit: giấy trắng.
+        editor_host = QWidget()
+        eh = QVBoxLayout(editor_host)
+        eh.setContentsMargins(24, 24, 24, 24)
+        self.editor = QTextEdit()
+        self.editor.setStyleSheet("background:#fff; border:1px solid #b0b0b0;")
+        eh.addWidget(self.editor)
+        self.stack.addWidget(editor_host)
+
+        # Preview: danh sách trang.
         self.preview_area = QScrollArea()
         self.preview_area.setWidgetResizable(True)
+        self.preview_area.setStyleSheet("background:#8f8f8f; border:none;")
         self.preview_host = QWidget()
+        self.preview_host.setStyleSheet("background:#8f8f8f;")
         self.preview_layout = QVBoxLayout(self.preview_host)
         self.preview_layout.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
         self.preview_area.setWidget(self.preview_host)
         self.stack.addWidget(self.preview_area)
-        return self.stack
+
+        canvas.setWidget(self.stack)
+        v.addWidget(canvas, 1)
+        return panel
+
+    def _build_toolbar(self) -> QWidget:
+        bar = QWidget()
+        bar.setFixedHeight(40)
+        bar.setStyleSheet("background:#f0f0f0; border-bottom:1px solid #cfcfcf;")
+        h = QHBoxLayout(bar)
+        h.setContentsMargins(12, 0, 12, 0)
+        h.setSpacing(10)
+
+        # Segmented Edit/Preview.
+        seg = QWidget()
+        sl = QHBoxLayout(seg)
+        sl.setContentsMargins(0, 0, 0, 0)
+        sl.setSpacing(0)
+        self.btn_edit = QPushButton("Chỉnh sửa")
+        self.btn_prev = QPushButton("Xem trước")
+        grp = QButtonGroup(self)
+        for b in (self.btn_edit, self.btn_prev):
+            b.setCheckable(True)
+            b.setProperty("toolbtn", "true")
+            grp.addButton(b)
+            sl.addWidget(b)
+        self.btn_edit.setChecked(True)
+        self.btn_edit.clicked.connect(lambda: self._set_mode(False))
+        self.btn_prev.clicked.connect(lambda: self._set_mode(True))
+        h.addWidget(seg)
+        h.addStretch(1)
+
+        prev_g = QPushButton("◀")
+        prev_g.setProperty("toolbtn", "true")
+        prev_g.clicked.connect(self._prev_group)
+        self.rec_label = QLabel("Hồ sơ 0/0")
+        self.rec_label.setMinimumWidth(120)
+        self.rec_label.setAlignment(Qt.AlignCenter)
+        next_g = QPushButton("▶")
+        next_g.setProperty("toolbtn", "true")
+        next_g.clicked.connect(self._next_group)
+        h.addWidget(prev_g)
+        h.addWidget(self.rec_label)
+        h.addWidget(next_g)
+        return bar
+
+    def _build_format_bar(self) -> QWidget:
+        bar = QWidget()
+        bar.setStyleSheet("background:#fbfbfb; border-bottom:1px solid #cfcfcf;")
+        h = QHBoxLayout(bar)
+        h.setContentsMargins(10, 5, 10, 5)
+        h.setSpacing(4)
+
+        def tool(text, slot, checkable=False, style=""):
+            b = QPushButton(text)
+            b.setProperty("toolbtn", "true")
+            b.setCheckable(checkable)
+            if style:
+                b.setStyleSheet(style)
+            b.clicked.connect(slot)
+            h.addWidget(b)
+            return b
+
+        self.btn_bold = tool("B", self._toggle_bold, True, "font-weight:800;")
+        self.btn_italic = tool("I", self._toggle_italic, True, "font-style:italic;")
+        self.btn_underline = tool("U", self._toggle_underline, True, "text-decoration:underline;")
+        h.addWidget(self._sep())
+        tool("A−", lambda: self._bump_size(-1))
+        tool("A+", lambda: self._bump_size(+1))
+        h.addWidget(self._sep())
+        tool("Trái", lambda: self._set_align(Qt.AlignLeft))
+        tool("Giữa", lambda: self._set_align(Qt.AlignHCenter))
+        tool("Phải", lambda: self._set_align(Qt.AlignRight))
+        h.addWidget(self._sep())
+        lbl = QLabel("Màu chữ:")
+        lbl.setProperty("hint", "true")
+        h.addWidget(lbl)
+        for c in _SWATCHES:
+            sw = QPushButton()
+            sw.setFixedSize(18, 18)
+            sw.setStyleSheet(f"background:{c}; border:1px solid #888; border-radius:2px;")
+            sw.clicked.connect(lambda _c, col=c: self._apply_color(QColor(col)))
+            h.addWidget(sw)
+        more = QPushButton("…")
+        more.setProperty("toolbtn", "true")
+        more.setToolTip("Chọn màu khác")
+        more.clicked.connect(self._pick_color)
+        h.addWidget(more)
+        h.addStretch(1)
+        return bar
 
     def _build_right(self) -> QWidget:
-        panel = QFrame()
-        panel.setFrameShape(QFrame.StyledPanel)
-        outer = QVBoxLayout(panel)
-        title = QLabel("Biến trong mẫu")
-        title.setProperty("section", "true")
-        outer.addWidget(title)
+        panel = QWidget()
+        panel.setObjectName("Palette")
+        panel.setFixedWidth(300)
+        panel.setStyleSheet("QWidget#Palette{background:#f0f0f0;}")
+        v = QVBoxLayout(panel)
+        v.setContentsMargins(0, 0, 0, 0)
+        v.setSpacing(0)
+
+        self.pal_header = QLabel("Biến của mẫu")
+        self.pal_header.setStyleSheet(
+            "background:#fff; border-bottom:1px solid #dcdcdc; padding:10px 12px; font-weight:600; color:#1a1a1a;"
+        )
+        v.addWidget(self.pal_header)
+
+        hint = QLabel(
+            "Đặt con trỏ vào vùng soạn thảo (chế độ Chỉnh sửa), rồi bấm một biến để chèn."
+        )
+        hint.setWordWrap(True)
+        hint.setStyleSheet(
+            "background:#fafafa; border-bottom:1px solid #e4e4e4; padding:10px 12px; font-size:11px; color:#666;"
+        )
+        v.addWidget(hint)
+
+        map_wrap = QWidget()
+        mw = QVBoxLayout(map_wrap)
+        mw.setContentsMargins(12, 10, 12, 0)
+        map_btn = QPushButton("Ghép biến với dữ liệu…")
+        map_btn.clicked.connect(lambda: self.main.go_to(0))
+        mw.addWidget(map_btn)
+        v.addWidget(map_wrap)
 
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         self.var_host = QWidget()
         self.var_layout = QVBoxLayout(self.var_host)
+        self.var_layout.setContentsMargins(12, 12, 12, 12)
         self.var_layout.setAlignment(Qt.AlignTop)
         scroll.setWidget(self.var_host)
-        outer.addWidget(scroll, 1)
+        v.addWidget(scroll, 1)
 
-        hint = QLabel("Đặt con trỏ trong ô soạn thảo rồi bấm 1 biến để chèn.")
-        hint.setProperty("hint", "true")
-        hint.setWordWrap(True)
-        outer.addWidget(hint)
+        save_row = QWidget()
+        save_row.setObjectName("SaveRow")
+        save_row.setStyleSheet("QWidget#SaveRow{background:#fff; border-top:1px solid #dcdcdc;}")
+        sr = QHBoxLayout(save_row)
+        sr.setContentsMargins(12, 12, 12, 12)
+        sr.setSpacing(8)
+        save = QPushButton("Lưu mẫu")
+        save.setObjectName("primary")
+        save.clicked.connect(self._save_template)
+        reset = QPushButton("Đặt lại mặc định")
+        reset.clicked.connect(self._reset_template)
+        sr.addWidget(save)
+        sr.addWidget(reset)
+        v.addWidget(save_row)
         return panel
 
-    def _build_footer_bar(self) -> QHBoxLayout:
-        bar = QHBoxLayout()
-        save = QPushButton("💾 Lưu mẫu")
-        save.clicked.connect(self._save_template)
-        reset = QPushButton("↺ Đặt lại mặc định")
-        reset.clicked.connect(self._reset_template)
-        bar.addWidget(save)
-        bar.addWidget(reset)
-        bar.addStretch(1)
-        return bar
+    @staticmethod
+    def _sep() -> QFrame:
+        f = QFrame()
+        f.setFrameShape(QFrame.VLine)
+        f.setStyleSheet("color:#dedede;")
+        f.setFixedHeight(20)
+        return f
 
     # --------------------------------------------------------------- enter
     def on_enter(self) -> None:
         st = self.main.state
         if st.style is None:
             return
-        # Nạp template khi đổi mẫu (không đè khi chỉ đổi dữ liệu để giữ chỉnh sửa).
         if st.style_dir != self._loaded_style_dir:
             self.editor.setHtml(st.style.template_html or "")
             self._loaded_style_dir = st.style_dir
-        # Panel biến + groups recompute theo data-version (Red Team invalidation).
+        self.pal_header.setText(f"Biến của mẫu · {st.style.name}")
         if st.data_version != self._panel_version:
             self._rebuild_var_panel()
             self._recompute_groups()
             self._panel_version = st.data_version
         if self._preview_mode:
             self._render_preview()
+
+    def status_text(self) -> str:
+        return "Bước 2/3 — Soạn mẫu, chèn biến và xem trước."
 
     def _recompute_groups(self) -> None:
         st = self.main.state
@@ -179,35 +342,38 @@ class StepDesign(QWidget):
 
     # ---------------------------------------------------------- var panel
     def _rebuild_var_panel(self) -> None:
-        # Xóa panel cũ.
         while self.var_layout.count():
             item = self.var_layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
 
         style = self.main.state.style
-        self._add_var_section("Tài liệu", V.document_tokens(style), True)
-        self._add_var_section("Cột bảng (dòng-mẫu)", V.row_tokens(style), True)
-        self._add_var_section("Từ settings", V.settings_tokens(style), True)
-        self._add_var_section("Tự động", V.auto_tokens(), True)
-        self._add_var_section("Chỉ dùng ở footer", list(V.FOOTER_VARS.keys()), False)
+        self._add_group("Tài liệu (hồ sơ)", V.document_tokens(style) + V.settings_tokens(style), True)
+        self._add_group("Hàng (bảng văn bản)", V.row_tokens(style), True)
+        self._add_group("Biến tự động", V.auto_tokens(), True)
+        self._add_group("Chỉ dùng ở footer", list(V.FOOTER_VARS.keys()), False)
 
-    def _add_var_section(self, title: str, tokens: List[str], insertable: bool) -> None:
+    def _add_group(self, title: str, tokens: List[str], insertable: bool) -> None:
         if not tokens:
             return
-        lbl = QLabel(title)
-        lbl.setProperty("section", "true")
+        lbl = QLabel(title.upper())
+        lbl.setStyleSheet("font-size:11px; color:#7a7a7a; letter-spacing:.4px; margin-bottom:2px;")
         self.var_layout.addWidget(lbl)
+
+        holder = QWidget()
+        flow = FlowLayout(6)
+        holder.setLayout(flow)
         for tok in tokens:
-            btn = QPushButton("{" + tok + "}")
-            btn.setProperty("toolbtn", "true")
+            chip = QPushButton("{" + tok + "}")
+            chip.setProperty("chip", "true")
             if insertable:
-                btn.clicked.connect(lambda _c, t=tok: self._insert_token(t))
-                btn.setToolTip("Chèn vào vị trí con trỏ (chế độ Chỉnh sửa)")
+                chip.clicked.connect(lambda _c, t=tok: self._insert_token(t))
+                chip.setToolTip("Chèn vào vị trí con trỏ (chế độ Chỉnh sửa)")
             else:
-                btn.setEnabled(False)
-                btn.setToolTip("Chỉ có giá trị ở footer, không chèn vào thân mẫu")
-            self.var_layout.addWidget(btn)
+                chip.setEnabled(False)
+                chip.setToolTip("Chỉ có giá trị ở footer")
+            flow.addWidget(chip)
+        self.var_layout.addWidget(holder)
 
     def _insert_token(self, token: str) -> None:
         if self._preview_mode:
@@ -226,8 +392,7 @@ class StepDesign(QWidget):
 
     def _toggle_bold(self) -> None:
         fmt = QTextCharFormat()
-        weight = QFont.Bold if self.btn_bold.isChecked() else QFont.Normal
-        fmt.setFontWeight(weight)
+        fmt.setFontWeight(QFont.Bold if self.btn_bold.isChecked() else QFont.Normal)
         self._merge_format(fmt)
 
     def _toggle_italic(self) -> None:
@@ -241,33 +406,39 @@ class StepDesign(QWidget):
         self._merge_format(fmt)
 
     def _bump_size(self, delta: int) -> None:
-        cursor = self.editor.textCursor()
-        size = cursor.charFormat().fontPointSize() or 12.0
+        size = self.editor.textCursor().charFormat().fontPointSize() or 12.0
         fmt = QTextCharFormat()
         fmt.setFontPointSize(max(6.0, size + delta))
+        self._merge_format(fmt)
+
+    def _set_align(self, align) -> None:
+        self.editor.setAlignment(align)
+
+    def _apply_color(self, color: QColor) -> None:
+        fmt = QTextCharFormat()
+        fmt.setForeground(color)
         self._merge_format(fmt)
 
     def _pick_color(self) -> None:
         color = QColorDialog.getColor(QColor(0, 0, 0), self, "Chọn màu chữ")
         if color.isValid():
-            fmt = QTextCharFormat()
-            fmt.setForeground(color)
-            self._merge_format(fmt)
+            self._apply_color(color)
 
     # ---------------------------------------------------------- preview
-    def _toggle_mode(self) -> None:
-        if not self._preview_mode:
+    def _set_mode(self, preview: bool) -> None:
+        if preview == self._preview_mode:
+            return
+        if preview:
             err = self._sync_and_validate()
             if err:
                 self.main.show_error(err)
+                self.btn_edit.setChecked(True)
                 return
             self._preview_mode = True
-            self.btn_toggle.setText("Chỉnh sửa")
             self.stack.setCurrentIndex(1)
             self._render_preview()
         else:
             self._preview_mode = False
-            self.btn_toggle.setText("Xem trước")
             self.stack.setCurrentIndex(0)
 
     def _render_preview(self) -> None:
@@ -275,7 +446,6 @@ class StepDesign(QWidget):
             item = self.preview_layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
-
         style = self.main.state.style
         if not self._groups:
             self.preview_layout.addWidget(QLabel("Chưa có dữ liệu để xem trước."))
@@ -285,10 +455,9 @@ class StepDesign(QWidget):
             total = R.page_count(style, records)
             for p in range(total):
                 img = R.render_page_image(style, records, p, stt_file=self._group_idx + 1)
-                pix = QPixmap.fromImage(img)
                 lbl = QLabel()
-                lbl.setPixmap(pix)
-                lbl.setStyleSheet("background:#fff; border:1px solid #c8c8c8; margin:8px;")
+                lbl.setPixmap(QPixmap.fromImage(img))
+                lbl.setStyleSheet("background:#fff; border:1px solid #555; margin:8px;")
                 self.preview_layout.addWidget(lbl)
         except R.TemplateError as e:
             self.preview_layout.addWidget(QLabel(f"Lỗi mẫu: {e}"))
@@ -317,7 +486,6 @@ class StepDesign(QWidget):
         self.main.state.style.template_html = html
 
     def _sync_and_validate(self):
-        """Đồng bộ editor→style rồi validate đúng 1 dòng-mẫu (build thử group 0/rỗng)."""
         self._sync_template()
         records = self._groups[self._group_idx] if self._groups else []
         try:

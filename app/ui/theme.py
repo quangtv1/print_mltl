@@ -1,157 +1,155 @@
-"""Theme Windows Fluent (sáng) cho app + widget stepper 3 bước.
+"""Theme cổ điển Windows (khớp prototype design/) + brand bar + stepper 3 bước.
 
-Accent `#0078d7`, nền `#f0f0f0`/trắng, chọn `#e5f1fb`, xác nhận xanh `#107c10`,
-font "Segoe UI". Nút hành động chính đặt `objectName("primary")`; nhãn tiêu đề
-section đặt property `section="true"`; vùng log `objectName("log")`.
+Đặc trưng: nền `#f0f0f0`, font Segoe UI **12px**, group box kiểu *fieldset* (viền
+`#cfcfcf` vuông, legend nằm trên viền), input viền `#7a7a7a` cao 24px, nút xám
+`#e1e1e1`/`#adadad` hover `#e5f1fb`, accent `#0078d7`. Nút primary đặt
+`objectName("primary")`; vùng log `objectName("log")` (terminal tối).
 """
 
 from __future__ import annotations
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QFrame, QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
-# --- Design tokens (Fluent) ---
+# --- Design tokens (khớp prototype) ---
 ACCENT = "#0078d7"
-ACCENT_HOVER = "#106ebe"
+ACCENT_HOVER = "#1a86db"
 ACCENT_PRESSED = "#005a9e"
 BG = "#f0f0f0"
 SURFACE = "#ffffff"
-TEXT = "#201f1e"
-MUTED = "#605e5c"
-BORDER = "#d1d1d1"
-SELECT_BG = "#e5f1fb"
+TEXT = "#000000"
+MUTED = "#666666"
+FIELD_BORDER = "#7a7a7a"
+GROUP_BORDER = "#cfcfcf"
+BTN_BG = "#e1e1e1"
+BTN_BORDER = "#adadad"
+HOVER_BG = "#e5f1fb"
+TOKEN_BLUE = "#0057b7"
 SUCCESS = "#107c10"
-DISABLED_BG = "#e8e8e8"
-DISABLED_TEXT = "#a19f9d"
-RADIUS = "4px"
+STEP_ACTIVE_BG = "#eaf3fc"
 
-FONT_STACK = '"Segoe UI", "Helvetica Neue", "Arial", "Noto Sans", sans-serif'
+FONT_STACK = "'Segoe UI', Tahoma, Geneva, 'Noto Sans', sans-serif"
 
 QSS = f"""
 * {{
     font-family: {FONT_STACK};
-    font-size: 14px;
+    font-size: 12px;
     color: {TEXT};
 }}
 
 QMainWindow, QWidget#Root {{ background: {BG}; }}
-QWidget#Header {{ background: {SURFACE}; border-bottom: 1px solid {BORDER}; }}
-QWidget#ActionBar {{ background: {SURFACE}; border-top: 1px solid {BORDER}; }}
+QWidget#BrandBar {{ background: {SURFACE}; border-bottom: 1px solid #dcdcdc; }}
+QWidget#Header {{ background: {SURFACE}; border-bottom: 1px solid #dcdcdc; }}
+QWidget#ActionBar {{ background: {BG}; border-top: 1px solid #dcdcdc; }}
 
-QLabel[section="true"] {{
-    font-size: 13px;
-    font-weight: 700;
-    color: {MUTED};
-    text-transform: uppercase;
-}}
-QLabel[hint="true"] {{ color: {MUTED}; font-size: 12.5px; }}
-QLabel[ok="true"] {{ color: {SUCCESS}; font-weight: 600; }}
-QLabel[info="true"] {{ color: {ACCENT}; font-weight: 600; }}
+QLabel[muted="true"] {{ color: {MUTED}; }}
+QLabel[hint="true"] {{ color: #777777; font-size: 11px; }}
+QLabel[ok="true"] {{ color: {SUCCESS}; }}
 
-/* ---- Cards / group boxes ---- */
+/* ---- Group box = fieldset cổ điển ---- */
 QGroupBox {{
-    background: {SURFACE};
-    border: 1px solid {BORDER};
-    border-radius: {RADIUS};
-    margin-top: 12px;
-    padding: 16px 14px 12px 14px;
-    font-weight: 700;
+    border: 1px solid {GROUP_BORDER};
+    background: {BG};
+    border-radius: 0;
+    margin-top: 7px;
+    padding: 12px 12px 10px 12px;
+    font-size: 12px;
 }}
 QGroupBox::title {{
     subcontrol-origin: margin;
     subcontrol-position: top left;
-    left: 10px;
-    padding: 0 6px;
-    color: {TEXT};
+    left: 8px;
+    padding: 0 5px;
+    background: {BG};
+    color: #1a1a1a;
 }}
 
 /* ---- Inputs ---- */
-QLineEdit, QComboBox, QSpinBox {{
+QLineEdit, QComboBox {{
+    min-height: 22px;
     background: {SURFACE};
-    border: 1px solid {BORDER};
-    border-radius: {RADIUS};
-    padding: 6px 9px;
+    border: 1px solid {FIELD_BORDER};
+    border-radius: 0;
+    padding: 1px 6px;
     selection-background-color: {ACCENT};
     selection-color: #ffffff;
 }}
 QLineEdit:focus, QComboBox:focus {{ border: 1px solid {ACCENT}; }}
-QLineEdit:disabled, QComboBox:disabled {{ background: {DISABLED_BG}; color: {DISABLED_TEXT}; }}
-QComboBox::drop-down {{ border: none; width: 20px; }}
+QLineEdit:disabled, QComboBox:disabled {{ background: #f5f5f5; color: #9a9a9a; }}
+QComboBox::drop-down {{ border: none; width: 18px; }}
 QComboBox QAbstractItemView {{
     background: {SURFACE};
-    border: 1px solid {BORDER};
-    selection-background-color: {SELECT_BG};
+    border: 1px solid {FIELD_BORDER};
+    selection-background-color: {HOVER_BG};
     selection-color: {TEXT};
     outline: none;
 }}
 
 /* ---- Buttons ---- */
 QPushButton {{
-    background: {SURFACE};
-    color: {TEXT};
-    border: 1px solid {BORDER};
-    border-radius: {RADIUS};
-    padding: 7px 16px;
-    font-weight: 600;
+    min-height: 22px;
+    background: {BTN_BG};
+    border: 1px solid {BTN_BORDER};
+    border-radius: 0;
+    padding: 2px 14px;
 }}
-QPushButton:hover {{ background: #f3f3f3; border-color: #b3b3b3; }}
-QPushButton:pressed {{ background: #ececec; }}
-QPushButton:disabled {{ background: {DISABLED_BG}; color: {DISABLED_TEXT}; border-color: {BORDER}; }}
-QPushButton#primary {{
-    background: {ACCENT}; color: #ffffff; border: 1px solid {ACCENT}; padding: 8px 22px;
-}}
+QPushButton:hover {{ background: {HOVER_BG}; border-color: {ACCENT}; }}
+QPushButton:pressed {{ background: #cfe4f7; }}
+QPushButton:disabled {{ background: #e8e8e8; color: #a3a3a3; border-color: {GROUP_BORDER}; }}
+QPushButton#primary {{ background: {ACCENT}; border: 1px solid {ACCENT}; color: #ffffff; font-weight: 600; padding: 3px 20px; }}
 QPushButton#primary:hover {{ background: {ACCENT_HOVER}; border-color: {ACCENT_HOVER}; }}
 QPushButton#primary:pressed {{ background: {ACCENT_PRESSED}; }}
-QPushButton#primary:disabled {{ background: {DISABLED_BG}; color: {DISABLED_TEXT}; border-color: {BORDER}; }}
+QPushButton#primary:disabled {{ background: #e8e8e8; color: #a3a3a3; border-color: {GROUP_BORDER}; }}
 
-/* ---- Toolbar buttons (editor) ---- */
-QPushButton[toolbtn="true"] {{ padding: 5px 10px; min-width: 0; }}
-QPushButton[toolbtn="true"]:checked {{ background: {SELECT_BG}; border-color: {ACCENT}; color: {ACCENT}; }}
+/* ---- Toolbar / chip buttons (editor, palette) ---- */
+QPushButton[toolbtn="true"] {{ min-height: 24px; min-width: 26px; background: #ffffff; border: 1px solid {GROUP_BORDER}; border-radius: 2px; padding: 2px 8px; }}
+QPushButton[toolbtn="true"]:hover {{ background: {HOVER_BG}; border-color: {ACCENT}; }}
+QPushButton[toolbtn="true"]:checked {{ background: {HOVER_BG}; border-color: {ACCENT}; color: {ACCENT}; }}
+QPushButton[chip="true"] {{ min-height: 22px; background: #ffffff; border: 1px solid #c8c8c8; border-radius: 2px; padding: 2px 8px; color: {TOKEN_BLUE}; font-family: Consolas, 'Courier New', monospace; }}
+QPushButton[chip="true"]:hover {{ background: {HOVER_BG}; border-color: {ACCENT}; }}
+QPushButton[chip="true"]:disabled {{ color: #a8a8a8; background: #f3f3f3; }}
 
 /* ---- Table ---- */
 QTableWidget {{
     background: {SURFACE};
-    border: 1px solid {BORDER};
-    border-radius: {RADIUS};
-    gridline-color: #ebebeb;
-    selection-background-color: {SELECT_BG};
+    border: 1px solid #a0a0a0;
+    border-radius: 0;
+    gridline-color: #eeeeee;
+    selection-background-color: {HOVER_BG};
     selection-color: {TEXT};
 }}
-QTableWidget::item {{ padding: 3px 6px; }}
+QTableWidget::item {{ padding: 2px 6px; }}
 QHeaderView::section {{
-    background: #f7f7f7;
-    color: {MUTED};
+    background: #f5f5f5;
+    color: #555555;
     border: none;
-    border-bottom: 1px solid {BORDER};
-    padding: 7px;
-    font-weight: 700;
+    border-right: 1px solid #e2e2e2;
+    border-bottom: 1px solid #d0d0d0;
+    padding: 5px 8px;
+    font-weight: 400;
 }}
 
 /* ---- Checkbox ---- */
-QCheckBox {{ spacing: 8px; }}
-QCheckBox::indicator {{
-    width: 16px; height: 16px;
-    border: 1px solid #9a9a9a; border-radius: 3px; background: {SURFACE};
-}}
+QCheckBox {{ spacing: 7px; }}
+QCheckBox::indicator {{ width: 14px; height: 14px; border: 1px solid #7a7a7a; border-radius: 0; background: {SURFACE}; }}
 QCheckBox::indicator:checked {{ background: {ACCENT}; border-color: {ACCENT}; }}
-QCheckBox:disabled {{ color: {DISABLED_TEXT}; }}
+QCheckBox:disabled {{ color: #a3a3a3; }}
 
 /* ---- Progress ---- */
-QProgressBar {{
-    background: {DISABLED_BG}; border: none; border-radius: 4px;
-    height: 10px; text-align: center; color: {TEXT};
-}}
-QProgressBar::chunk {{ background: {ACCENT}; border-radius: 4px; }}
+QProgressBar {{ background: #e6e6e6; border: 1px solid #a0a0a0; border-radius: 0; height: 18px; text-align: center; color: {TEXT}; }}
+QProgressBar::chunk {{ background: {ACCENT}; }}
 
-/* ---- Log / preview ---- */
-QTextEdit#log {{ font-family: "Consolas", "SF Mono", "Menlo", monospace; font-size: 12.5px; background: {SURFACE}; }}
-QTextEdit, QTextBrowser {{ background: {SURFACE}; border: 1px solid {BORDER}; border-radius: {RADIUS}; }}
+/* ---- Log terminal ---- */
+QTextEdit#log {{ background: #1e1e1e; color: #dcdcdc; border: 1px solid #000000; border-radius: 0; font-family: Consolas, 'Courier New', monospace; font-size: 12px; }}
+QTextEdit, QTextBrowser {{ background: {SURFACE}; border: 1px solid {FIELD_BORDER}; border-radius: 0; }}
 
 /* ---- Scrollbars ---- */
-QScrollBar:vertical {{ background: transparent; width: 12px; margin: 2px; }}
-QScrollBar::handle:vertical {{ background: #c8c8c8; border-radius: 6px; min-height: 30px; }}
-QScrollBar::handle:vertical:hover {{ background: #b0b0b0; }}
+QScrollBar:vertical {{ background: #f0f0f0; width: 16px; margin: 0; }}
+QScrollBar::handle:vertical {{ background: #cdcdcd; border: 1px solid #f0f0f0; min-height: 30px; }}
+QScrollBar::handle:vertical:hover {{ background: #a6a6a6; }}
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0; }}
+QScrollBar:horizontal {{ background: #f0f0f0; height: 16px; margin: 0; }}
+QScrollBar::handle:horizontal {{ background: #cdcdcd; border: 1px solid #f0f0f0; min-width: 30px; }}
 QScrollArea {{ border: none; background: transparent; }}
 """
 
@@ -161,72 +159,99 @@ def apply_theme(app) -> None:
     app.setStyleSheet(QSS)
 
 
-class StepHeader(QWidget):
-    """Thanh stepper ngang: N chip 'số + BƯỚC n + tiêu đề', đánh dấu bước hiện tại.
+class BrandBar(QWidget):
+    """Dải thương hiệu trên cùng: badge accent 'T' + tên ứng dụng (khớp title bar mock)."""
 
-    `set_current(i)`: bước <i = xong (xanh ✓), =i = hiện tại (accent), >i = chờ (xám).
+    def __init__(self, title: str, parent=None):
+        super().__init__(parent)
+        self.setObjectName("BrandBar")
+        self.setFixedHeight(31)
+        row = QHBoxLayout(self)
+        row.setContentsMargins(9, 0, 12, 0)
+        row.setSpacing(8)
+        badge = QLabel("T")
+        badge.setFixedSize(15, 15)
+        badge.setAlignment(Qt.AlignCenter)
+        badge.setStyleSheet(
+            f"background:{ACCENT}; color:#fff; font-size:10px; font-weight:700;"
+        )
+        name = QLabel(title)
+        name.setStyleSheet("font-size:12px; color:#1a1a1a;")
+        row.addWidget(badge)
+        row.addWidget(name)
+        row.addStretch(1)
+
+
+class StepHeader(QWidget):
+    """Stepper ngang: chip 'số + BƯỚC n + tiêu đề', phân tách bằng chevron ›.
+
+    `set_current(i)`: <i xong (badge xanh ✓), =i hiện tại (badge accent + nền nhạt),
+    >i chờ (badge xám).
     """
 
     def __init__(self, steps, parent=None):
         super().__init__(parent)
         self.setObjectName("Header")
         self._titles = list(steps)
-        self._chips = []  # (circle QLabel, kicker QLabel, title QLabel)
+        self._chips = []  # (wrap QWidget, badge, title)
 
         row = QHBoxLayout(self)
-        row.setContentsMargins(24, 12, 24, 12)
-        row.setSpacing(0)
+        row.setContentsMargins(18, 10, 18, 10)
+        row.setSpacing(6)
 
         for i, title in enumerate(self._titles):
-            chip = QHBoxLayout()
-            chip.setSpacing(10)
+            wrap = QWidget()
+            wl = QHBoxLayout(wrap)
+            wl.setContentsMargins(8, 5, 10, 5)
+            wl.setSpacing(9)
 
-            circle = QLabel(str(i + 1))
-            circle.setFixedSize(30, 30)
-            circle.setAlignment(Qt.AlignCenter)
-            chip.addWidget(circle)
+            badge = QLabel(str(i + 1))
+            badge.setFixedSize(24, 24)
+            badge.setAlignment(Qt.AlignCenter)
+            wl.addWidget(badge)
 
             texts = QVBoxLayout()
             texts.setSpacing(0)
             kicker = QLabel(f"BƯỚC {i + 1}")
-            kicker.setStyleSheet(f"font-size:10px; font-weight:700; color:{MUTED};")
+            kicker.setStyleSheet("font-size:10px; color:#8a8a8a;")
             name = QLabel(title)
-            name.setStyleSheet("font-size:14px; font-weight:600;")
             texts.addWidget(kicker)
             texts.addWidget(name)
-            chip.addLayout(texts)
+            wl.addLayout(texts)
 
-            row.addLayout(chip)
-            self._chips.append((circle, kicker, name))
+            row.addWidget(wrap)
+            self._chips.append((wrap, badge, name))
 
             if i < len(self._titles) - 1:
-                line = QFrame()
-                line.setFrameShape(QFrame.HLine)
-                line.setFixedHeight(2)
-                line.setStyleSheet(f"background:{BORDER}; border:none;")
-                row.addSpacing(16)
-                row.addWidget(line, 1)
-                row.addSpacing(16)
+                sep = QLabel("›")  # ›
+                sep.setStyleSheet("font-size:16px; color:#b8b8b8;")
+                row.addSpacing(6)
+                row.addWidget(sep)
+                row.addSpacing(6)
 
+        row.addStretch(1)
         self.set_current(0)
 
     def set_current(self, index: int) -> None:
-        for i, (circle, kicker, name) in enumerate(self._chips):
-            if i < index:  # đã xong
-                circle.setText("✓")
-                circle.setStyleSheet(
-                    f"background:{SUCCESS}; color:#fff; border-radius:15px; font-weight:700;"
+        for i, (wrap, badge, name) in enumerate(self._chips):
+            if i < index:
+                badge.setText("✓")  # ✓
+                badge.setStyleSheet(
+                    f"background:{SUCCESS}; color:#fff; border-radius:12px; font-weight:700;"
                 )
-                name.setStyleSheet(f"font-size:14px; font-weight:600; color:{TEXT};")
-            elif i == index:  # hiện tại
-                circle.setText(str(i + 1))
-                circle.setStyleSheet(
-                    f"background:{ACCENT}; color:#fff; border-radius:15px; font-weight:700;"
+                wrap.setStyleSheet("background:transparent; border-radius:3px;")
+                name.setStyleSheet("font-size:13px; color:#1a1a1a;")
+            elif i == index:
+                badge.setText(str(i + 1))
+                badge.setStyleSheet(
+                    f"background:{ACCENT}; color:#fff; border-radius:12px; font-weight:700;"
                 )
-                name.setStyleSheet(f"font-size:14px; font-weight:700; color:{ACCENT};")
-            else:  # chờ
-                circle.setText(str(i + 1))
-                circle.setStyleSheet(
-                    f"background:#e1e1e1; color:{MUTED}; border-radius:15px; font-weight:700;"
+                wrap.setStyleSheet(f"background:{STEP_ACTIVE_BG}; border-radius:3px;")
+                name.setStyleSheet(f"font-size:13px; font-weight:700; color:{ACCENT};")
+            else:
+                badge.setText(str(i + 1))
+                badge.setStyleSheet(
+                    "background:#d6d6d6; color:#666; border-radius:12px; font-weight:700;"
                 )
-                name.setStyleSheet(f"font-size:14px; font-weight:600; color:{MUTED};")
+                wrap.setStyleSheet("background:transparent; border-radius:3px;")
+                name.setStyleSheet("font-size:13px; color:#8a8a8a;")

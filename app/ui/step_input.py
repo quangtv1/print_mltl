@@ -10,6 +10,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import List, Tuple
 
+from PyQt5.QtGui import QColor, QFont
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
     QAbstractItemView,
@@ -28,6 +29,9 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
+_MONO = QFont("Consolas")
+_TOKEN_COLOR = QColor("#0057b7")
+
 from app.core import excel_reader
 from app.core.platform_utils import styles_root
 from app.core.style_config import list_styles, load_style
@@ -42,7 +46,8 @@ class StepInput(QWidget):
         self._var_rows: List[Tuple[str, str]] = []  # (var, kind) song song với hàng bảng
 
         root = QVBoxLayout(self)
-        root.setSpacing(14)
+        root.setContentsMargins(22, 12, 22, 12)
+        root.setSpacing(12)
         root.addLayout(self._build_top_row())
         root.addWidget(self._build_mapping_group(), 1)
         root.addWidget(self._build_grouping_group())
@@ -75,7 +80,6 @@ class StepInput(QWidget):
         self.sheet_combo = QComboBox()
         g.addWidget(self.sheet_combo, 1, 1)
         self.read_btn = QPushButton("Đọc dữ liệu")
-        self.read_btn.setObjectName("primary")
         self.read_btn.setEnabled(False)
         self.read_btn.clicked.connect(self._on_read)
         g.addWidget(self.read_btn, 1, 2)
@@ -91,18 +95,31 @@ class StepInput(QWidget):
         self.style_combo = QComboBox()
         self.style_combo.currentIndexChanged.connect(self._on_style_change)
         v.addWidget(self.style_combo)
-        self.style_info = QLabel("")
-        self.style_info.setProperty("info", "true")
-        v.addWidget(self.style_info)
+
+        info_row = QHBoxLayout()
+        info_row.setSpacing(8)
+        self.count_badge = QLabel("0")
+        self.count_badge.setAlignment(Qt.AlignCenter)
+        self.count_badge.setFixedHeight(18)
+        self.count_badge.setMinimumWidth(22)
+        self.count_badge.setStyleSheet(
+            "background:#0078d7; color:#fff; border-radius:9px; font-weight:700; padding:0 6px;"
+        )
+        info_text = QLabel("biến đầu vào cho mẫu này")
+        info_text.setProperty("hint", "true")
+        info_row.addWidget(self.count_badge)
+        info_row.addWidget(info_text)
+        info_row.addStretch(1)
+        v.addLayout(info_row)
         v.addStretch(1)
         return box
 
     def _build_mapping_group(self) -> QGroupBox:
         box = QGroupBox("Ghép biến ↔ cột trong file Excel")
         v = QVBoxLayout(box)
-        self.table = QTableWidget(0, 4)
+        self.table = QTableWidget(0, 5)
         self.table.setHorizontalHeaderLabels(
-            ["#", "Cột trong file Excel", "Biến trong mẫu", "Tự khớp"]
+            ["#", "Cột trong Excel (header)", "", "Biến trong mẫu", "Tự khớp"]
         )
         self.table.verticalHeader().setVisible(False)
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -110,8 +127,9 @@ class StepInput(QWidget):
         hh = self.table.horizontalHeader()
         hh.setSectionResizeMode(0, QHeaderView.ResizeToContents)
         hh.setSectionResizeMode(1, QHeaderView.Stretch)
-        hh.setSectionResizeMode(2, QHeaderView.Stretch)
-        hh.setSectionResizeMode(3, QHeaderView.ResizeToContents)
+        hh.setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        hh.setSectionResizeMode(3, QHeaderView.Stretch)
+        hh.setSectionResizeMode(4, QHeaderView.ResizeToContents)
         v.addWidget(self.table)
         return box
 
@@ -212,7 +230,7 @@ class StepInput(QWidget):
         nvars = len(self.main.state.style.document_fields) + len(
             self.main.state.style.row_mapping
         )
-        self.style_info.setText(f"{nvars} biến đầu vào cho mẫu này")
+        self.count_badge.setText(str(nvars))
         self.main.bump_data_version()
         if self.main.state.headers:
             self._rebuild_mapping()
@@ -235,10 +253,12 @@ class StepInput(QWidget):
 
         self.table.setRowCount(len(self._var_rows))
         for r, (var, kind) in enumerate(self._var_rows):
-            self.table.setItem(r, 0, self._cell(str(r + 1)))
+            num = self._cell(str(r + 1))
+            num.setForeground(QColor("#999999"))
+            self.table.setItem(r, 0, num)
 
             combo = QComboBox()
-            combo.addItem("— (bỏ trống) —", "")
+            combo.addItem("— chưa đọc dữ liệu —", "")
             for h in headers:
                 combo.addItem(h, h)
             chosen = matched.get(var, "")
@@ -249,12 +269,19 @@ class StepInput(QWidget):
             )
             self.table.setCellWidget(r, 1, combo)
 
-            self.table.setItem(r, 2, self._cell("{" + var + "}"))
-            ok = "✓ khớp" if chosen else "—"
-            item = self._cell(ok)
-            if chosen:
-                item.setForeground(Qt.darkGreen)
-            self.table.setItem(r, 3, item)
+            arrow = self._cell("→")
+            arrow.setTextAlignment(Qt.AlignCenter)
+            arrow.setForeground(QColor("#b0b0b0"))
+            self.table.setItem(r, 2, arrow)
+
+            token = self._cell("{" + var + "}")
+            token.setForeground(_TOKEN_COLOR)
+            token.setFont(_MONO)
+            self.table.setItem(r, 3, token)
+
+            item = self._cell("✓ khớp" if chosen else "—")
+            item.setForeground(QColor("#107c10") if chosen else QColor("#b0b0b0"))
+            self.table.setItem(r, 4, item)
 
             # Ghi ngược lựa chọn auto vào style ngay để nhất quán.
             self._write_map(var, kind, chosen)
@@ -264,9 +291,9 @@ class StepInput(QWidget):
         combo = self.table.cellWidget(row, 1)
         chosen = combo.currentData() or ""
         self._write_map(var, kind, chosen)
-        item = self.table.item(row, 3)
+        item = self.table.item(row, 4)
         item.setText("✓ khớp" if chosen else "—")
-        item.setForeground(Qt.darkGreen if chosen else Qt.gray)
+        item.setForeground(QColor("#107c10") if chosen else QColor("#b0b0b0"))
         self.main.bump_data_version()
 
     def _write_map(self, var: str, kind: str, header: str) -> None:
@@ -294,6 +321,9 @@ class StepInput(QWidget):
         if self.main.state.style is not None and text:
             self.main.state.style.grouping_column = text
             self.main.bump_data_version()
+
+    def status_text(self) -> str:
+        return "Bước 1/3 — Chọn mẫu, nguồn Excel và ghép biến."
 
     # ------------------------------------------------------------- gating
     def validate_next(self):
