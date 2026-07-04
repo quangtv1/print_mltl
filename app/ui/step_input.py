@@ -49,6 +49,9 @@ class StepInput(QWidget):
         root.setContentsMargins(22, 12, 22, 12)
         root.setSpacing(12)
         root.addLayout(self._build_top_row())
+        self.banner = QLabel('Chưa đọc dữ liệu — bấm "Đọc dữ liệu" để bắt đầu ghép biến.')
+        self.banner.setProperty("banner", "warn")
+        root.addWidget(self.banner)
         root.addWidget(self._build_mapping_group(), 1)
         root.addWidget(self._build_grouping_group())
 
@@ -80,6 +83,7 @@ class StepInput(QWidget):
         self.sheet_combo = QComboBox()
         g.addWidget(self.sheet_combo, 1, 1)
         self.read_btn = QPushButton("Đọc dữ liệu")
+        self.read_btn.setObjectName("teal")
         self.read_btn.setEnabled(False)
         self.read_btn.clicked.connect(self._on_read)
         g.addWidget(self.read_btn, 1, 2)
@@ -134,7 +138,8 @@ class StepInput(QWidget):
         return box
 
     def _build_grouping_group(self) -> QGroupBox:
-        box = QGroupBox("Cột gom nhóm hồ sơ")
+        box = QGroupBox("🗂 Cột gom nhóm hồ sơ (mỗi hồ sơ 1 file)")
+        box.setObjectName("GroupCol")
         v = QVBoxLayout(box)
         self.group_combo = QComboBox()
         self.group_combo.currentTextChanged.connect(self._on_group_change)
@@ -258,7 +263,7 @@ class StepInput(QWidget):
             self.table.setItem(r, 0, num)
 
             combo = QComboBox()
-            combo.addItem("— chưa đọc dữ liệu —", "")
+            combo.addItem("— chưa gán —", "")
             for h in headers:
                 combo.addItem(h, h)
             chosen = matched.get(var, "")
@@ -279,21 +284,55 @@ class StepInput(QWidget):
             token.setFont(_MONO)
             self.table.setItem(r, 3, token)
 
-            item = self._cell("✓ khớp" if chosen else "—")
-            item.setForeground(QColor("#107c10") if chosen else QColor("#b0b0b0"))
-            self.table.setItem(r, 4, item)
+            self.table.setItem(r, 4, self._mark_cell(bool(chosen)))
 
             # Ghi ngược lựa chọn auto vào style ngay để nhất quán.
             self._write_map(var, kind, chosen)
+        self._update_banner()
+
+    @staticmethod
+    def _mark_cell(mapped: bool) -> QTableWidgetItem:
+        """Ô 'Tự khớp': ✓ khớp (xanh) nếu đã gán, ⚠ chưa gán (cam) nếu chưa."""
+        item = QTableWidgetItem("✓ khớp" if mapped else "⚠ chưa gán")
+        item.setForeground(QColor("#107c10") if mapped else QColor("#c47a00"))
+        item.setFlags(Qt.ItemIsEnabled)
+        return item
+
+    def _unmapped_count(self) -> int:
+        """Số biến chưa gán cột (dựa trên combo hiện tại)."""
+        n = 0
+        for r in range(self.table.rowCount()):
+            combo = self.table.cellWidget(r, 1)
+            if combo is not None and not (combo.currentData() or ""):
+                n += 1
+        return n
+
+    def _update_banner(self) -> None:
+        """Cập nhật dải trạng thái ghép biến (chưa đọc / đủ / thiếu)."""
+        if self.main.state.df is None:
+            text = 'Chưa đọc dữ liệu — bấm "Đọc dữ liệu" để bắt đầu ghép biến.'
+            state = "warn"
+        else:
+            unmapped = self._unmapped_count()
+            total = self.table.rowCount()
+            if unmapped == 0:
+                text = f"✓ Đã ghép đủ {total} biến."
+                state = "ok"
+            else:
+                text = f"⚠ {unmapped} biến chưa gán — sửa xong mới sang được bước sau."
+                state = "err"
+        self.banner.setText(text)
+        self.banner.setProperty("banner", state)
+        self.banner.style().unpolish(self.banner)
+        self.banner.style().polish(self.banner)
 
     def _on_map_change(self, row: int) -> None:
         var, kind = self._var_rows[row]
         combo = self.table.cellWidget(row, 1)
         chosen = combo.currentData() or ""
         self._write_map(var, kind, chosen)
-        item = self.table.item(row, 4)
-        item.setText("✓ khớp" if chosen else "—")
-        item.setForeground(QColor("#107c10") if chosen else QColor("#b0b0b0"))
+        self.table.setItem(row, 4, self._mark_cell(bool(chosen)))
+        self._update_banner()
         self.main.bump_data_version()
 
     def _write_map(self, var: str, kind: str, header: str) -> None:
@@ -337,6 +376,9 @@ class StepInput(QWidget):
                 f"Cột gom nhóm '{st.style.grouping_column}' không có trong dữ liệu. "
                 "Hãy chọn lại."
             )
+        unmapped = self._unmapped_count()
+        if unmapped:
+            return f"Còn {unmapped} biến chưa gán cột. Hãy ghép đủ trước khi sang bước sau."
         return None
 
     @staticmethod

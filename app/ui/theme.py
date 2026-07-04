@@ -11,22 +11,26 @@ from __future__ import annotations
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
-# --- Design tokens (khớp prototype) ---
-ACCENT = "#0078d7"
-ACCENT_HOVER = "#1a86db"
-ACCENT_PRESSED = "#005a9e"
-BG = "#f0f0f0"
+# --- Design tokens (khớp prototype design2 — HUCE navy) ---
+ACCENT = "#0043a5"
+ACCENT_HOVER = "#0a52c0"
+ACCENT_PRESSED = "#003480"
+TEAL = "#00ccd6"
+TEAL_HOVER = "#00b3bc"
+BG = "#f0f2f5"
 SURFACE = "#ffffff"
 TEXT = "#000000"
 MUTED = "#666666"
 FIELD_BORDER = "#7a7a7a"
 GROUP_BORDER = "#cfcfcf"
-BTN_BG = "#e1e1e1"
-BTN_BORDER = "#adadad"
-HOVER_BG = "#e5f1fb"
+BTN_BG = "#ffffff"
+BTN_BORDER = "#d9d9d9"
+HOVER_BG = "#e6eefb"
 TOKEN_BLUE = "#0057b7"
 SUCCESS = "#107c10"
-STEP_ACTIVE_BG = "#eaf3fc"
+WARN = "#c47a00"
+DANGER = "#c42b1c"
+STEP_ACTIVE_BG = "#e6eefb"
 
 FONT_STACK = "'Segoe UI', Tahoma, Geneva, 'Noto Sans', sans-serif"
 
@@ -46,6 +50,11 @@ QLabel[muted="true"] {{ color: {MUTED}; }}
 QLabel[hint="true"] {{ color: #777777; font-size: 11px; }}
 QLabel[ok="true"] {{ color: {SUCCESS}; }}
 
+/* ---- Info banner (trạng thái ghép biến) ---- */
+QLabel[banner="warn"] {{ font-size: 11px; padding: 5px 10px; border: 1px solid #e6d9a8; border-radius: 2px; background: #fbf4e0; color: #8a6d00; }}
+QLabel[banner="ok"] {{ font-size: 11px; padding: 5px 10px; border: 1px solid #a8ddb5; border-radius: 2px; background: #eafaef; color: {SUCCESS}; }}
+QLabel[banner="err"] {{ font-size: 11px; padding: 5px 10px; border: 1px solid #e6b0b0; border-radius: 2px; background: #fdeaea; color: {DANGER}; }}
+
 /* ---- Group box = fieldset cổ điển ---- */
 QGroupBox {{
     border: 1px solid {GROUP_BORDER};
@@ -63,6 +72,7 @@ QGroupBox::title {{
     background: {BG};
     color: #1a1a1a;
 }}
+QGroupBox#GroupCol {{ border-left: 3px solid {ACCENT}; }}
 
 /* ---- Inputs ---- */
 QLineEdit, QComboBox {{
@@ -90,16 +100,19 @@ QPushButton {{
     min-height: 22px;
     background: {BTN_BG};
     border: 1px solid {BTN_BORDER};
-    border-radius: 0;
+    border-radius: 5px;
     padding: 2px 14px;
 }}
 QPushButton:hover {{ background: {HOVER_BG}; border-color: {ACCENT}; }}
-QPushButton:pressed {{ background: #cfe4f7; }}
-QPushButton:disabled {{ background: #e8e8e8; color: #a3a3a3; border-color: {GROUP_BORDER}; }}
+QPushButton:pressed {{ background: #dbe6fa; }}
+QPushButton:disabled {{ background: #f0f0f0; color: #b0b0b0; border-color: {GROUP_BORDER}; }}
 QPushButton#primary {{ background: {ACCENT}; border: 1px solid {ACCENT}; color: #ffffff; font-weight: 600; padding: 3px 20px; }}
 QPushButton#primary:hover {{ background: {ACCENT_HOVER}; border-color: {ACCENT_HOVER}; }}
 QPushButton#primary:pressed {{ background: {ACCENT_PRESSED}; }}
-QPushButton#primary:disabled {{ background: #e8e8e8; color: #a3a3a3; border-color: {GROUP_BORDER}; }}
+QPushButton#primary:disabled {{ background: #f0f0f0; color: #b0b0b0; border-color: {GROUP_BORDER}; }}
+QPushButton#teal {{ background: {TEAL}; border: 1px solid {TEAL}; color: #ffffff; }}
+QPushButton#teal:hover {{ background: {TEAL_HOVER}; border-color: {TEAL_HOVER}; }}
+QPushButton#teal:disabled {{ background: #f0f0f0; color: #b0b0b0; border-color: {GROUP_BORDER}; }}
 
 /* ---- Toolbar / chip buttons (editor, palette) ---- */
 QPushButton[toolbtn="true"] {{ min-height: 24px; min-width: 26px; background: #ffffff; border: 1px solid {GROUP_BORDER}; border-radius: 2px; padding: 2px 8px; }}

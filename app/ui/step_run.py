@@ -121,10 +121,18 @@ class StepRun(QWidget):
         self.progress_title = QLabel("Tiến trình chạy")
         self.gen_status = QLabel("")
         self.gen_status.setProperty("muted", "true")
+        self.btn_open = QPushButton("📁 Mở thư mục kết quả")
+        self.btn_open.clicked.connect(self._on_open_dir)
         row.addWidget(self.progress_title)
         row.addStretch(1)
         row.addWidget(self.gen_status)
+        row.addWidget(self.btn_open)
         return row
+
+    def _on_open_dir(self) -> None:
+        d = self.dir_edit.text().strip()
+        if d and Path(d).is_dir():
+            open_with_default(d)
 
     def _build_log_group(self) -> QGroupBox:
         box = QGroupBox("Nhật ký (realtime)")
