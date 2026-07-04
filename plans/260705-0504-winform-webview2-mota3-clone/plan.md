@@ -1,9 +1,9 @@
 ---
 title: "WinForms + WebView2 — clone 100% design_v3 (Tạo Mục Lục Hồ Sơ)"
 description: ""
-status: pending
+status: in-progress
 priority: P2
-branch: "feat/native-qt-pdf-designer"
+branch: "feat/winform-webview2"
 tags: []
 blockedBy: []
 blocks: []
@@ -50,8 +50,8 @@ HTML/CSS/JS + engine phân trang của prototype** → giống tuyệt đối. X
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 1 | [Scaffold Delete-Python & Vendor Prototype](./phase-01-scaffold-delete-python-vendor-prototype.md) | Pending |
-| 2 | [Core Excel Models Config NameResolver](./phase-02-core-excel-models-config-nameresolver.md) | Pending |
+| 1 | [Scaffold Delete-Python & Vendor Prototype](./phase-01-scaffold-delete-python-vendor-prototype.md) | Done |
+| 2 | [Core Excel Models Config NameResolver](./phase-02-core-excel-models-config-nameresolver.md) | Done |
 | 3 | [WebView2 Host Bridge & Template Engine](./phase-03-webview2-host-bridge-template-engine.md) | Pending |
 | 4 | [Step 1 Input & Mapping](./phase-04-step-1-input-mapping.md) | Pending |
 | 5 | [Step 2 Design Editor & Preview](./phase-05-step-2-design-editor-preview.md) | Pending |

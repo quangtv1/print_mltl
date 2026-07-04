@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Scaffold Delete-Python & Vendor Prototype"
-status: pending
+status: done
 priority: P1
 dependencies: []
 ---

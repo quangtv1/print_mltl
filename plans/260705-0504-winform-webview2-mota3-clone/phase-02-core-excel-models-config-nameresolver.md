@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Core Excel Models Config NameResolver"
-status: pending
+status: done
 priority: P1
 dependencies: [1]
 ---
