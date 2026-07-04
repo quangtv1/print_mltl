@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Đặc tả kỹ thuật — Ứng dụng Tạo Mục lục hồ sơ (.NET 8 WinForms)</title>
+<style>
+  :root { --ac:#0043a5; --cy:#00ccd6; --ink:#1a1a1a; --mut:#5a6472; --line:#d9dee6; --bg:#eef1f5; }
+  * { box-sizing: border-box; }
+  html,body { margin:0; padding:0; background:var(--bg); color:var(--ink);
+    font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size:14px; line-height:1.6; }
+  .sheet { max-width: 880px; margin: 28px auto; background:#fff; padding: 56px 64px;
+    box-shadow: 0 2px 18px rgba(20,30,60,.12); }
+  h1 { font-size: 27px; line-height:1.25; margin:0 0 6px; color:var(--ac); letter-spacing:-.01em; }
+  h2 { font-size: 19px; margin: 34px 0 10px; padding-bottom:6px; border-bottom:2px solid var(--ac); color:var(--ac); }
+  h3 { font-size: 15.5px; margin: 22px 0 6px; color:#12305c; }
+  h4 { font-size: 13.5px; margin: 16px 0 4px; color:#12305c; text-transform:uppercase; letter-spacing:.04em; }
+  p { margin: 7px 0; }
+  ul,ol { margin: 6px 0 6px; padding-left: 22px; }
+  li { margin: 3px 0; }
+  code { font-family: "Cascadia Code", Consolas, monospace; font-size: 12.5px; background:#eef2f8;
+    border:1px solid #dde4ee; border-radius:4px; padding:1px 5px; color:#0a3a86; }
+  pre { background:#0f1b2d; color:#d7e3f4; border-radius:8px; padding:14px 16px; overflow:auto;
+    font-family: "Cascadia Code", Consolas, monospace; font-size: 12px; line-height:1.55; }
+  pre code { background:none; border:none; color:inherit; padding:0; }
+  table { border-collapse: collapse; width:100%; margin: 10px 0; font-size: 12.8px; }
+  th,td { border:1px solid var(--line); padding: 6px 9px; text-align:left; vertical-align:top; }
+  th { background:#f3f6fb; color:#12305c; font-weight:600; }
+  .lead { font-size: 15px; color:var(--mut); margin: 4px 0 2px; }
+  .meta { color:var(--mut); font-size: 12.5px; margin-top:2px; }
+  .tag { display:inline-block; background:var(--ac); color:#fff; font-size:11px; font-weight:600;
+    padding:2px 9px; border-radius:20px; vertical-align:middle; }
+  .cy { background:var(--cy); color:#03303a; }
+  .box { border:1px solid var(--line); border-left:4px solid var(--ac); background:#f7f9fc;
+    border-radius:6px; padding:11px 15px; margin:12px 0; }
+  .box.warn { border-left-color:#d98300; background:#fdf7ec; }
+  .swatch { display:inline-block; width:13px; height:13px; border-radius:3px; border:1px solid rgba(0,0,0,.2);
+    vertical-align:middle; margin-right:6px; }
+  .toc { columns:2; column-gap:34px; font-size:13px; }
+  .toc a { color:#12305c; text-decoration:none; }
+  .kbd { font-family:Consolas,monospace; font-size:11.5px; background:#eceff4; border:1px solid #cfd6e0;
+    border-bottom-width:2px; border-radius:4px; padding:1px 6px; }
+  hr { border:none; border-top:1px solid var(--line); margin:26px 0; }
+  .small { font-size:12.5px; color:var(--mut); }
+  @media print {
+    body { background:#fff; }
+    .sheet { box-shadow:none; margin:0; max-width:none; padding:0 14mm; }
+    h2 { break-after: avoid; }
+    pre, table, .box { break-inside: avoid; }
+    @page { size: A4; margin: 16mm 0; }
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <p class="meta">ĐẶC TẢ KỸ THUẬT · Tài liệu bàn giao phát triển</p>
+  <h1>Ứng dụng “Tạo Mục lục hồ sơ lưu trữ”<br>Xây dựng trên .NET 8 — Windows Forms (WinForms)</h1>
+  <p class="lead">Mục tiêu: tái tạo <b>100%</b> giao diện và luồng nghiệp vụ của bản mẫu HTML hiện có, chạy dưới dạng ứng dụng desktop Windows. Tài liệu này mô tả kiến trúc, từng màn hình, từng control, hệ màu/typography, mô hình dữ liệu, bộ máy sinh mẫu (template engine), phân trang, xuất PDF hàng loạt và xử lý đa luồng.</p>
+  <p class="meta">Phiên bản mẫu tham chiếu: bản “HUCE” (accent xanh <span class="swatch" style="background:#0043a5"></span><code>#0043a5</code>). Bản gốc dùng xanh Windows <code>#0078d7</code> — chỉ khác token màu, mọi thứ khác giữ nguyên.</p>
+
+  <h2 id="0">0. Tóm tắt chức năng</h2>
+  <p>Ứng dụng đọc dữ liệu văn bản/tài liệu từ file <b>Excel</b>, cho người dùng <b>ghép</b> (mapping) các cột Excel vào <b>biến</b> của một <b>mẫu (template)</b> mục lục, cho phép <b>thiết kế/soạn thảo</b> mẫu trực quan (WYSIWYG) trên khổ <b>A4</b> có phân trang, rồi <b>sinh hàng loạt</b> mỗi hồ sơ thành một file <b>PDF</b> mục lục — chạy đơn luồng hoặc đa luồng.</p>
+  <p>Toàn bộ thao tác gói trong một <b>wizard 3 bước</b>: <span class="tag">Bước 1 · Đầu vào</span> <span class="tag">Bước 2 · Thiết kế &amp; Preview</span> <span class="tag">Bước 3 · Chạy</span>.</p>
+
+  <h2 id="toc">Mục lục</h2>
+  <div class="toc">
+    <p><a href="#1">1. Kiến trúc &amp; công nghệ</a></p>
+    <p><a href="#2">2. Cửa sổ chính &amp; khung wizard</a></p>
+    <p><a href="#3">3. Hệ màu, font, kích thước</a></p>
+    <p><a href="#4">4. Mô hình dữ liệu</a></p>
+    <p><a href="#5">5. Danh mục mẫu (4 template)</a></p>
+    <p><a href="#6">6. Bước 1 — Đầu vào</a></p>
+    <p><a href="#7">7. Bước 2 — Thiết kế &amp; Preview</a></p>
+    <p><a href="#8">8. Template engine &amp; phân trang</a></p>
+    <p><a href="#9">9. Bước 3 — Chạy &amp; xuất PDF</a></p>
+    <p><a href="#10">10. Đa luồng &amp; xử lý lỗi</a></p>
+    <p><a href="#11">11. Lưu trạng thái / cấu hình</a></p>
+    <p><a href="#12">12. Cấu trúc dự án đề xuất</a></p>
+    <p><a href="#13">13. Tiêu chí nghiệm thu</a></p>
+  </div>
+
+  <h2 id="1">1. Kiến trúc &amp; công nghệ</h2>
+  <table>
+    <tr><th style="width:34%">Hạng mục</th><th>Lựa chọn đề xuất</th></tr>
+    <tr><td>Nền tảng</td><td><b>.NET 8.0</b> (LTS), <code>net8.0-windows</code>, WinForms, C# 12</td></tr>
+    <tr><td>IDE</td><td>Visual Studio 2022 (17.8+)</td></tr>
+    <tr><td>Đọc Excel</td><td><b>ClosedXML</b> (khuyến nghị) hoặc <b>EPPlus</b> (≥7, giấy phép). Đọc <code>.xlsx</code>; lấy tên sheet, header (dòng 1), toàn bộ dòng dữ liệu.</td></tr>
+    <tr><td>Sinh PDF</td><td>Hai hướng: <b>(A) HTML→PDF</b> bằng <b>PuppeteerSharp</b> (Chromium headless) — bám sát mẫu HTML nhất, giữ 100% layout; hoặc <b>(B)</b> dựng bằng <b>QuestPDF</b> (thuần .NET, không cần Chromium) — nhẹ, nhanh, nhưng phải dựng lại layout bằng API. <i>Khuyến nghị (A) để đạt “giống 100%”.</i></td></tr>
+    <tr><td>Ghi Excel tổng hợp</td><td>ClosedXML/EPPlus</td></tr>
+    <tr><td>Editor WYSIWYG</td><td><b>WebView2</b> (Microsoft.Web.WebView2) hiển thị vùng A4 bằng chính HTML template + <code>contenteditable</code>, để đạt độ giống tuyệt đối với bản mẫu. (Thay thế: RichTextBox — nhưng KHÔNG đạt được bảng/biến/phân trang giống mẫu, không khuyến nghị.)</td></tr>
+    <tr><td>Đa luồng</td><td><code>Task</code> + <code>Parallel.ForEachAsync</code> với <code>MaxDegreeOfParallelism</code> (tương đương ProcessPoolExecutor của bản mẫu)</td></tr>
+    <tr><td>Lưu cấu hình</td><td>JSON (<code>System.Text.Json</code>) trong <code>%AppData%\MLTL\</code></td></tr>
+  </table>
+  <div class="box"><b>Nguyên tắc “giống 100%”:</b> Vùng trang A4 (soạn thảo &amp; xem trước) nên nhúng <b>WebView2</b> và tái sử dụng đúng HTML/CSS template của bản mẫu. Khung ứng dụng, wizard, thanh công cụ, panel biến, các nút… dựng bằng control WinForms thật để có cảm giác desktop chuẩn. Đây là mô hình “vỏ WinForms + lõi trang WebView2”.</p></div>
+
+  <h2 id="2">2. Cửa sổ chính &amp; khung wizard</h2>
+  <h3>2.1 Form chính (MainForm)</h3>
+  <ul>
+    <li>Tiêu đề cửa sổ (title bar): <code>Tạo mục lục hồ sơ — SaoMai</code> kèm icon xanh chữ “T”.</li>
+    <li>Kích thước khởi động gợi ý: <b>1200 × 780</b>, <code>MinimumSize</code> 1040×680, cho phép maximize.</li>
+    <li>Bố cục dọc: <b>(a)</b> thanh bước (step header) trên cùng — cao ~64px; <b>(b)</b> vùng nội dung bước (fill); <b>(c)</b> thanh điều hướng dưới cùng — cao ~52px với nút <span class="kbd">◀ Quay lại</span> và <span class="kbd">Tiếp theo ▶</span> / <span class="kbd">Tạo Mục lục</span>.</li>
+  </ul>
+
+  <h3>2.2 Thanh bước (Step header)</h3>
+  <p>Ba mục nằm ngang, ngăn bởi mũi tên <code>›</code>. Mỗi mục gồm <b>badge tròn số</b> + hai dòng chữ (nhãn nhỏ “BƯỚC n” + tên bước):</p>
+  <table>
+    <tr><th>Trạng thái</th><th>Badge</th><th>Chữ</th></tr>
+    <tr><td>Đã xong (bước trước)</td><td>Tròn nền xanh accent, dấu ✓ trắng</td><td>Màu thường</td></tr>
+    <tr><td>Đang ở</td><td>Tròn nền xanh accent, số trắng</td><td>Đậm, màu <code>#12305c</code></td></tr>
+    <tr><td>Chưa tới</td><td>Tròn viền xám, số xám</td><td>Xám <code>#8a94a6</code></td></tr>
+  </table>
+  <p>Tên các bước: <b>Đầu vào</b> · <b>Thiết kế &amp; Preview</b> · <b>Chạy</b>. Cho phép bấm vào badge để nhảy bước (chỉ khi hợp lệ — xem §6.4). Thêm thuộc tính <code>data-screen-label</code> tương đương để log/telemetry.</p>
+
+  <h3>2.3 Thanh điều hướng dưới</h3>
+  <ul>
+    <li><b>◀ Quay lại</b>: ẩn/disable ở Bước 1.</li>
+    <li><b>Tiếp theo ▶</b> (Bước 1–2) / <b>Tạo Mục lục</b> (Bước 3): nút chính (primary, nền accent, chữ trắng). Ở Bước 1 nút này <b>disable</b> đến khi mapping hợp lệ (§6.4). Ở Bước 3 khi đang chạy đổi nhãn “Đang tạo…”, xong đổi “Tạo lại”.</li>
+    <li>Dòng trạng thái ngắn bên cạnh (statusMap) mô tả bước hiện tại.</li>
+  </ul>
+
+  <h2 id="3">3. Hệ màu, font, kích thước</h2>
+  <h3>3.1 Màu (bản HUCE)</h3>
+  <table>
+    <tr><th>Token</th><th>Mã</th><th>Dùng cho</th></tr>
+    <tr><td>Accent chính</td><td><span class="swatch" style="background:#0043a5"></span><code>#0043a5</code></td><td>Badge bước, biến, nút primary, tab đang chọn, viền nhấn, cột gom nhóm</td></tr>
+    <tr><td>Cyan phụ</td><td><span class="swatch" style="background:#00ccd6"></span><code>#00ccd6</code></td><td>Nút “Đọc dữ liệu”</td></tr>
+    <tr><td>Hover nút</td><td><span class="swatch" style="background:#e6eefb"></span><code>#e6eefb</code></td><td>Nền khi rê chuột lên nút công cụ</td></tr>
+    <tr><td>Nền vùng</td><td><span class="swatch" style="background:#f0f0f0"></span><code>#f0f0f0</code></td><td>Nền fieldset/panel</td></tr>
+    <tr><td>Nền canvas trang</td><td><span class="swatch" style="background:#8f8f8f"></span><code>#8f8f8f</code></td><td>Nền xám sau tờ A4</td></tr>
+    <tr><td>Highlight biến</td><td><span class="swatch" style="background:#ffe98a"></span><code>#ffe98a</code></td><td>Nổi sáng giá trị/cột khi bấm biến ở chế độ xem trước</td></tr>
+    <tr><td>Xanh “khớp”</td><td><span class="swatch" style="background:#107c10"></span><code>#107c10</code></td><td>Trạng thái ghép biến hợp lệ</td></tr>
+    <tr><td>Vàng cảnh báo</td><td><span class="swatch" style="background:#c47a00"></span><code>#c47a00</code></td><td>Biến chưa gán</td></tr>
+    <tr><td>Đỏ xóa</td><td><span class="swatch" style="background:#d13438"></span><code>#d13438</code></td><td>Hover nút xóa</td></tr>
+  </table>
+  <p class="small">Bản gốc (không HUCE): thay accent <code>#0043a5</code> → <code>#0078d7</code>, nút “Đọc dữ liệu” dùng xám <code>#e1e1e1</code> thay cyan. Nút bo góc bản HUCE ~5px (phẳng kiểu Ant Design); bản gốc vuông ~2px.</p>
+
+  <h3>3.2 Typography</h3>
+  <ul>
+    <li><b>Giao diện app</b> (khung, nút, panel): <code>Segoe UI</code> 12px (nhãn phụ 11px).</li>
+    <li><b>Biến / mã</b>: <code>Consolas</code> 11px, màu xanh <code>#0057b7</code>, nền <code>#e8f0fe</code>, viền <code>#b6d0f5</code>, bo 3px.</li>
+    <li><b>Nội dung trang A4</b>: <code>Times New Roman</code>, cỡ mặc định <b>13</b>; bảng 9.5–11px tùy mẫu; tiêu đề mẫu 14–15px đậm, in hoa.</li>
+  </ul>
+
+  <h3>3.3 Kích thước trang A4 (vùng preview, đơn vị px của mẫu)</h3>
+  <table>
+    <tr><th>Hướng</th><th>Rộng × Cao (px)</th><th>Vùng nội dung (trừ lề)</th></tr>
+    <tr><td>Dọc (portrait, mặc định)</td><td>620 × 877</td><td>532 × 797</td></tr>
+    <tr><td>Ngang (landscape)</td><td>877 × 620</td><td>789 × 540</td></tr>
+  </table>
+  <p class="small">Lề tờ: padding 40px trên/dưới, 44px trái/phải (tức trừ 80px chiều cao, 88px chiều rộng). Đây là tỉ lệ hiển thị; khi xuất PDF thật dùng khổ A4 (210×297mm) với lề tương ứng.</p>
+
+  <h2 id="4">4. Mô hình dữ liệu</h2>
+  <h3>4.1 Bản ghi hồ sơ (record)</h3>
+  <p>Mỗi hồ sơ là một đối tượng có các trường “cấp hồ sơ” + một danh sách <code>rows</code> (các văn bản trong hồ sơ). Trường cấp hồ sơ và cấp hàng ánh xạ 1–1 với biến mẫu:</p>
+  <pre><code>public sealed class HoSo {
+    public string SoHoSo { get; set; }          // {so_ho_so}
+    public string DonVi { get; set; }            // {don_vi}
+    public string ChiNhanh { get; set; }         // {chi_nhanh}
+    public string TieuDe { get; set; }           // {tieu_de}
+    public string NguoiLap { get; set; }         // {nguoi_lap}
+    public List&lt;VanBan&gt; Rows { get; set; } = new();
+}
+public sealed class VanBan {
+    public string Stt { get; set; }              // {stt}
+    public string SoKyHieu { get; set; }         // {so_ky_hieu}
+    public string NgayThang { get; set; }        // {ngay_thang}
+    public string TacGia { get; set; }           // {tac_gia}
+    public string TrichYeu { get; set; }         // {trich_yeu}
+    public string ToSo { get; set; }             // {to_so}
+    public string GhiChu { get; set; }           // {ghi_chu}
+    public string LoaiVb { get; set; }           // {loai_vb}   (Mẫu 03)
+    public string SlTrang { get; set; }          // {sl_trang}  (Mẫu 03)
+}</code></pre>
+
+  <h3>4.2 Biến tự động</h3>
+  <ul>
+    <li><code>{trang_so}</code> — số trang hiện tại (tính khi phân trang).</li>
+    <li><code>{tong_so_trang}</code> — tổng số trang của hồ sơ.</li>
+  </ul>
+  <p>Hai biến này KHÔNG lấy từ Excel; đánh dấu <code>auto = true</code>, hiển thị nhóm chip riêng (nền xanh lá <code>#eefaf0</code>, viền <code>#7fc08a</code>).</p>
+
+  <h3>4.3 Header Excel mặc định (19 cột mẫu)</h3>
+  <p class="small">STT · Số, ký hiệu hồ sơ · Số, ký hiệu văn bản · Ngày tháng văn bản · Tác giả · Trích yếu nội dung VB · Tờ số · Ghi chú · Người lập · Đơn vị chủ quản · Chi nhánh · Tiêu đề hồ sơ · Thời hạn bảo quản · Số lượng tờ · Thời gian tài liệu · Tổng số văn bản · Tổng số tờ · Tình trạng vật lý · Ngày lập · (Mẫu 03 thêm: Loại văn bản, Số lượng trang).</p>
+
+  <h2 id="5">5. Danh mục mẫu (4 template)</h2>
+  <p>Dropdown “Mẫu” liệt kê 4 template; mỗi mẫu có <b>số biến đầu vào khác nhau</b> và <b>bố cục khác nhau</b>. Khi đổi mẫu: cập nhật danh sách biến ở panel, cập nhật bảng ghép biến (Bước 1), reset con trỏ hồ sơ về hồ sơ đầu.</p>
+  <table>
+    <tr><th>ID</th><th>Tên hiển thị</th><th>Tiêu đề in ra</th><th>Cột bảng</th></tr>
+    <tr><td><code>mau01</code></td><td>Mẫu 01 - Quảng Trị</td><td>MỤC LỤC VĂN BẢN, TÀI LIỆU</td><td>STT · Số ký hiệu VB · Ngày tháng · Tác giả · Trích yếu · Tờ số · Ghi chú (có header đơn vị + Quốc hiệu + ô ký “Người lập”)</td></tr>
+    <tr><td><code>mau02</code></td><td>Mẫu 02 - Quảng Ninh</td><td>MỤC LỤC VĂN BẢN TRONG HỒ SƠ</td><td>Tt · Số &amp; ký hiệu · Ngày tháng năm · Tác giả · Trích yếu · Trang (từ-đến) · Ghi chú (khối “Hồ sơ số / Mục lục HS số / Phông số” + phụ đề tiêu đề tập lưu)</td></tr>
+    <tr><td><code>mau03</code></td><td>Mẫu 03 - Đống Đa</td><td>MỤC LỤC HỒ SƠ</td><td>STT · Số ký hiệu VB · Ngày ký · <b>Loại VB</b> · Tác giả · Trích yếu · Tờ số · <b>SL trang VB</b> · Ghi chú (9 cột)</td></tr>
+    <tr><td><code>mau04</code></td><td>Mẫu 04- Vĩnh Phúc</td><td>MỤC LỤC VĂN BẢN</td><td>STT · Số ký hiệu VB · Ngày tháng · Trích yếu (trước Tác giả) · Tác giả · Tờ số · Ghi chú; header “Hồ sơ {so_ho_so}: {tiêu đề}”</td></tr>
+  </table>
+  <p>Footer mọi mẫu: góc dưới bên phải “<b>Trang số: {trang_so}/{tong_so_trang}</b>” (mẫu 04 dạng “Trang x / y”), cỡ 10px, màu <code>#444</code>, sát đáy tờ.</p>
+  <div class="box">Mỗi mẫu lưu kèm <b>dữ liệu mẫu riêng</b> (dựng sẵn từ file nguồn tương ứng) để xem trước khi chưa nạp Excel thật. Trong app .NET, đây là seed data đọc từ JSON nhúng.</div>
+
+  <h2 id="6">6. Bước 1 — Đầu vào</h2>
+  <p>Bố cục dạng lưới, canh cột thẳng nhau (mép phải vùng Excel thẳng mép phải cột “Cột trong Excel”, mép trái vùng Mẫu thẳng mép trái cột “Biến trong mẫu”).</p>
+
+  <h3>6.1 Hàng đầu — hai fieldset</h3>
+  <ul>
+    <li><b>Nguồn dữ liệu Excel</b> (bên trái): nhãn trái <span class="kbd">Tệp:</span> + textbox readonly + nút <span class="kbd">Duyệt…</span> (OpenFileDialog, lọc <code>*.xlsx</code>); nhãn <span class="kbd">Sheet:</span> + combobox (nạp sau khi chọn file); nút <span class="cy tag">Đọc dữ liệu</span> + nhãn trạng thái (“Chưa đọc dữ liệu…” → “✓ Đã đọc N dòng · M cột”).</li>
+    <li><b>Mẫu (template)</b> (bên phải): combobox chọn 1 trong 4 mẫu; hiển thị số biến đầu vào của mẫu.</li>
+  </ul>
+
+  <h3>6.2 Banner trạng thái ghép biến</h3>
+  <p>Một dải thông báo đổi màu theo trạng thái: chưa đọc (vàng nhạt) → “✓ Đã ghép đủ N biến” (xanh) → “⚠ K biến chưa gán — sửa xong mới sang được bước sau” (đỏ).</p>
+
+  <h3>6.3 Bảng ghép biến ↔ cột Excel</h3>
+  <p>DataGridView (hoặc lưới tùy biến) 5 cột: <b>#</b> · <b>Cột trong Excel (header)</b> · <code>→</code> · <b>Biến trong mẫu</b> · <b>Tự khớp</b>.</p>
+  <ul>
+    <li><b>Bên phải (Biến trong mẫu)</b> cố định theo mẫu đang chọn — hiển thị dạng chip <code>{ten_bien}</code>.</li>
+    <li><b>Bên trái (Cột Excel)</b> là combobox cho mỗi biến; trước khi “Đọc dữ liệu” thì mờ/disable ghi “— chưa đọc dữ liệu —”. Sau khi đọc: tự khớp theo tên gần đúng, đổi được tay. Danh sách gồm <code>— (chưa gán) —</code> + tất cả header.</li>
+    <li><b>KHÔNG kiểm tra trùng cột</b> (cho phép nhiều biến dùng chung 1 cột, không cảnh báo).</li>
+    <li>Cột “Tự khớp”: “✓ khớp” (xanh) hoặc “⚠ chưa gán” (vàng).</li>
+    <li>Có thanh cuộn dọc luôn hiện (reserve gutter) để canh cột ổn định.</li>
+  </ul>
+
+  <h3>6.4 Cột gom nhóm hồ sơ</h3>
+  <p>Fieldset nhấn (viền trái accent). Combobox chọn cột dùng để tách file (mặc định tự chọn cột “Số, ký hiệu hồ sơ” sau khi đọc). Bên cạnh hiển thị <b>số file PDF sẽ tạo</b> theo lựa chọn hiện tại — ví dụ “→ sẽ tạo 1.000 file PDF (mỗi giá trị của cột này 1 file)”, hoặc chọn “(không gom nhóm)” → “→ gộp tất cả hồ sơ vào 1 file PDF”.</p>
+
+  <h3>6.5 Điều kiện hợp lệ để sang Bước 2</h3>
+  <p><code>step1Valid = dataRead == true &amp;&amp; (số biến chưa gán == 0)</code>. Khi chưa hợp lệ: nút “Tiếp theo ▶” disable.</p>
+
+  <h2 id="7">7. Bước 2 — Thiết kế &amp; Preview</h2>
+  <p>Hai vùng: <b>trái</b> = tờ A4 (soạn thảo/xem trước) trên nền xám; <b>phải</b> = panel danh sách biến. Trên cùng có tab <b>Chỉnh sửa</b> / <b>Xem trước</b>, thanh điều hướng hồ sơ (◀ / “Hồ sơ {so} (i/n)” / ▶) và (ở bản này) nút xuất nằm hợp lý.</p>
+
+  <h3>7.1 Thanh công cụ định dạng (chỉ hiện ở chế độ Chỉnh sửa)</h3>
+  <p>Một hàng, thứ tự từ trái sang phải:</p>
+  <ol>
+    <li><b>Font</b> (combobox: Times New Roman, Arial, Calibri, Tahoma, Segoe UI, Cambria, Verdana) — mặc định Times New Roman.</li>
+    <li><b>Cỡ chữ</b> (combobox: 9,10,11,12,13,14,16,18,20,24) — mặc định 13.</li>
+    <li>| <b>B</b> đậm · <b>I</b> nghiêng · <b>U</b> gạch chân.</li>
+    <li>| <b>A−</b> giảm cỡ · <b>A+</b> tăng cỡ.</li>
+    <li>| Căn <b>trái</b> · <b>giữa</b> · <b>phải</b> (icon).</li>
+    <li>| <b>−</b> zoom out · <b>%</b> · <b>+</b> zoom in (50%–200%, áp cho tờ A4 ở cả 2 chế độ) · <b>⇄ A4: Dọc/Ngang</b> (đổi hướng trang).</li>
+    <li>| <b>➕ Chèn cột</b> · <b>✖ Xóa cột</b> — <b>chỉ hiện khi con trỏ đang focus vào một ô trong bảng</b>; đưa con trỏ ra ngoài bảng thì tự ẩn. · <b>↶ Hoàn tác</b> (undo thao tác cột).</li>
+  </ol>
+  <p class="small">Kích thước nút nhỏ (cao 22–26px, chữ 11–12px), khoảng cách nút hẹp (gap ~3px). Bỏ nhãn “Font:” chữ ở đầu.</p>
+
+  <h3>7.2 Chèn / xóa / co giãn cột trong bảng</h3>
+  <ul>
+    <li>Bấm vào ô bất kỳ → chọn cột đó (highlight viền xanh), hiện nút Chèn/Xóa.</li>
+    <li><b>Chèn cột</b>: thêm cột mới bên phải cột đang chọn (header trống + ô thân trống), chuẩn hóa lại bề rộng.</li>
+    <li><b>Xóa cột</b>: xóa cột đang chọn.</li>
+    <li><b>Kéo mép cột</b> (col-resize khi chuột gần mép phải header, ngưỡng 7px) để co giãn; cột kế bù trừ; lưu bằng % để giữ tỉ lệ.</li>
+    <li>Mọi thao tác cột đẩy vào stack <b>Undo</b> (giới hạn ~40).</li>
+  </ul>
+
+  <h3>7.3 Panel biến (bên phải)</h3>
+  <ul>
+    <li>Biến gom theo nhóm: <b>Tài liệu (hồ sơ)</b> và <b>Hàng (bảng văn bản)</b>, cộng nhóm <b>tự động</b> ({trang_so},{tong_so_trang}).</li>
+    <li><b>Chế độ Chỉnh sửa</b>: bấm chip → chèn biến tại vị trí con trỏ (một <code>&lt;span data-var&gt;</code> không cho sửa nội bộ; xóa thì xóa cả biến, không xóa từng ký tự).</li>
+    <li><b>Chế độ Xem trước</b>: chip KHÔNG bị mờ; bấm chip → <b>nổi sáng vàng</b> giá trị biến đó trong trang (biến hàng → sáng cả cột kể cả tiêu đề; biến đơn → sáng đúng ô). Bấm giá trị trong bảng cũng nổi sáng cả cột. Bấm lại để tắt.</li>
+    <li>Nút <b>Ghép biến với dữ liệu</b> (mở popup bảng mapping giống Bước 1).</li>
+    <li>Khi mẫu đã chỉnh sửa (dirty): hiện nút <b>Lưu</b> và <b>Reset về mặc định</b>.</li>
+  </ul>
+
+  <h2 id="8">8. Template engine &amp; phân trang</h2>
+  <p>Đây là phần lõi. Mỗi mẫu là một khối HTML gồm: <b>phần đầu</b> (header) → <b>một bảng</b> (thead + một hàng mẫu <code>data-loop</code>) → <b>phần chân</b> (footer) → <b>node số trang</b>. Thuật toán resolve + phân trang:</p>
+  <ol>
+    <li>Thay mọi <code>&lt;span data-var="k"&gt;</code> bằng giá trị thật <code>valFor(record, k, pageNo, total)</code>. Với biến suy diễn: <code>loai_vb</code> đoán từ tiền tố trích yếu (Quyết định/Tờ trình/Thông báo/Công văn/Giấy chứng nhận/Biên bản/Đơn/Phiếu/Hợp đồng/Trích lục → mặc định “Văn bản”); <code>sl_trang</code> = <code>max(1,(toSo%4)+1)</code> (chỉ là quy tắc mẫu — trong app thật lấy từ cột Excel nếu có).</li>
+    <li>Nhân bản hàng <code>data-loop</code> cho từng văn bản trong <code>rows</code>.</li>
+    <li><b>Đo chiều cao thật</b> ở bề rộng nội dung theo hướng trang (portrait/landscape) để chia các hàng vào từng trang sao cho không tràn (đo header, từng hàng, footer, node số trang).</li>
+    <li>Sinh nhiều “tờ” (page card): tờ đầu có header; các tờ có bảng (thead lặp lại mỗi trang) + phần hàng thuộc trang; tờ cuối có footer (nếu đủ chỗ, nếu không thì footer sang trang riêng); mỗi trang có node số trang cập nhật <code>{trang_so}/{tong_so_trang}</code>.</li>
+    <li>Khung nội dung mỗi tờ là flex-column, <code>min-height</code> = chiều cao vùng nội dung, để node số trang (<code>margin-top:auto</code>) rơi sát đáy góc phải.</li>
+  </ol>
+  <div class="box"><b>Cách hiện thực trong .NET để “giống 100%”:</b> Giữ nguyên chuỗi HTML template + thuật toán trên, chạy trong <b>WebView2</b> (đo chiều cao bằng JS <code>getBoundingClientRect</code>). Khi xuất PDF, nạp cùng HTML đã resolve vào <b>PuppeteerSharp</b> và <code>page.PdfAsync</code> khổ A4. Như vậy layout preview và PDF trùng khớp tuyệt đối. (QuestPDF là phương án thuần .NET nhưng phải lập trình lại toàn bộ bố cục &amp; luật phân trang.)</div>
+
+  <h2 id="9">9. Bước 3 — Chạy &amp; xuất PDF</h2>
+  <h3>9.1 Khung “Thư mục &amp; tên file xuất”</h3>
+  <ul>
+    <li><b>Thư mục</b>: textbox readonly + nút <span class="kbd">Duyệt…</span> (FolderBrowserDialog). <i>Thư mục xuất chỉ ở Bước 3.</i></li>
+    <li><b>Tên PDF</b>: combobox mẫu sẵn + textbox tự do. Hỗ trợ mọi biến của mẫu, cộng biến đặc biệt: <code>{stt_file}</code> (số thứ tự tăng dần, 3 chữ số), <code>{ngay_gio}</code> (ngày giờ <code>YYYYMMDD_HHmm</code>). Preset gợi ý: <code>MLHS_{so_ho_so}.pdf</code>, <code>{stt_file}_{so_ho_so}.pdf</code>, <code>MLHS_{ngay_gio}_{so_ho_so}.pdf</code>, <code>{so_ho_so}_{nguoi_lap}.pdf</code>, <code>PDF_{stt_file}.pdf</code>. Hiển thị <b>ví dụ tên</b> tính trực tiếp; tự thay ký tự cấm <code>\ / : * ? " &lt; &gt; |</code> bằng <code>_</code>; tự thêm <code>.pdf</code>.</li>
+  </ul>
+
+  <h3>9.2 Khung “Tùy chọn chạy”</h3>
+  <ul>
+    <li>☑ <b>Chạy đa luồng</b> (song song — nhanh nhất). Bỏ chọn = đơn luồng. <b>Ẩn</b> ô nhập số luồng (tự quản lý).</li>
+    <li>☑ <b>Ghi đè file đã tồn tại</b>.</li>
+    <li>☑ <b>Xuất kèm file Excel tổng hợp</b>.</li>
+    <li>☑ <b>Bỏ qua hồ sơ lỗi</b> (không dừng cả mẻ).</li>
+    <li>Dòng <b>⏱ Ước tính</b> thời gian theo chế độ (đa luồng ~48 giây / đơn luồng ~3 phút 30 cho ~1.000 hồ sơ — trong app thật tính động).</li>
+  </ul>
+
+  <h3>9.3 Nút chạy &amp; tiến trình</h3>
+  <ul>
+    <li>Chỉ <b>một</b> nút hành động: <b>Tạo Mục lục</b> (nằm ở thanh dưới; đang chạy “Đang tạo…”, xong “Tạo lại”). Không còn nút “Tạo PDF hàng loạt”/“Bắt đầu sinh HTML” riêng.</li>
+    <li>Trên thanh tiến trình: bên trái chữ thường “<b>Tiến trình chạy (x/y)</b>” — x = số hồ sơ đã tạo, y = tổng; <b>chỉ hiện khi đang chạy hoặc đã chạy xong</b> (xong vẫn hiện y/y); bên phải “Hoàn tất”.</li>
+    <li>Thanh <b>progress bar</b> (nền <code>#e6e6e6</code>, fill accent).</li>
+    <li><b>Console log</b> nền tối, cuộn theo: mỗi hồ sơ “✓ Hồ sơ {so} → {tên file}.pdf”; lỗi “✗ … LỖI: … → bỏ qua/DỪNG”; kết thúc “✔ Hoàn tất: N PDF • t giây • K lỗi”.</li>
+    <li>Sau khi xong: nút <b>📁 Mở thư mục kết quả</b>; nếu có lỗi: “⚠ K hồ sơ lỗi” + nút <b>↻ Thử lại hồ sơ lỗi</b>.</li>
+  </ul>
+
+  <h2 id="10">10. Đa luồng &amp; xử lý lỗi</h2>
+  <pre><code>var opts = new ParallelOptions {
+    MaxDegreeOfParallelism = multiThread ? Environment.ProcessorCount : 1
+};
+int done = 0, errs = 0;
+await Parallel.ForEachAsync(hoSoList, opts, async (hs, ct) => {
+    try {
+        var html = engine.Resolve(template, hs);      // §8
+        var file = NameResolver.Build(pattern, hs, Interlocked.Increment(ref idx));
+        if (!overwrite &amp;&amp; File.Exists(file)) { /* bỏ qua */ }
+        else await pdf.RenderAsync(html, Path.Combine(outDir, file));
+        Report(Interlocked.Increment(ref done), file, null);
+    } catch (Exception ex) {
+        Interlocked.Increment(ref errs);
+        if (!skipErrors) throw;                        // dừng cả mẻ
+        Report(done, hs.SoHoSo, ex);                   // log &amp; đi tiếp
+    }
+});</code></pre>
+  <ul>
+    <li>Cập nhật UI (progress, counter, log) qua <code>IProgress&lt;T&gt;</code> / <code>Control.Invoke</code> để về UI thread.</li>
+    <li>Nếu tắt “Bỏ qua lỗi”: gặp lỗi đầu tiên → hủy (<code>CancellationTokenSource</code>), log “■ Đã dừng…”.</li>
+    <li>“Thử lại hồ sơ lỗi”: chạy lại danh sách lỗi đã gom.</li>
+    <li>Nếu dùng PuppeteerSharp: dùng <b>pool</b> nhiều <code>Page</code> trên một <code>Browser</code>, giới hạn song song để tránh quá tải Chromium.</li>
+  </ul>
+
+  <h2 id="11">11. Lưu trạng thái / cấu hình</h2>
+  <ul>
+    <li><b>Nhớ lần dùng gần nhất</b>: mẫu đang chọn, mapping (colMap), cột gom nhóm, mẫu tên file, tùy chọn chạy — lưu JSON, nạp lại khi mở app. Lọc bỏ mapping cũ không hợp lệ khi nạp.</li>
+    <li>Mỗi file/ứng dụng dùng <b>khóa lưu riêng</b> (namespace theo đường dẫn) để không lẫn giữa các biến thể.</li>
+    <li>(Tùy chọn — bản mẫu từng có rồi ẩn) “Hồ sơ cấu hình”: lưu/nạp/xóa nhiều bộ cấu hình đặt tên.</li>
+  </ul>
+
+  <h2 id="12">12. Cấu trúc dự án đề xuất</h2>
+  <pre><code>MucLucTaiLieu.sln
+├─ MucLucTaiLieu.App            (WinForms, net8.0-windows)
+│  ├─ Forms/
+│  │  ├─ MainForm.cs            // wizard shell + step header + nav
+│  │  ├─ Step1InputControl.cs   // UserControl — Đầu vào
+│  │  ├─ Step2DesignControl.cs  // UserControl — Thiết kế (WebView2)
+│  │  ├─ Step3RunControl.cs     // UserControl — Chạy
+│  │  └─ MappingPopup.cs
+│  ├─ Web/                      // HTML/CSS/JS template + engine cho WebView2
+│  │  ├─ templates.js  editor.js  styles.css
+│  ├─ Assets/  (icon, seed JSON)
+│  └─ Program.cs
+├─ MucLucTaiLieu.Core           (class library, net8.0)
+│  ├─ Models/ (HoSo, VanBan, TemplateDef, AppConfig)
+│  ├─ Excel/  (IExcelReader → ClosedXmlReader)
+│  ├─ Templating/ (TemplateEngine, Paginator, NameResolver)
+│  ├─ Pdf/ (IPdfRenderer → PuppeteerPdfRenderer / QuestPdfRenderer)
+│  └─ Config/ (ConfigStore — JSON %AppData%)
+└─ MucLucTaiLieu.Tests
+</code></pre>
+
+  <h2 id="13">13. Tiêu chí nghiệm thu (checklist “giống 100%”)</h2>
+  <ul>
+    <li>☐ Wizard 3 bước, step header đúng trạng thái ✓/đang/chưa; nút “Tiếp theo” khóa đến khi mapping hợp lệ.</li>
+    <li>☐ Bước 1: chọn Excel + sheet, “Đọc dữ liệu”, bảng ghép biến (cột Excel bên trái, biến bên phải), tự khớp, không cảnh báo trùng; cột gom nhóm hiện số file sẽ tạo.</li>
+    <li>☐ 4 mẫu đúng tiêu đề/số cột/bố cục; đổi mẫu cập nhật biến + dữ liệu mẫu; footer số trang sát đáy phải.</li>
+    <li>☐ Bước 2: thanh công cụ đúng thứ tự (Font, size, B/I/U, A−/A+, canh lề, zoom, hướng, chèn/xóa cột theo focus, undo); chèn biến tại con trỏ; xóa cả biến; kéo giãn cột.</li>
+    <li>☐ Xem trước: chip không mờ, bấm chip/giá trị nổi sáng cả cột; phân trang đúng khi bảng dài.</li>
+    <li>☐ Bước 3: thư mục + mẫu tên (có {stt_file},{ngay_gio}); tùy chọn đa luồng (ẩn số luồng)/ghi đè/Excel/bỏ qua lỗi; ước tính thời gian; một nút “Tạo Mục lục”; tiến trình (x/y) + log + mở thư mục + thử lại lỗi.</li>
+    <li>☐ Hệ màu accent <code>#0043a5</code>, nút “Đọc dữ liệu” cyan, font/cỡ đúng; nhớ trạng thái lần trước.</li>
+    <li>☐ Xuất PDF khổ A4 trùng khớp với xem trước.</li>
+  </ul>
+
+  <hr>
+  <p class="small">Ghi chú: các con số thời gian, số file (1.000), và quy tắc suy diễn <code>loai_vb</code>/<code>sl_trang</code> trong bản mẫu chỉ mang tính minh hoạ (mock). Trong ứng dụng thật, lấy hoàn toàn từ dữ liệu Excel do người dùng nạp và tính động theo số hồ sơ thực tế.</p>
+
+</div>
+</body>
+</html>

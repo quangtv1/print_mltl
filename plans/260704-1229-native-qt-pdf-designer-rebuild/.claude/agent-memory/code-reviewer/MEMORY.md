@@ -1,0 +1,1 @@
+- [Qt renderer resolution pitfall](project_qt_renderer_resolution.md) — physical text size & pagination differ between 110dpi preview and 300dpi PDF; point sizes not resolution-independent

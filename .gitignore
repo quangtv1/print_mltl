@@ -24,6 +24,15 @@ MLHS_*.docx
 Muc_Luc_Ho_So.xlsx
 *.pdf
 
+# === Local sample data (large, not for repo) ===
+Biên mục*.xlsx
+.thumbnail
+*.thumbnail
+
+# === .NET build output ===
+bin/
+obj/
+
 # === OS / editor ===
 .DS_Store
 Thumbs.db
