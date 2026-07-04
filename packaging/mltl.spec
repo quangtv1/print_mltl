@@ -16,14 +16,12 @@ a = Analysis(
     pathex=["."],
     binaries=[],
     datas=[],  # styles/ copy cạnh exe ở workflow, không nhồi vào bundle
-    hiddenimports=[
-        "google.oauth2.service_account",
-    ],
+    hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    # Loại tài nguyên nhạy cảm / không cần: KHÔNG bao giờ gói khóa Google.
-    excludes=["tkinter", "get_link_pdf_"],
+    # Loại module đã gỡ khỏi luồng chính để bundle gọn (không còn docx/Google/PyMuPDF).
+    excludes=["tkinter", "docx", "docxtpl", "gspread", "google", "fitz", "PyMuPDF"],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,

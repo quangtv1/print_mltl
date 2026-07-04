@@ -2,7 +2,7 @@
   "name": "Văn phòng đăng ký đất đai - Đông Hà",
   "template_file": "template.docx",
   "grouping_column": "Tiêu đề hồ sơ",
-  "output_filename_pattern": "MLHS_{ho_so_so}.docx",
+  "output_filename_pattern": "MLHS_{ho_so_so}.pdf",
   "settings": {
     "co_quan_dong1": "VĂN PHÒNG ĐĂNG KÝ ĐẤT ĐAI TỈNH Q.TRỊ",
     "co_quan_dong2": "CHI NHÁNH THÀNH PHỐ ĐÔNG HÀ",
@@ -12,8 +12,9 @@
     "anh_chu_ky_path": "chuky_tung.png",
     "font_name": "Times New Roman",
     "footer_page_number": true,
-    "footer_format": "Trang {PAGE}/{NUMPAGES}"
+    "footer_format": "Trang {trang_so}/{tong_so_trang}"
   },
+  "template_html": "<table border=\"0\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">\n<tr>\n<td width=\"50%\" align=\"center\">{co_quan_dong1}<br/><b><u>{co_quan_dong2}</u></b></td>\n<td width=\"50%\" align=\"center\">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM<br/><b><u>Độc lập - Tự do - Hạnh phúc</u></b></td>\n</tr>\n</table>\n<p align=\"center\"><span style=\"font-size:15pt\"><b>{tieu_de}</b></span></p>\n<p align=\"center\"><i>Số, ký hiệu hồ sơ (đơn vị bảo quản): {ho_so_so}</i></p>\n<table border=\"1\" width=\"100%\" cellspacing=\"0\" cellpadding=\"3\">\n<tr><td width=\"7%\" align=\"center\"><b>STT</b></td><td width=\"12%\" align=\"center\"><b>Số, ký hiệu văn bản</b></td><td width=\"13%\" align=\"center\"><b>Ngày tháng văn bản</b></td><td width=\"22%\" align=\"center\"><b>Tác giả</b></td><td width=\"28%\" align=\"center\"><b>Trích yếu nội dung VB</b></td><td width=\"8%\" align=\"center\"><b>Tờ số</b></td><td width=\"8%\" align=\"center\"><b>Ghi chú</b></td></tr>\n<tr><td width=\"7%\" align=\"center\">{stt}</td><td width=\"12%\" align=\"center\">{so_ky_hieu_vb}</td><td width=\"13%\" align=\"center\">{ngay_thang_vb}</td><td width=\"22%\" align=\"center\">{tac_gia}</td><td width=\"28%\" align=\"left\">{trich_yeu}</td><td width=\"8%\" align=\"center\">{to_so}</td><td width=\"8%\" align=\"center\">{ghi_chu}</td></tr>\n</table>\n<p></p>\n<table border=\"0\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">\n<tr>\n<td width=\"55%\"></td>\n<td width=\"45%\" align=\"center\"><b>{chuc_danh_ky}</b><br/><br/><br/><br/><b>{nguoi_ky}</b></td>\n</tr>\n</table>",
   "document_fields": {
     "ho_so_so": "Hồ sơ số"
   },

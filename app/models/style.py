@@ -21,13 +21,15 @@ DEFAULT_SETTINGS: Dict[str, Any] = {
     "anh_chu_ky_path": "",
     "font_name": "Times New Roman",
     "footer_page_number": True,
-    "footer_format": "Trang {PAGE}/{NUMPAGES}",
+    # Footer render lúc in từng trang; `{trang_so}`/`{tong_so_trang}` là biến
+    # footer-only (không chèn được vào thân template — xem app/core/variables.py).
+    "footer_format": "Trang {trang_so}/{tong_so_trang}",
 }
 
 
 @dataclass
 class ColumnDef:
-    """Một cột bảng dữ liệu: nhãn hiển thị, biến docxtpl, độ rộng (tỉ lệ)."""
+    """Một cột bảng dữ liệu: nhãn hiển thị, biến template, độ rộng (tỉ lệ)."""
 
     header: str
     var: str
@@ -52,11 +54,14 @@ class StyleConfig:
     name: str = ""
     template_file: str = "template.docx"
     grouping_column: str = ""
-    output_filename_pattern: str = "MLHS_{ho_so_so}.docx"
+    output_filename_pattern: str = "MLHS_{ho_so_so}.pdf"
     settings: Dict[str, Any] = field(default_factory=lambda: dict(DEFAULT_SETTINGS))
-    # biến docxtpl cấp tài liệu -> tên cột trong sheet
+    # Nội dung soạn thảo WYSIWYG (QTextEdit → HTML): header + bảng-mẫu (đúng 1
+    # dòng-mẫu chứa token cột) + khối chữ ký. Chứa `{token}`. Rỗng với style cũ.
+    template_html: str = ""
+    # biến template cấp tài liệu -> tên cột trong file Excel
     document_fields: Dict[str, str] = field(default_factory=dict)
-    # biến docxtpl trong vòng lặp hàng -> tên cột trong sheet
+    # biến template trong dòng-mẫu bảng -> tên cột trong file Excel
     row_mapping: Dict[str, str] = field(default_factory=dict)
     columns: List[ColumnDef] = field(default_factory=list)
 
@@ -69,9 +74,10 @@ class StyleConfig:
             template_file=str(d.get("template_file", "template.docx")),
             grouping_column=str(d.get("grouping_column", "")),
             output_filename_pattern=str(
-                d.get("output_filename_pattern", "MLHS_{ho_so_so}.docx")
+                d.get("output_filename_pattern", "MLHS_{ho_so_so}.pdf")
             ),
             settings=settings,
+            template_html=str(d.get("template_html", "") or ""),
             document_fields=dict(d.get("document_fields") or {}),
             row_mapping=dict(d.get("row_mapping") or {}),
             columns=[ColumnDef.from_dict(c) for c in (d.get("columns") or [])],
@@ -84,6 +90,7 @@ class StyleConfig:
             "grouping_column": self.grouping_column,
             "output_filename_pattern": self.output_filename_pattern,
             "settings": self.settings,
+            "template_html": self.template_html,
             "document_fields": self.document_fields,
             "row_mapping": self.row_mapping,
             "columns": [c.to_dict() for c in self.columns],

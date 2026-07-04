@@ -1,10 +1,9 @@
 """Entry point app desktop "Tạo Mục Lục Hồ Sơ".
 
-`multiprocessing.freeze_support()` PHẢI gọi đầu tiên trong `__main__` — cần cho
-generate song song (ProcessPoolExecutor, P6) khi đóng gói exe Windows (spawn, P7).
+Engine Native Qt (QTextDocument → PDF), render tuần tự trong QThread — không còn
+ProcessPool nên không cần `multiprocessing.freeze_support()`.
 """
 
-import multiprocessing
 import sys
 
 
@@ -12,9 +11,11 @@ def main() -> int:
     from PyQt5.QtWidgets import QApplication
 
     from app.ui.main_window import MainWindow
+    from app.ui.theme import apply_theme
 
     app = QApplication(sys.argv)
     app.setApplicationName("Tạo Mục Lục Hồ Sơ")
+    apply_theme(app)
 
     window = MainWindow()
     window.show()
@@ -22,5 +23,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    multiprocessing.freeze_support()
     sys.exit(main())

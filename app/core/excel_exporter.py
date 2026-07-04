@@ -12,6 +12,28 @@ from app.models.style import StyleConfig
 
 _FONT = "Times New Roman"
 
+# Ký tự mở đầu ô có thể bị Excel diễn giải thành công thức (CSV/formula injection).
+_FORMULA_PREFIXES = ("=", "+", "-", "@")
+
+
+def _is_number(s: str) -> bool:
+    """True nếu chuỗi là số hợp lệ (để không bọc nhầm số âm '-5')."""
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+
+def _sanitize_cell(value: Any) -> Any:
+    """Chống formula injection: ô chuỗi bắt đầu bằng `= + - @` → thêm `'` đứng trước.
+
+    Bỏ qua nếu chuỗi thực chất là một con số (vd `-5`) để không làm hỏng giá trị số.
+    """
+    if isinstance(value, str) and value[:1] in _FORMULA_PREFIXES and not _is_number(value):
+        return "'" + value
+    return value
+
 
 def export_excel(all_groups: List[Dict[str, Any]], out_path, style: StyleConfig) -> bool:
     """Ghi tất cả nhóm ra 1 file Excel.
@@ -67,7 +89,8 @@ def export_excel(all_groups: List[Dict[str, Any]], out_path, style: StyleConfig)
 
         for rec in records:
             for col_num, col_name in enumerate(columns_sheet, start=1):
-                c = ws.cell(row=row_num, column=col_num, value=rec.get(col_name, ""))
+                val = _sanitize_cell(rec.get(col_name, ""))
+                c = ws.cell(row=row_num, column=col_num, value=val)
                 c.font = Font(name=_FONT, size=10)
                 c.number_format = "@"
                 # Cột "trích yếu" canh trái (nếu có), còn lại canh giữa.
