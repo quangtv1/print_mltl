@@ -18,24 +18,24 @@
 
         <!-- Một mục trong thanh bước -->
         <DataTemplate x:Key="StepHeaderItem" DataType="{x:Type vm:StepViewModel}">
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,6,0">
-                <Border x:Name="dot" Width="34" Height="34" CornerRadius="17" Background="#FFE1E6EE" Margin="0,0,10,0">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,5,0">
+                <Border x:Name="dot" Width="27" Height="27" CornerRadius="13.5" Background="#FFE1E6EE" Margin="0,0,8,0">
                     <Grid>
                         <TextBlock x:Name="num" Text="{Binding Number}" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                   Foreground="{StaticResource Muted}" FontWeight="SemiBold" FontSize="15"/>
+                                   Foreground="{StaticResource Muted}" FontWeight="SemiBold" FontSize="12"/>
                         <TextBlock x:Name="chk" Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" Foreground="White"
-                                   FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/>
+                                   FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/>
                     </Grid>
                 </Border>
-                <StackPanel VerticalAlignment="Center" Margin="0,0,14,0">
-                    <TextBlock x:Name="kicker" FontSize="12" Foreground="{StaticResource Muted}">
+                <StackPanel VerticalAlignment="Center" Margin="0,0,11,0">
+                    <TextBlock x:Name="kicker" FontSize="10" Foreground="{StaticResource Muted}">
                         <Run Text="BƯỚC "/><Run Text="{Binding Number, Mode=OneWay}"/>
                     </TextBlock>
-                    <TextBlock x:Name="title" Text="{Binding Title}" FontSize="16" FontWeight="SemiBold"
+                    <TextBlock x:Name="title" Text="{Binding Title}" FontSize="13" FontWeight="SemiBold"
                                Foreground="{StaticResource Muted}"/>
                 </StackPanel>
-                <TextBlock x:Name="chev" Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="13"
-                           Foreground="{StaticResource Line}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <TextBlock x:Name="chev" Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="10"
+                           Foreground="{StaticResource Line}" VerticalAlignment="Center" Margin="0,0,8,0"/>
             </StackPanel>
             <DataTemplate.Triggers>
                 <DataTrigger Binding="{Binding IsActive}" Value="True">
@@ -65,7 +65,7 @@
         </Grid.RowDefinitions>
 
         <!-- Thanh bước (dải trắng trên cùng) -->
-        <Border Grid.Row="0" Background="White" BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="18,12">
+        <Border Grid.Row="0" Background="White" BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="15,10">
             <ItemsControl ItemsSource="{Binding Steps}" ItemTemplate="{StaticResource StepHeaderItem}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate>
