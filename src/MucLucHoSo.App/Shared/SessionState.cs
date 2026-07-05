@@ -31,7 +31,7 @@ public sealed partial class SessionState : ObservableObject
 
     // --- Xuất ---
     [ObservableProperty] private string _outputDirectory = "";
-    [ObservableProperty] private string _fileNamePattern = "MLHS_{so_ho_so}";
+    [ObservableProperty] private string _fileNamePrefix = "MLHS_";
     [ObservableProperty] private bool _exportPdf;
     [ObservableProperty] private bool _overwrite = true;
     [ObservableProperty] private bool _multiThread = true;
@@ -55,7 +55,7 @@ public sealed partial class SessionState : ObservableObject
     public GenerateOptions BuildOptions() => new()
     {
         OutputDirectory = OutputDirectory,
-        FileNamePattern = FileNamePattern,
+        FileNamePrefix = FileNamePrefix,
         ExportPdf = ExportPdf,
         Overwrite = Overwrite,
         MultiThread = MultiThread,

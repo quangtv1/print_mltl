@@ -3,7 +3,8 @@ namespace MucLucHoSo.Core.Models;
 public sealed class GenerateOptions
 {
     public required string OutputDirectory { get; init; }
-    public string FileNamePattern { get; init; } = "MLHS_{so_ho_so}";
+    /// <summary>Tiền tố (text tự nhập) đứng trước giá trị cột gom nhóm khi đặt tên file.</summary>
+    public string FileNamePrefix { get; init; } = "MLHS_";
     public bool ExportPdf { get; init; } = false;
     public bool Overwrite { get; init; } = true;
 

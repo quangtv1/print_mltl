@@ -40,8 +40,11 @@ public partial class Step4GenerateViewModel : StepViewModel
     {
         get
         {
-            var b = (S.FileNamePattern ?? "").Replace("{so_ho_so}", "42359").Replace("{stt_file}", "1");
-            if (string.IsNullOrWhiteSpace(b)) b = "MLHS_42359";
+            // Ví dụ = tiền tố + giá trị cột gom nhóm thật (dòng đầu có giá trị), rơi về mẫu nếu chưa có dữ liệu.
+            var sample = S.PreviewRows.Select(r => r.Get(S.GroupColumn ?? ""))
+                                      .FirstOrDefault(v => !string.IsNullOrWhiteSpace(v)) ?? "42359";
+            var b = (S.FileNamePrefix ?? "") + sample;
+            if (string.IsNullOrWhiteSpace(b)) b = "MLHS_1";
             return "→ " + b + ".docx" + (S.ExportPdf ? " + " + b + ".pdf" : "");
         }
     }
@@ -54,7 +57,7 @@ public partial class Step4GenerateViewModel : StepViewModel
     {
         S.PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName is nameof(SessionState.FileNamePattern) or nameof(SessionState.ExportPdf))
+            if (e.PropertyName is nameof(SessionState.FileNamePrefix) or nameof(SessionState.ExportPdf) or nameof(SessionState.GroupColumn))
                 OnPropertyChanged(nameof(FileNamePreview));
         };
     }
@@ -125,7 +128,7 @@ public partial class Step4GenerateViewModel : StepViewModel
             {
                 if (o.Status == HoSoStatus.Ok)
                 {
-                    var b = (S.FileNamePattern ?? "").Replace("{so_ho_so}", o.GroupKey);
+                    var b = (S.FileNamePrefix ?? "") + o.GroupKey;
                     Log($"✓ Hồ sơ {o.GroupKey} → {b}.docx" + (S.ExportPdf ? " + .pdf" : ""), COk);
                 }
                 else Log($"✗ Hồ sơ {o.GroupKey}" + (o.Message is null ? "" : " — " + o.Message), CErr);

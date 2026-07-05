@@ -26,6 +26,8 @@ public sealed class GeneratePipeline
     private readonly GenerateSummary _summary = new();
     private readonly object _summaryLock = new();
     private readonly object _ckLock = new();
+    // Chống trùng tên trong một mẻ: giữ các tên (không phân biệt hoa/thường) đã dùng.
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, byte> _usedNames = new();
     private JobState _state = new();
     private string _jobStatePath = "";
     private int _done;
@@ -42,6 +44,7 @@ public sealed class GeneratePipeline
         Func<IRowReader> readerFactory, string jobStatePath, CancellationToken ct = default)
     {
         Directory.CreateDirectory(_opt.OutputDirectory);
+        _usedNames.Clear();
         _jobStatePath = jobStatePath;
         _state = _opt.Resume ? JobState.LoadOrNew(jobStatePath) : new JobState();
         int startAfter = _opt.Resume ? _state.LastCompletedGroupIndex : -1;
@@ -72,7 +75,7 @@ public sealed class GeneratePipeline
                 {
                     try
                     {
-                        var baseName = FileNameBuilder.Build(_opt.FileNamePattern, captured, fi);
+                        var baseName = ReserveUniqueName(FileNameBuilder.Build(_opt.FileNamePrefix, captured, fi));
                         var docxPath = Path.Combine(_opt.OutputDirectory, baseName + ".docx");
                         if (_opt.Overwrite || !File.Exists(docxPath))
                         {
@@ -150,6 +153,16 @@ public sealed class GeneratePipeline
                 }
             }
         }, ct);
+    }
+
+    /// <summary>Đảm bảo tên file duy nhất trong mẻ: nếu trùng thì thêm _2, _3… (không phân biệt hoa/thường).</summary>
+    private string ReserveUniqueName(string baseName)
+    {
+        var candidate = baseName;
+        int n = 1;
+        while (!_usedNames.TryAdd(candidate.ToLowerInvariant(), 0))
+            candidate = $"{baseName}_{++n}";
+        return candidate;
     }
 
     private void Complete(HoSoOutcome ok)
