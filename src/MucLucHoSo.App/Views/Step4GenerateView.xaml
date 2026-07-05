@@ -45,11 +45,10 @@
                     <TextBlock Grid.Row="2" Grid.Column="0" Text="Tên file:" VerticalAlignment="Top" Margin="0,6,0,10"/>
                     <StackPanel Grid.Row="2" Grid.Column="1" Margin="0,0,0,10">
                         <StackPanel Orientation="Horizontal">
-                            <TextBox Text="{Binding S.FileNamePrefix, UpdateSourceTrigger=PropertyChanged}" Width="160" VerticalContentAlignment="Center"/>
-                            <TextBlock Text="+ giá trị cột gom nhóm" Foreground="{StaticResource Muted}" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                            <TextBox Text="{Binding S.FileNamePrefix, UpdateSourceTrigger=PropertyChanged}" Width="120" VerticalContentAlignment="Center"/>
+                            <TextBlock Text="{Binding FileNamePreview}" FontWeight="SemiBold" Foreground="{StaticResource Ink}" VerticalAlignment="Center" Margin="12,0,0,0"/>
                         </StackPanel>
-                        <TextBlock Text="{Binding FileNamePreview}" FontWeight="SemiBold" Foreground="{StaticResource Ink}" Margin="0,6,0,0"/>
-                        <TextBlock Text="Tự thêm số thứ tự (_2, _3…) khi trùng tên hoặc cột gom nhóm rỗng." Foreground="{StaticResource Muted}" FontSize="12.5" Margin="0,3,0,0" TextWrapping="Wrap"/>
+                        <TextBlock Text="Tự thêm số thứ tự (_2, _3…) khi trùng tên hoặc cột gom nhóm rỗng." Foreground="{StaticResource Muted}" FontSize="12.5" Margin="0,5,0,0" TextWrapping="Wrap"/>
                     </StackPanel>
 
                     <TextBlock Grid.Row="3" Grid.Column="0" Text="Định dạng:" VerticalAlignment="Center"/>

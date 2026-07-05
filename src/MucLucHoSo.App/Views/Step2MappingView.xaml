@@ -16,8 +16,8 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <!-- Block: Cột gom nhóm — làm nổi bật vì đây là lựa chọn quyết định kết quả -->
-            <Border Grid.Row="0" Background="#FFE7F0FC" BorderBrush="{StaticResource Accent}" BorderThickness="1.5" CornerRadius="10" Padding="16,14">
+            <!-- Block: Cột gom nhóm — quan trọng nhưng dịu lại (chỉ nền, không viền đậm) -->
+            <Border Grid.Row="0" Background="#FFEFF3FA" CornerRadius="10" Padding="16,14">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                         <TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{StaticResource Accent}" Margin="0,0,8,0" VerticalAlignment="Center"/>
@@ -47,7 +47,7 @@
                                 <Setter Property="Background" Value="{StaticResource Panel}"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding ValidationIsOk}" Value="True">
-                                        <Setter Property="Background" Value="#FFEFF9F2"/>
+                                        <Setter Property="Background" Value="#FFEFF3FA"/>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
@@ -87,7 +87,7 @@
                     <Border DockPanel.Dock="Top" Background="{StaticResource Panel}" BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="0,10">
                         <Grid Margin="0,0,16,0">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="4"/>
+                                <ColumnDefinition Width="2"/>
                                 <ColumnDefinition Width="220"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="132"/>
@@ -105,7 +105,7 @@
                                     <Border BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1">
                                         <Grid MinHeight="40">
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="4"/>
+                                                <ColumnDefinition Width="2"/>
                                                 <ColumnDefinition Width="220"/>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="132"/>

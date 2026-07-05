@@ -128,7 +128,7 @@ public partial class Step3PreviewViewModel : StepViewModel
         {
             HoSoJob? job = ShowFilled && _jobs.Count > 0 ? _jobs[Math.Clamp(_index, 0, _jobs.Count - 1)] : null;
             NavText = _jobs.Count > 0 && job != null
-                ? $"Hồ sơ {job.GroupKey} ({Math.Min(_index + 1, _jobs.Count)}/{_jobs.Count})"
+                ? $"{job.GroupKey} ({Math.Min(_index + 1, _jobs.Count)}/{_jobs.Count})"
                 : "(không có dữ liệu mẫu)";
             var pages = await GetPagesAsync(ShowFilled, _index, SelectedHighlight);
             PreviewPages.Clear();

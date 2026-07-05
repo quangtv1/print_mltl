@@ -18,7 +18,7 @@
                 <!-- Toolbar phía trên khung Preview -->
                 <Grid Grid.Column="0">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-                        <RadioButton Style="{StaticResource TextToggle}" Content="Xem Template" Margin="0,0,16,0"
+                        <RadioButton Style="{StaticResource TextToggle}" Content="Template" Margin="0,0,16,0"
                                      IsChecked="{Binding ShowFilled, Converter={StaticResource InverseBool}}"/>
                         <RadioButton Style="{StaticResource TextToggle}" Content="Xem trước" Margin="0,0,16,0" IsChecked="{Binding ShowFilled}"/>
                         <Border Width="1" Background="{StaticResource Line}" Margin="0,3,16,3"/>
@@ -33,7 +33,7 @@
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0">
                         <Button Content="◀" Style="{StaticResource GhostButton}" Padding="0" Width="36" Command="{Binding PrevCommand}"
                                 ToolTip="Hồ sơ trước (Ctrl ←)" AutomationProperties.Name="Hồ sơ trước"/>
-                        <TextBlock Text="{Binding NavText}" VerticalAlignment="Center" Margin="10,0" MinWidth="150" TextAlignment="Center" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding NavText}" VerticalAlignment="Center" Margin="10,0" MinWidth="150" TextAlignment="Center"/>
                         <Button Content="▶" Style="{StaticResource GhostButton}" Padding="0" Width="36" Command="{Binding NextCommand}"
                                 ToolTip="Hồ sơ sau (Ctrl →)" AutomationProperties.Name="Hồ sơ sau"/>
                     </StackPanel>

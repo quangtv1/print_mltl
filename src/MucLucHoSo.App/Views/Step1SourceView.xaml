@@ -88,7 +88,7 @@
             <!-- Template -->
             <Border Grid.Row="2" Style="{StaticResource Card}">
                 <DockPanel>
-                    <TextBlock DockPanel.Dock="Top" Text="Mẫu (Template DOCX)" Style="{StaticResource H2}"/>
+                    <TextBlock DockPanel.Dock="Top" Text="Mẫu template" Style="{StaticResource H2}"/>
                     <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="76"/>
