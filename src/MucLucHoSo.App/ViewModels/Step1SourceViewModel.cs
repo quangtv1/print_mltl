@@ -49,20 +49,8 @@ public partial class Step1SourceViewModel : StepViewModel
         LoadBuiltInTemplates();
     }
 
-    private static readonly Dictionary<string, string> TemplateDisplayNames = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["Template01"] = "Mẫu 01 - Quảng Trị",
-        ["Template02"] = "Mẫu 02 - Quảng Ninh",
-        ["Template03"] = "Mẫu 03 - Đống Đa",
-        ["Template04"] = "Mẫu 04 - Vĩnh Phúc",
-    };
-
-    private static string DisplayNameFor(string file)
-    {
-        var stem = Path.GetFileNameWithoutExtension(file);
-        return TemplateDisplayNames.TryGetValue(stem, out var name) ? name : stem;
-    }
-
+    // Tên hiển thị trong dropdown = tên file mẫu (bỏ đuôi .docx). Đổi tên file trong
+    // thư mục templates/ là dropdown tự đổi theo — không cần sửa code.
     private void LoadBuiltInTemplates()
     {
         try
@@ -70,7 +58,7 @@ public partial class Step1SourceViewModel : StepViewModel
             var dir = Path.Combine(AppContext.BaseDirectory, "templates");
             if (Directory.Exists(dir))
                 foreach (var f in Directory.EnumerateFiles(dir, "*.docx").OrderBy(x => x))
-                    Templates.Add(new TemplateItem(DisplayNameFor(f), f));
+                    Templates.Add(new TemplateItem(Path.GetFileNameWithoutExtension(f), f));
         }
         catch { /* bỏ qua */ }
     }
@@ -118,7 +106,7 @@ public partial class Step1SourceViewModel : StepViewModel
     {
         var dlg = new OpenFileDialog { Filter = "Word (*.docx)|*.docx" };
         if (dlg.ShowDialog() != true) return;
-        var item = new TemplateItem(Path.GetFileName(dlg.FileName), dlg.FileName, IsImported: true);
+        var item = new TemplateItem(Path.GetFileNameWithoutExtension(dlg.FileName), dlg.FileName, IsImported: true);
         Templates.Add(item); SelectedTemplate = item;
     }
 

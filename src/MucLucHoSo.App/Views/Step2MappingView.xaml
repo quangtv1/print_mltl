@@ -79,68 +79,98 @@
 
             <Border Grid.Row="1" Style="{StaticResource Card}" Padding="0">
                 <DockPanel>
-                    <!-- Header bảng: chừa sẵn 16px cho thanh cuộn để thẳng cột với các dòng -->
-                    <Grid DockPanel.Dock="Top" Background="{StaticResource Panel}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="16"/>
-                        </Grid.ColumnDefinitions>
-                        <Border Grid.Column="0" BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="52"/>
-                                    <ColumnDefinition Width="1.5*"/>
-                                    <ColumnDefinition Width="40"/>
-                                    <ColumnDefinition Width="1*"/>
-                                    <ColumnDefinition Width="110"/>
-                                </Grid.ColumnDefinitions>
-                                <Border Grid.Column="0" BorderBrush="{StaticResource Line}" BorderThickness="0,0,1,0" Padding="12,10"><TextBlock Text="#" FontWeight="SemiBold" Foreground="{StaticResource Muted}"/></Border>
-                                <Border Grid.Column="1" Padding="12,10"><TextBlock Text="Cột trong Excel (header)" FontWeight="SemiBold" Foreground="{StaticResource Muted}"/></Border>
-                                <Border Grid.Column="2" BorderBrush="{StaticResource Line}" BorderThickness="0,0,1,0"/>
-                                <Border Grid.Column="3" BorderBrush="{StaticResource Line}" BorderThickness="0,0,1,0" Padding="12,10"><TextBlock Text="Biến trong mẫu" FontWeight="SemiBold" Foreground="{StaticResource Muted}"/></Border>
-                                <Border Grid.Column="4" Padding="12,10"><TextBlock Text="Tự khớp" FontWeight="SemiBold" Foreground="{StaticResource Muted}"/></Border>
-                            </Grid>
-                        </Border>
-                    </Grid>
+                    <!-- Tiêu đề cột (chừa 16px bên phải cho thanh cuộn để thẳng hàng) -->
+                    <Border DockPanel.Dock="Top" Background="{StaticResource Panel}" BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="0,10">
+                        <Grid Margin="0,0,16,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="4"/>
+                                <ColumnDefinition Width="220"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="132"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="1" Text="Biến trong mẫu" FontWeight="SemiBold" Foreground="{StaticResource Muted}" Margin="14,0,0,0"/>
+                            <TextBlock Grid.Column="2" Text="Nguồn: cột Excel hoặc hằng" FontWeight="SemiBold" Foreground="{StaticResource Muted}" Margin="8,0,0,0"/>
+                            <TextBlock Grid.Column="3" Text="Trạng thái" FontWeight="SemiBold" Foreground="{StaticResource Muted}"/>
+                        </Grid>
+                    </Border>
 
-                    <ScrollViewer VerticalScrollBarVisibility="Visible">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <ItemsControl ItemsSource="{Binding S.Bindings}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Border BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1">
-                                        <Grid>
+                                        <Grid MinHeight="58">
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="52"/>
-                                                <ColumnDefinition Width="1.5*"/>
-                                                <ColumnDefinition Width="40"/>
-                                                <ColumnDefinition Width="1*"/>
-                                                <ColumnDefinition Width="110"/>
+                                                <ColumnDefinition Width="4"/>
+                                                <ColumnDefinition Width="220"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="132"/>
                                             </Grid.ColumnDefinitions>
-                                            <Border Grid.Column="0" BorderBrush="{StaticResource Line}" BorderThickness="0,0,1,0" Padding="12,8">
-                                                <TextBlock Text="{Binding Index}" VerticalAlignment="Center" Foreground="{StaticResource Muted}"/>
+
+                                            <!-- Thanh màu theo loại biến (hồ sơ / bảng / tự động) -->
+                                            <Border Grid.Column="0">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="{StaticResource Accent}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsRowField}" Value="True"><Setter Property="Background" Value="#FF7A3FF2"/></DataTrigger>
+                                                            <DataTrigger Binding="{Binding IsAutoField}" Value="True"><Setter Property="Background" Value="{StaticResource Ok}"/></DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
                                             </Border>
-                                            <Border Grid.Column="1" Padding="10,6">
-                                                <ComboBox IsEditable="True"
-                                                          ItemsSource="{Binding AvailableColumns}"
-                                                          Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
-                                                          IsEnabled="{Binding IsAutoField, Converter={StaticResource InverseBool}}"/>
-                                            </Border>
-                                            <Border Grid.Column="2" BorderBrush="{StaticResource Line}" BorderThickness="0,0,1,0">
-                                                <TextBlock Text="→" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource Muted}"/>
-                                            </Border>
-                                            <Border Grid.Column="3" BorderBrush="{StaticResource Line}" BorderThickness="0,0,1,0" Padding="12,8">
-                                                <TextBlock VerticalAlignment="Center" FontFamily="Consolas" FontSize="14" Foreground="{StaticResource Accent}"
-                                                           Text="{Binding Variable, StringFormat={}{{{0}}}}"/>
-                                            </Border>
-                                            <Border Grid.Column="4" Padding="12,8">
-                                                <TextBlock Text="{Binding MatchText}" VerticalAlignment="Center">
+
+                                            <!-- Biến + nhãn loại -->
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="14,8">
+                                                <TextBlock Text="{Binding Variable, StringFormat={}{{{0}}}}" FontFamily="Consolas" FontSize="14" Foreground="{StaticResource Accent}"/>
+                                                <TextBlock FontSize="12" Foreground="{StaticResource Muted}" Margin="0,2,0,0">
                                                     <TextBlock.Style>
                                                         <Style TargetType="TextBlock">
-                                                            <Setter Property="Foreground" Value="{StaticResource Muted}"/>
+                                                            <Setter Property="Text" Value="Biến hồ sơ"/>
                                                             <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding MatchOk}" Value="True">
-                                                                    <Setter Property="Foreground" Value="{StaticResource Ok}"/>
-                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding IsRowField}" Value="True"><Setter Property="Text" Value="Biến trong bảng"/></DataTrigger>
+                                                                <DataTrigger Binding="{Binding IsAutoField}" Value="True"><Setter Property="Text" Value="Tự động (Word tính)"/></DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </StackPanel>
+
+                                            <!-- Nguồn: combo (cột/hằng) hoặc ghi chú tự động -->
+                                            <Grid Grid.Column="2" Margin="8,8,12,8" VerticalAlignment="Center">
+                                                <Grid Visibility="{Binding IsAutoField, Converter={StaticResource InverseBoolToVis}}">
+                                                    <ComboBox IsEditable="True" ItemsSource="{Binding AvailableColumns}"
+                                                              Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"/>
+                                                    <TextBlock Text="Chọn cột hoặc gõ hằng…" Foreground="{StaticResource Muted}" FontStyle="Italic"
+                                                               Margin="12,0,34,0" VerticalAlignment="Center" IsHitTestVisible="False"
+                                                               Visibility="{Binding Value, Converter={StaticResource NullToVis}, ConverterParameter=invert}"/>
+                                                </Grid>
+                                                <TextBlock Text="Word tự tính khi render (PAGE/NUMPAGES)" Foreground="{StaticResource Muted}" FontStyle="Italic"
+                                                           VerticalAlignment="Center" Margin="2,0,0,0"
+                                                           Visibility="{Binding IsAutoField, Converter={StaticResource BoolToVis}}"/>
+                                            </Grid>
+
+                                            <!-- Trạng thái (pill) -->
+                                            <Border Grid.Column="3" HorizontalAlignment="Left" VerticalAlignment="Center" CornerRadius="10" Padding="10,3">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="#FFFBEACF"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsBound}" Value="True"><Setter Property="Background" Value="#FFE3ECFA"/></DataTrigger>
+                                                            <DataTrigger Binding="{Binding IsColumn}" Value="True"><Setter Property="Background" Value="#FFDDF1E5"/></DataTrigger>
+                                                            <DataTrigger Binding="{Binding IsAutoField}" Value="True"><Setter Property="Background" Value="#FFDDF1E5"/></DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <TextBlock FontSize="12.5" FontWeight="SemiBold">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Text" Value="Chưa gán"/>
+                                                            <Setter Property="Foreground" Value="{StaticResource Warn}"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsBound}" Value="True"><Setter Property="Text" Value="Hằng"/><Setter Property="Foreground" Value="{StaticResource Accent}"/></DataTrigger>
+                                                                <DataTrigger Binding="{Binding IsColumn}" Value="True"><Setter Property="Text" Value="✓ Cột"/><Setter Property="Foreground" Value="{StaticResource OkText}"/></DataTrigger>
+                                                                <DataTrigger Binding="{Binding IsAutoField}" Value="True"><Setter Property="Text" Value="Tự động"/><Setter Property="Foreground" Value="{StaticResource OkText}"/></DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
                                                     </TextBlock.Style>

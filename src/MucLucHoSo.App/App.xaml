@@ -32,18 +32,143 @@
             <conv:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis"/>
             <conv:SelectedChipBrushConverter x:Key="ChipBrush"/>
 
-            <!-- Style ngầm: mọi TextBox/ComboBox cao 32 (bằng ô nhập cạnh nút Duyệt) -->
+            <!-- ===== Ô nhập & Select box: phẳng, bo góc 6, viền theo brand ===== -->
+            <!-- TextBox: viền mảnh bo góc, sáng viền accent khi focus -->
             <Style TargetType="TextBox">
-                <Setter Property="MinHeight" Value="32"/>
-                <Setter Property="Padding" Value="8,0"/>
+                <Setter Property="MinHeight" Value="34"/>
+                <Setter Property="Padding" Value="9,0"/>
                 <Setter Property="FontSize" Value="14"/>
+                <Setter Property="Foreground" Value="{StaticResource Ink}"/>
+                <Setter Property="Background" Value="White"/>
+                <Setter Property="BorderBrush" Value="{StaticResource Line}"/>
                 <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="TextBox">
+                            <Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="1" CornerRadius="6" SnapsToDevicePixels="True">
+                                <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bd" Property="BorderBrush" Value="#FFB9C4D4"/>
+                                </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter TargetName="bd" Property="Opacity" Value="0.6"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
             </Style>
-            <Style TargetType="ComboBox">
-                <Setter Property="MinHeight" Value="32"/>
-                <Setter Property="Padding" Value="8,0"/>
+
+            <!-- Nút mở/đóng của ComboBox: vẽ khung + mũi chevron -->
+            <Style x:Key="ComboToggle" TargetType="ToggleButton">
+                <Setter Property="OverridesDefaultStyle" Value="True"/>
+                <Setter Property="Focusable" Value="False"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ToggleButton">
+                            <Border x:Name="bd" Background="White" BorderBrush="{StaticResource Line}"
+                                    BorderThickness="1" CornerRadius="6" SnapsToDevicePixels="True">
+                                <TextBlock x:Name="chev" Text="&#xE70D;" FontFamily="Segoe MDL2 Assets" FontSize="11"
+                                           Foreground="{StaticResource Muted}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bd" Property="BorderBrush" Value="#FFB9C4D4"/>
+                                </Trigger>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                    <Setter TargetName="chev" Property="Foreground" Value="{StaticResource Accent}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- Mục trong danh sách xổ xuống -->
+            <Style TargetType="ComboBoxItem">
+                <Setter Property="Padding" Value="10,7"/>
+                <Setter Property="Foreground" Value="{StaticResource Ink}"/>
                 <Setter Property="FontSize" Value="14"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ComboBoxItem">
+                            <Border x:Name="bd" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="4" Margin="3,1">
+                                <ContentPresenter/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsHighlighted" Value="True">
+                                    <Setter TargetName="bd" Property="Background" Value="{StaticResource GhostHover}"/>
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter TargetName="bd" Property="Background" Value="#FFE3ECFA"/>
+                                    <Setter Property="Foreground" Value="{StaticResource Accent}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- Select box (ComboBox): phẳng, bo góc, hỗ trợ cả editable & non-editable -->
+            <Style TargetType="ComboBox">
+                <Setter Property="MinHeight" Value="34"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="Foreground" Value="{StaticResource Ink}"/>
+                <Setter Property="Padding" Value="10,0"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="HorizontalContentAlignment" Value="Left"/>
                 <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="ScrollViewer.CanContentScroll" Value="True"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ComboBox">
+                            <Grid>
+                                <ToggleButton Style="{StaticResource ComboToggle}" ClickMode="Press"
+                                              IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                                <ContentPresenter x:Name="ContentSite" IsHitTestVisible="False"
+                                                  Content="{TemplateBinding SelectionBoxItem}"
+                                                  ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                                  ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"
+                                                  Margin="10,0,32,0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                                <TextBox x:Name="PART_EditableTextBox" Style="{x:Null}" Focusable="True"
+                                         Background="Transparent" BorderThickness="0" Padding="0"
+                                         Margin="8,0,32,0" VerticalAlignment="Center" VerticalContentAlignment="Center"
+                                         Visibility="Collapsed" IsReadOnly="{TemplateBinding IsReadOnly}"/>
+                                <Popup x:Name="PART_Popup" Placement="Bottom" Focusable="False" AllowsTransparency="True"
+                                       PopupAnimation="Fade" IsOpen="{TemplateBinding IsDropDownOpen}">
+                                    <Border MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                                            MaxHeight="{TemplateBinding MaxDropDownHeight}" Margin="0,4,0,6"
+                                            Background="White" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="6">
+                                        <Border.Effect>
+                                            <DropShadowEffect BlurRadius="12" ShadowDepth="2" Opacity="0.18" Color="#FF000000"/>
+                                        </Border.Effect>
+                                        <ScrollViewer>
+                                            <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                        </ScrollViewer>
+                                    </Border>
+                                </Popup>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsEditable" Value="True">
+                                    <Setter TargetName="ContentSite" Property="Visibility" Value="Collapsed"/>
+                                    <Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Visible"/>
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.55"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
             </Style>
 
             <Style TargetType="TextBlock">
