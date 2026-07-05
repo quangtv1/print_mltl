@@ -337,11 +337,9 @@
                 </Style.Triggers>
             </Style>
 
-            <!-- Chip biến dạng outline (nền trắng, viền + chữ theo màu) -->
+            <!-- Chip biến (giống Màn 1): nền nhạt theo nhóm màu, chữ {bien} đậm màu; bấm để tô sáng.
+                 Nhóm màu lấy từ Button.Tag ("purple" = biến trong bảng), mặc định accent. Đang chọn = tô đặc + chữ trắng. -->
             <Style x:Key="ChipButton" TargetType="Button">
-                <Setter Property="Background" Value="White"/>
-                <Setter Property="Foreground" Value="{StaticResource Accent}"/>
-                <Setter Property="BorderBrush" Value="#FF9CC3EE"/>
                 <Setter Property="FontFamily" Value="Consolas"/>
                 <Setter Property="FontSize" Value="13.5"/>
                 <Setter Property="Margin" Value="0,0,7,7"/>
@@ -350,26 +348,26 @@
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="Button">
-                            <!-- Nền/chữ đổi khi biến này đang được chọn (so DataContext = SelectedHighlight của VM) -->
-                            <Border x:Name="b" BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="1" CornerRadius="4" Padding="9,4">
+                            <Border x:Name="b" BorderBrush="Transparent" BorderThickness="1" CornerRadius="4" Padding="9,4">
                                 <Border.Background>
                                     <MultiBinding Converter="{StaticResource ChipBrush}" ConverterParameter="bg">
                                         <Binding/>
                                         <Binding Path="DataContext.SelectedHighlight" RelativeSource="{RelativeSource AncestorType=ItemsControl}"/>
+                                        <Binding Path="Tag" RelativeSource="{RelativeSource TemplatedParent}"/>
                                     </MultiBinding>
                                 </Border.Background>
                                 <TextElement.Foreground>
                                     <MultiBinding Converter="{StaticResource ChipBrush}" ConverterParameter="fg">
                                         <Binding/>
                                         <Binding Path="DataContext.SelectedHighlight" RelativeSource="{RelativeSource AncestorType=ItemsControl}"/>
+                                        <Binding Path="Tag" RelativeSource="{RelativeSource TemplatedParent}"/>
                                     </MultiBinding>
                                 </TextElement.Foreground>
                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                    <Setter TargetName="b" Property="BorderBrush" Value="#33000000"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>

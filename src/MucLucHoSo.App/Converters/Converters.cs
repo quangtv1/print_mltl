@@ -40,21 +40,31 @@ public sealed class InverseBoolToVisibilityConverter : IValueConverter
 }
 
 /// <summary>
-/// Chip biến ở Bước 3: tô nền/chữ theo trạng thái đang chọn.
-/// values[0] = tên biến của chip; values[1] = SelectedHighlight của VM.
-/// ConverterParameter "bg" → trả về Background; "fg" → trả về Foreground.
+/// Chip biến ở Bước 3: tô nền/chữ theo NHÓM màu và trạng thái đang chọn.
+/// values[0] = tên biến của chip; values[1] = SelectedHighlight của VM; values[2] = mã màu nhóm (Tag: "purple"/…, mặc định accent).
+/// ConverterParameter "bg" → Background (không chọn = nền nhạt, đang chọn = màu đặc); "fg" → Foreground (không chọn = màu đậm, đang chọn = trắng).
 /// </summary>
 public sealed class SelectedChipBrushConverter : IMultiValueConverter
 {
-    private static readonly SolidColorBrush Accent = Frozen(0x00, 0x43, 0xA5); // nền khi chọn / chữ khi không chọn
-    private static readonly SolidColorBrush White  = Frozen(0xFF, 0xFF, 0xFF); // nền khi không chọn / chữ khi chọn
+    private static readonly SolidColorBrush White      = Frozen(0xFF, 0xFF, 0xFF);
+    private static readonly SolidColorBrush Accent     = Frozen(0x00, 0x43, 0xA5);
+    private static readonly SolidColorBrush AccentTint = Frozen(0xED, 0xF2, 0xFB);
+    private static readonly SolidColorBrush Purple     = Frozen(0x7A, 0x3F, 0xF2);
+    private static readonly SolidColorBrush PurpleTint = Frozen(0xF2, 0xEE, 0xFC);
 
     public object Convert(object[] values, Type t, object p, CultureInfo c)
     {
-        bool selected = values.Length >= 2 && values[0] is string a && values[1] is string b
-                        && string.Equals(a, b, StringComparison.Ordinal);
+        string a = values.Length > 0 ? values[0] as string ?? "" : "";
+        string b = values.Length > 1 ? values[1] as string ?? "" : "";
+        string token = values.Length > 2 ? values[2] as string ?? "" : "";
+        bool selected = a.Length > 0 && string.Equals(a, b, StringComparison.Ordinal);
         bool foreground = string.Equals(p as string, "fg", StringComparison.OrdinalIgnoreCase);
-        return foreground ? (selected ? White : Accent) : (selected ? Accent : White);
+
+        var (full, tint) = string.Equals(token, "purple", StringComparison.OrdinalIgnoreCase)
+            ? (Purple, PurpleTint)
+            : (Accent, AccentTint);
+
+        return foreground ? (selected ? White : full) : (selected ? full : tint);
     }
 
     public object[] ConvertBack(object v, Type[] t, object p, CultureInfo c) => throw new NotSupportedException();
