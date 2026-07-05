@@ -8,7 +8,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>MucLucTaiLieu.App</RootNamespace>
     <AssemblyName>print_mltl</AssemblyName>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <AssemblyTitle>MụcLụcTàiLiệu</AssemblyTitle>
     <!-- Allows building the Windows-targeted app on non-Windows dev machines (macOS/Linux).
          The app only runs on Windows; this just enables cross-platform compile/restore. -->
