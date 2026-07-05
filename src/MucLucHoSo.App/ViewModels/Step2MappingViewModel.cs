@@ -9,7 +9,6 @@ public partial class Step2MappingViewModel : StepViewModel
 {
     public SessionState S => Wizard.Session;
 
-    [ObservableProperty] private string _fileEstimateText = "";
     [ObservableProperty] private string _bindStatusText = "";
     [ObservableProperty] private bool _bindStatusIsOk;
     [ObservableProperty] private string _mappedCountText = "";
@@ -24,7 +23,7 @@ public partial class Step2MappingViewModel : StepViewModel
     {
         S.PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName == nameof(SessionState.GroupColumn)) Recompute();
+            if (e.PropertyName == nameof(SessionState.GroupColumn)) MappingChanged();
         };
     }
 
@@ -42,7 +41,7 @@ public partial class Step2MappingViewModel : StepViewModel
         int idx = 1;
         void Add(string v, bool isRow, bool isAuto)
         {
-            var row = new VariableBindingRowViewModel(idx++, v, isRow, isAuto, cols, Recompute);
+            var row = new VariableBindingRowViewModel(idx++, v, isRow, isAuto, cols, MappingChanged);
             if (!isAuto)
             {
                 var match = cols.FirstOrDefault(c => TextUtil.Normalize(c) == TextUtil.Normalize(v))
@@ -60,26 +59,29 @@ public partial class Step2MappingViewModel : StepViewModel
         _builtFor = S.Runtime;
     }
 
+    /// <summary>Mapping/cột gom nhóm vừa đổi → phải kiểm tra lại trước khi qua bước sau.</summary>
+    private void MappingChanged()
+    {
+        Validated = false;
+        ValidationIsOk = false;
+        ValidationText = "";
+        Recompute();
+    }
+
     public void Recompute()
     {
-        if (!Validated && !string.IsNullOrEmpty(S.GroupColumn))
-        {
-            var distinct = S.PreviewRows.Select(r => r.Get(S.GroupColumn!))
-                                        .Where(x => !string.IsNullOrWhiteSpace(x))
-                                        .Distinct().Count();
-            FileEstimateText = $"→ sẽ tạo ≈ {distinct} file (mỗi giá trị của cột này 1 file)";
-        }
-        else if (string.IsNullOrEmpty(S.GroupColumn)) FileEstimateText = "";
-
         int total = S.Bindings.Count;
         int bound = S.Bindings.Count(b => b.IsBound);
         bool groupOk = !string.IsNullOrEmpty(S.GroupColumn);
-        bool all = bound == total && total > 0 && groupOk;
-        BindStatusText = all ? $"✓ Đã ghép đủ {total} biến."
+        bool allBound = bound == total && total > 0 && groupOk;
+        BindStatusText = allBound
+            ? (Validated && ValidationIsOk ? $"✓ Đã ghép đủ {total} biến — dữ liệu hợp lệ."
+                                           : $"✓ Đã ghép đủ {total} biến · hãy bấm Kiểm tra dữ liệu.")
             : $"Đã ghép {bound}/{total} biến" + (groupOk ? "." : " · chưa chọn cột gom nhóm.");
-        BindStatusIsOk = all;
+        BindStatusIsOk = allBound && Validated && ValidationIsOk;
         MappedCountText = $"(đã ghép {bound}/{total})";
-        CanGoNext = all;
+        // Bắt buộc chạy Validation hợp lệ mới cho qua bước sau.
+        CanGoNext = allBound && Validated && ValidationIsOk;
     }
 
     [RelayCommand]
@@ -93,9 +95,9 @@ public partial class Step2MappingViewModel : StepViewModel
             ValidationText = res.ToString();
             ValidationIsOk = res.IsValid;
             Validated = true;
-            FileEstimateText = $"→ sẽ tạo {res.TotalGroups} file (mỗi giá trị của cột này 1 file)";
+            S.ValidatedGroupCount = res.TotalGroups;   // tổng hồ sơ cho thanh tiến trình Bước 4
         }
-        catch (Exception ex) { ValidationText = "Lỗi: " + ex.Message; ValidationIsOk = false; }
-        finally { Busy = false; }
+        catch (Exception ex) { ValidationText = "Lỗi: " + ex.Message; ValidationIsOk = false; Validated = false; }
+        finally { Busy = false; Recompute(); }   // cập nhật CanGoNext theo kết quả kiểm tra
     }
 }

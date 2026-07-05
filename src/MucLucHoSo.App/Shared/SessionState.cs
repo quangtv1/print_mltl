@@ -28,13 +28,15 @@ public sealed partial class SessionState : ObservableObject
     // --- Ghép biến ---
     [ObservableProperty] private string? _groupColumn;
     public ObservableCollection<MucLucHoSo.App.ViewModels.VariableBindingRowViewModel> Bindings { get; } = new();
+    /// <summary>Số hồ sơ (nhóm) từ lần Validation gần nhất — dùng làm tổng cho thanh tiến trình ở Bước 4.</summary>
+    [ObservableProperty] private int _validatedGroupCount;
 
     // --- Xuất ---
     [ObservableProperty] private string _outputDirectory = "";
     [ObservableProperty] private string _fileNamePrefix = "MLHS_";
     [ObservableProperty] private bool _exportPdf;
     [ObservableProperty] private bool _overwrite = true;
-    [ObservableProperty] private bool _multiThread = true;
+    [ObservableProperty] private bool _multiThread = false;
     [ObservableProperty] private bool _resume = true;
     [ObservableProperty] private bool _auditLog = true;
     [ObservableProperty] private bool _skipErrors = true;

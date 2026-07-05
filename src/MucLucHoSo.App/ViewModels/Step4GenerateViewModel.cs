@@ -1,7 +1,10 @@
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Threading;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -27,6 +30,15 @@ public partial class Step4GenerateViewModel : StepViewModel
     private const string CErr  = "#FFE06C75";  // dòng "✗" (lỗi)
 
     public ObservableCollection<LogEntry> LogLines { get; } = new();
+
+    // Nhật ký & tiến trình cập nhật theo LÔ trên UI thread (DispatcherTimer) để không đơ khi
+    // hàng nghìn hồ sơ hoàn thành dồn dập ở chế độ đa luồng. Worker chỉ enqueue (không Dispatch).
+    private const int MaxLogLines = 1000;
+    private readonly ConcurrentQueue<LogEntry> _logQueue = new();
+    private readonly List<LogEntry> _batch = new();
+    private long _pendingDone, _pendingTotal;
+    private DispatcherTimer? _uiTimer;
+
     [ObservableProperty] private double _progressValue;
     [ObservableProperty] private double _progressMax = 1;
     [ObservableProperty] private bool _isRunning;
@@ -73,7 +85,41 @@ public partial class Step4GenerateViewModel : StepViewModel
         OnPropertyChanged(nameof(FileNamePreview));
     }
 
-    private void Log(string text, string color) => Dispatch(() => LogLines.Add(new LogEntry(text, color)));
+    // Chỉ xếp hàng — DispatcherTimer sẽ đẩy lên UI theo lô.
+    private void Log(string text, string color) => _logQueue.Enqueue(new LogEntry(text, color));
+
+    private void StartUiPump()
+    {
+        _uiTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(150) };
+        _uiTimer.Tick += (_, _) => PumpUi();
+        _uiTimer.Start();
+    }
+
+    private void StopUiPump()
+    {
+        _uiTimer?.Stop();
+        _uiTimer = null;
+        PumpUi();   // đẩy nốt phần còn lại
+    }
+
+    /// <summary>Chạy trên UI thread: cập nhật tiến trình mới nhất + đổ nhật ký đang chờ (giới hạn số dòng).</summary>
+    private void PumpUi()
+    {
+        double done = Volatile.Read(ref _pendingDone);
+        double total = Volatile.Read(ref _pendingTotal);
+        if (ProgressValue != done) ProgressValue = done;
+        if (total > ProgressMax) ProgressMax = total;
+
+        _batch.Clear();
+        while (_logQueue.TryDequeue(out var e)) _batch.Add(e);
+        if (_batch.Count == 0) return;
+
+        // Chỉ thêm tối đa MaxLogLines dòng mới nhất mỗi lần (tránh đơ khi flush lô lớn cuối mẻ).
+        int keep = Math.Min(_batch.Count, MaxLogLines);
+        if (keep == MaxLogLines) LogLines.Clear();
+        for (int i = _batch.Count - keep; i < _batch.Count; i++) LogLines.Add(_batch[i]);
+        while (LogLines.Count > MaxLogLines) LogLines.RemoveAt(0);
+    }
 
     [RelayCommand]
     private void BrowseOutput()
@@ -90,6 +136,12 @@ public partial class Step4GenerateViewModel : StepViewModel
             S.OutputDirectory = Path.Combine(Path.GetDirectoryName(S.SourcePath ?? "") ?? Environment.CurrentDirectory, "Output");
 
         IsRunning = true; CanOpenFolder = false; DoneText = ""; LogLines.Clear();
+        while (_logQueue.TryDequeue(out _)) { }
+        // Tổng = số hồ sơ đã Validation ở Bước 2 (thanh tiến trình hiện đúng ngay từ đầu).
+        Volatile.Write(ref _pendingDone, 0);
+        Volatile.Write(ref _pendingTotal, S.ValidatedGroupCount);
+        ProgressValue = 0; ProgressMax = Math.Max(1, S.ValidatedGroupCount);
+        StartUiPump();
         GenerateCommand.NotifyCanExecuteChanged();
 
         string fmt = S.ExportPdf ? "DOCX + PDF" : "DOCX";
@@ -123,7 +175,7 @@ public partial class Step4GenerateViewModel : StepViewModel
             else pdfFactory = () => new NullPdfConverter();
 
             var pipe = Wizard.Core.BuildPipeline(S, pdfFactory, log);
-            pipe.OnProgress += (d, t) => Dispatch(() => { ProgressValue = d; ProgressMax = Math.Max(1, t); });
+            pipe.OnProgress += (d, t) => { Volatile.Write(ref _pendingDone, d); Volatile.Write(ref _pendingTotal, t); };
             pipe.OnHoSo += o =>
             {
                 if (o.Status == HoSoStatus.Ok)
@@ -149,7 +201,7 @@ public partial class Step4GenerateViewModel : StepViewModel
             Log("✗ Lỗi: " + ex.Message, CErr);
             DoneText = "Lỗi";
         }
-        finally { IsRunning = false; HasRun = true; GenerateCommand.NotifyCanExecuteChanged(); }
+        finally { StopUiPump(); IsRunning = false; HasRun = true; GenerateCommand.NotifyCanExecuteChanged(); }
     }
     private bool CanGenerate() => !IsRunning && S.Runtime != null;
 
@@ -159,6 +211,4 @@ public partial class Step4GenerateViewModel : StepViewModel
         if (Directory.Exists(S.OutputDirectory))
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"\"{S.OutputDirectory}\"") { UseShellExecute = true });
     }
-
-    private static void Dispatch(Action a) => Application.Current?.Dispatcher.Invoke(a);
 }
