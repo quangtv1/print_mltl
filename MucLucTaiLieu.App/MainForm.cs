@@ -30,9 +30,14 @@ public sealed class MainForm : Form
         StartPosition = FormStartPosition.CenterScreen;
         Font = Theme.Ui;
 
-        BuildHeader();
-        BuildNavBar();
+        // WinForms docks in reverse z-order (last-added docks first). Add the Fill
+        // content FIRST so it docks LAST and takes only the leftover space; the nav bar
+        // and header are added after so they claim their edges without overlapping the
+        // content. (Adding Fill last makes it grab the whole client area and hide the
+        // header/nav — which was covering Step 1's Excel picker.)
         Controls.Add(_content);
+        BuildNavBar();
+        BuildHeader();
 
         _step1 = new Step1InputControl(_state);
         _step2 = new Step2DesignControl(_state);
