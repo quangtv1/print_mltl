@@ -22,15 +22,20 @@
                                      IsChecked="{Binding ShowFilled, Converter={StaticResource InverseBool}}"/>
                         <RadioButton Style="{StaticResource TextToggle}" Content="Xem trước" Margin="0,0,16,0" IsChecked="{Binding ShowFilled}"/>
                         <Border Width="1" Background="{StaticResource Line}" Margin="0,3,16,3"/>
-                        <Button Content="−" Style="{StaticResource GhostButton}" Padding="0" Width="36" Command="{Binding ZoomOutCommand}"/>
-                        <TextBlock Text="{Binding ZoomText}" VerticalAlignment="Center" MinWidth="52" TextAlignment="Center"/>
-                        <Button Content="+" Style="{StaticResource GhostButton}" Padding="0" Width="36" Command="{Binding ZoomInCommand}"/>
+                        <Button Content="−" Style="{StaticResource GhostButton}" Padding="0" Width="36" Command="{Binding ZoomOutCommand}"
+                                ToolTip="Thu nhỏ (Ctrl −, hoặc Ctrl + lăn chuột)" AutomationProperties.Name="Thu nhỏ"/>
+                        <Button Style="{StaticResource LinkButton}" Content="{Binding ZoomText}" MinWidth="52" Command="{Binding ZoomResetCommand}"
+                                ToolTip="Về 100% (Ctrl 0)" AutomationProperties.Name="Đặt lại zoom 100%"/>
+                        <Button Content="+" Style="{StaticResource GhostButton}" Padding="0" Width="36" Command="{Binding ZoomInCommand}"
+                                ToolTip="Phóng to (Ctrl +, hoặc Ctrl + lăn chuột)" AutomationProperties.Name="Phóng to"/>
                     </StackPanel>
                     <!-- Bộ nút Tiến/Lùi hồ sơ: sát cạnh phải khung Preview -->
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0">
-                        <Button Content="◀" Style="{StaticResource GhostButton}" Padding="0" Width="36" Command="{Binding PrevCommand}"/>
+                        <Button Content="◀" Style="{StaticResource GhostButton}" Padding="0" Width="36" Command="{Binding PrevCommand}"
+                                ToolTip="Hồ sơ trước (Ctrl ←)" AutomationProperties.Name="Hồ sơ trước"/>
                         <TextBlock Text="{Binding NavText}" VerticalAlignment="Center" Margin="10,0" MinWidth="150" TextAlignment="Center" FontWeight="SemiBold"/>
-                        <Button Content="▶" Style="{StaticResource GhostButton}" Padding="0" Width="36" Command="{Binding NextCommand}"/>
+                        <Button Content="▶" Style="{StaticResource GhostButton}" Padding="0" Width="36" Command="{Binding NextCommand}"
+                                ToolTip="Hồ sơ sau (Ctrl →)" AutomationProperties.Name="Hồ sơ sau"/>
                     </StackPanel>
                 </Grid>
 
@@ -107,7 +112,7 @@
                         <ItemsControl ItemsSource="{Binding AutoVars}">
                             <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate><DataTemplate>
-                                <Border Background="White" BorderBrush="#FFA6D8BC" BorderThickness="1" CornerRadius="4" Padding="9,4" Margin="0,0,7,7"><TextBlock Text="{Binding StringFormat={}{{{0}}}}" FontFamily="Consolas" FontSize="13.5" Foreground="{StaticResource Ok}"/></Border>
+                                <Border Background="White" BorderBrush="#FFA6D8BC" BorderThickness="1" CornerRadius="4" Padding="9,4" Margin="0,0,7,7"><TextBlock Text="{Binding StringFormat={}{{{0}}}}" FontFamily="Consolas" FontSize="13.5" Foreground="{StaticResource OkText}"/></Border>
                             </DataTemplate></ItemsControl.ItemTemplate>
                         </ItemsControl>
                         <TextBlock Text="{}{trang_so}/{tong_so_trang}: số trang / tổng số trang — tự động khi xuất."

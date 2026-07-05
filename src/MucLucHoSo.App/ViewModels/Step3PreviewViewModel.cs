@@ -49,6 +49,7 @@ public partial class Step3PreviewViewModel : StepViewModel
         try { _jobs = Wizard.Core.BuildPreviewJobs(S); }
         catch (Exception ex) { _jobs = new(); StatusText = "Lỗi dựng dữ liệu xem trước: " + ex.Message; }
         _index = 0;
+        NotifyNavCanExec();
         _ = RefreshAsync();
         _ = PrefetchAllAsync(_prefetchCts.Token);   // tải trước toàn bộ hồ sơ ở nền
     }
@@ -62,13 +63,40 @@ public partial class Step3PreviewViewModel : StepViewModel
         foreach (var v in S.Runtime.AutoFields.OrderBy(x => x)) AutoVars.Add(v);
     }
 
-    partial void OnShowFilledChanged(bool value) => _ = RefreshAsync();
-    partial void OnZoomFactorChanged(double value) => OnPropertyChanged(nameof(ZoomText));
+    private const double ZoomMin = 0.4, ZoomMax = 3.0;
 
-    [RelayCommand] private void Prev() { if (_index > 0) { _index--; _ = RefreshAsync(); } }
-    [RelayCommand] private void Next() { if (_index < _jobs.Count - 1) { _index++; _ = RefreshAsync(); } }
-    [RelayCommand] private void ZoomIn() { ZoomFactor = Math.Min(3.0, Math.Round(ZoomFactor + 0.1, 2)); }
-    [RelayCommand] private void ZoomOut() { ZoomFactor = Math.Max(0.4, Math.Round(ZoomFactor - 0.1, 2)); }
+    partial void OnShowFilledChanged(bool value) => _ = RefreshAsync();
+    partial void OnZoomFactorChanged(double value)
+    {
+        OnPropertyChanged(nameof(ZoomText));
+        ZoomInCommand.NotifyCanExecuteChanged();
+        ZoomOutCommand.NotifyCanExecuteChanged();
+    }
+
+    /// <summary>Bật/tắt nút Tiến/Lùi theo vị trí hồ sơ để tránh "click chết" ở đầu/cuối.</summary>
+    private void NotifyNavCanExec()
+    {
+        PrevCommand.NotifyCanExecuteChanged();
+        NextCommand.NotifyCanExecuteChanged();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanPrev))]
+    private void Prev() { if (_index > 0) { _index--; _ = RefreshAsync(); NotifyNavCanExec(); } }
+    private bool CanPrev() => _index > 0;
+
+    [RelayCommand(CanExecute = nameof(CanNext))]
+    private void Next() { if (_index < _jobs.Count - 1) { _index++; _ = RefreshAsync(); NotifyNavCanExec(); } }
+    private bool CanNext() => _index < _jobs.Count - 1;
+
+    [RelayCommand(CanExecute = nameof(CanZoomIn))]
+    private void ZoomIn() { ZoomFactor = Math.Min(ZoomMax, Math.Round(ZoomFactor + 0.1, 2)); }
+    private bool CanZoomIn() => ZoomFactor < ZoomMax - 1e-6;
+
+    [RelayCommand(CanExecute = nameof(CanZoomOut))]
+    private void ZoomOut() { ZoomFactor = Math.Max(ZoomMin, Math.Round(ZoomFactor - 0.1, 2)); }
+    private bool CanZoomOut() => ZoomFactor > ZoomMin + 1e-6;
+
+    [RelayCommand] private void ZoomReset() { ZoomFactor = 1.0; }
 
     [RelayCommand]
     private void SelectVar(string? variable)

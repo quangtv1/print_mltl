@@ -5,6 +5,11 @@
         xmlns:v="clr-namespace:MucLucHoSo.App.Views"
         Title="Tạo mục lục hồ sơ - SaoMai" Height="820" Width="1280" MinWidth="1060" MinHeight="660"
         FontFamily="Segoe UI" FontSize="14" Background="{StaticResource Panel}">
+    <!-- Phím tắt điều hướng wizard: Alt ← quay lại, Alt → tiếp theo -->
+    <Window.InputBindings>
+        <KeyBinding Modifiers="Alt" Key="Left" Command="{Binding BackCommand}"/>
+        <KeyBinding Modifiers="Alt" Key="Right" Command="{Binding NextCommand}"/>
+    </Window.InputBindings>
     <Window.Resources>
         <DataTemplate DataType="{x:Type vm:Step1SourceViewModel}"><v:Step1SourceView/></DataTemplate>
         <DataTemplate DataType="{x:Type vm:Step2MappingViewModel}"><v:Step2MappingView/></DataTemplate>

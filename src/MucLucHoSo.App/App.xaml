@@ -7,13 +7,22 @@
         <ResourceDictionary>
             <!-- Màu -->
             <SolidColorBrush x:Key="Accent" Color="#FF0043A5"/>
+            <SolidColorBrush x:Key="AccentHover" Color="#FF003A8C"/>
+            <SolidColorBrush x:Key="AccentPress" Color="#FF002E6E"/>
             <SolidColorBrush x:Key="Cyan" Color="#FF00A9B4"/>
+            <SolidColorBrush x:Key="CyanHover" Color="#FF00929C"/>
+            <SolidColorBrush x:Key="CyanPress" Color="#FF007B84"/>
             <SolidColorBrush x:Key="Ink" Color="#FF1A1A1A"/>
             <SolidColorBrush x:Key="Muted" Color="#FF5A6472"/>
             <SolidColorBrush x:Key="Line" Color="#FFD9DEE6"/>
             <SolidColorBrush x:Key="Panel" Color="#FFF5F7FA"/>
             <SolidColorBrush x:Key="Ok" Color="#FF1F9D55"/>
+            <!-- Xanh đậm cho CHỮ (đạt tương phản AA ~5:1); Ok chỉ dùng cho viền/nền -->
+            <SolidColorBrush x:Key="OkText" Color="#FF157A42"/>
             <SolidColorBrush x:Key="Warn" Color="#FFD98300"/>
+            <!-- Nền hover/pressed cho nút phụ (ghost) -->
+            <SolidColorBrush x:Key="GhostHover" Color="#FFEFF3F8"/>
+            <SolidColorBrush x:Key="GhostPress" Color="#FFE2E8F1"/>
 
             <!-- Converters -->
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
@@ -21,6 +30,7 @@
             <conv:NullToVisibilityConverter x:Key="NullToVis"/>
             <conv:EnumEqualsConverter x:Key="EnumEquals"/>
             <conv:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis"/>
+            <conv:SelectedChipBrushConverter x:Key="ChipBrush"/>
 
             <!-- Style ngầm: mọi TextBox/ComboBox cao 32 (bằng ô nhập cạnh nút Duyệt) -->
             <Style TargetType="TextBox">
@@ -40,15 +50,44 @@
                 <Setter Property="VerticalAlignment" Value="Center"/>
             </Style>
 
-            <!-- Nút: mọi nút cao 32, padding như nút điều hướng; CHỈ đổi màu nền -->
+            <!-- Nút chính (Accent): bo góc, có hover/pressed/disabled/focus theo brand.
+                 MinWidth 132 để "Tạo lại" không hẹp hơn "Tạo mục lục". -->
             <Style x:Key="PrimaryButton" TargetType="Button">
                 <Setter Property="Background" Value="{StaticResource Accent}"/>
                 <Setter Property="Foreground" Value="White"/>
                 <Setter Property="Padding" Value="16,6"/>
                 <Setter Property="MinHeight" Value="32"/>
+                <Setter Property="MinWidth" Value="132"/>
                 <Setter Property="FontSize" Value="14"/>
-                <Setter Property="VerticalContentAlignment" Value="Center"/>
-                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="6"
+                                    BorderThickness="1" BorderBrush="{TemplateBinding Background}" SnapsToDevicePixels="True"
+                                    TextElement.Foreground="{TemplateBinding Foreground}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bd" Property="Background" Value="{StaticResource AccentHover}"/>
+                                    <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource AccentHover}"/>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="bd" Property="Background" Value="{StaticResource AccentPress}"/>
+                                    <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource AccentPress}"/>
+                                </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter TargetName="bd" Property="BorderBrush" Value="White"/>
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter TargetName="bd" Property="Opacity" Value="0.45"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
             </Style>
             <Style x:Key="TealButton" TargetType="Button">
                 <Setter Property="Background" Value="{StaticResource Cyan}"/>
@@ -56,18 +95,95 @@
                 <Setter Property="Padding" Value="16,6"/>
                 <Setter Property="MinHeight" Value="32"/>
                 <Setter Property="FontSize" Value="14"/>
-                <Setter Property="VerticalContentAlignment" Value="Center"/>
-                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="6"
+                                    BorderThickness="1" BorderBrush="{TemplateBinding Background}" SnapsToDevicePixels="True"
+                                    TextElement.Foreground="{TemplateBinding Foreground}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bd" Property="Background" Value="{StaticResource CyanHover}"/>
+                                    <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource CyanHover}"/>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="bd" Property="Background" Value="{StaticResource CyanPress}"/>
+                                    <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource CyanPress}"/>
+                                </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter TargetName="bd" Property="BorderBrush" Value="White"/>
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter TargetName="bd" Property="Opacity" Value="0.45"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
             </Style>
+            <!-- Nút phụ (ghost): nền trắng, viền mảnh, bo góc; hover/pressed/disabled/focus rõ. -->
             <Style x:Key="GhostButton" TargetType="Button">
+                <Setter Property="Background" Value="White"/>
+                <Setter Property="Foreground" Value="{StaticResource Ink}"/>
                 <Setter Property="Padding" Value="16,6"/>
                 <Setter Property="MinHeight" Value="32"/>
                 <Setter Property="FontSize" Value="14"/>
-                <Setter Property="VerticalContentAlignment" Value="Center"/>
-                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="6"
+                                    BorderThickness="1" BorderBrush="{StaticResource Line}" SnapsToDevicePixels="True"
+                                    TextElement.Foreground="{TemplateBinding Foreground}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bd" Property="Background" Value="{StaticResource GhostHover}"/>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="bd" Property="Background" Value="{StaticResource GhostPress}"/>
+                                </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter TargetName="bd" Property="Opacity" Value="0.45"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <!-- Nút dạng chữ (link): dùng cho nhãn "%" bấm để về 100%. -->
+            <Style x:Key="LinkButton" TargetType="Button">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Foreground" Value="{StaticResource Ink}"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="Transparent" Padding="4,2" TextElement.Foreground="{TemplateBinding Foreground}">
+                                <ContentPresenter x:Name="cp" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Foreground" Value="{StaticResource Accent}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
             </Style>
 
-            <!-- Toggle dạng chữ (không có nút tròn) -->
+            <!-- Toggle dạng chữ (không có nút tròn) + gạch chân accent khi đang chọn -->
             <Style x:Key="TextToggle" TargetType="RadioButton">
                 <Setter Property="Cursor" Value="Hand"/>
                 <Setter Property="Foreground" Value="{StaticResource Muted}"/>
@@ -75,7 +191,16 @@
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="RadioButton">
-                            <ContentPresenter VerticalAlignment="Center"/>
+                            <StackPanel>
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Border x:Name="underline" Height="2" Margin="0,4,0,0" CornerRadius="1"
+                                        Background="{StaticResource Accent}" Visibility="Collapsed"/>
+                            </StackPanel>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="underline" Property="Visibility" Value="Visible"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
@@ -96,16 +221,30 @@
                 <Setter Property="FontSize" Value="13.5"/>
                 <Setter Property="Margin" Value="0,0,7,7"/>
                 <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="Button">
-                            <Border x:Name="b" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                            <!-- Nền/chữ đổi khi biến này đang được chọn (so DataContext = SelectedHighlight của VM) -->
+                            <Border x:Name="b" BorderBrush="{TemplateBinding BorderBrush}"
                                     BorderThickness="1" CornerRadius="4" Padding="9,4">
+                                <Border.Background>
+                                    <MultiBinding Converter="{StaticResource ChipBrush}" ConverterParameter="bg">
+                                        <Binding/>
+                                        <Binding Path="DataContext.SelectedHighlight" RelativeSource="{RelativeSource AncestorType=ItemsControl}"/>
+                                    </MultiBinding>
+                                </Border.Background>
+                                <TextElement.Foreground>
+                                    <MultiBinding Converter="{StaticResource ChipBrush}" ConverterParameter="fg">
+                                        <Binding/>
+                                        <Binding Path="DataContext.SelectedHighlight" RelativeSource="{RelativeSource AncestorType=ItemsControl}"/>
+                                    </MultiBinding>
+                                </TextElement.Foreground>
                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="b" Property="Background" Value="#FFEFF4FC"/>
+                                    <Setter TargetName="b" Property="BorderBrush" Value="{StaticResource Accent}"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
