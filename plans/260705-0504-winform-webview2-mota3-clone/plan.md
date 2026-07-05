@@ -52,19 +52,18 @@ HTML/CSS/JS + engine phân trang của prototype** → giống tuyệt đối. X
 |-------|------|--------|
 | 1 | [Scaffold Delete-Python & Vendor Prototype](./phase-01-scaffold-delete-python-vendor-prototype.md) | Done |
 | 2 | [Core Excel Models Config NameResolver](./phase-02-core-excel-models-config-nameresolver.md) | Done |
-| 3 | [WebView2 Host Bridge & Template Engine](./phase-03-webview2-host-bridge-template-engine.md) | In-progress (infra compiles; blocked on prototype bootstrap + Windows spike) |
-| 4 | [Step 1 Input & Mapping](./phase-04-step-1-input-mapping.md) | Pending (Windows UI) |
-| 5 | [Step 2 Design Editor & Preview](./phase-05-step-2-design-editor-preview.md) | Pending (Windows UI, needs bootstrap) |
-| 6 | [Step 3 Run Batch PrintToPdf](./phase-06-step-3-run-batch-printtopdf.md) | Core done+tested; Step3 UI pending (Windows) |
-| 7 | [Packaging CI & Acceptance](./phase-07-packaging-ci-acceptance.md) | CI + docs done; publish/acceptance pending (Windows) |
+| 3 | [WebView2 Host Bridge & Template Engine](./phase-03-webview2-host-bridge-template-engine.md) | Code done (host/renderer/bridge + React bootstrap); PrintToPdf spike + render fidelity pending Windows |
+| 4 | [Step 1 Input & Mapping](./phase-04-step-1-input-mapping.md) | Code done (compiles + published on CI); behavior verify on Windows |
+| 5 | [Step 2 Design Editor & Preview](./phase-05-step-2-design-editor-preview.md) | Code done (toolbar/panel/nav via bridge); editor+preview verify on Windows |
+| 6 | [Step 3 Run Batch PrintToPdf](./phase-06-step-3-run-batch-printtopdf.md) | Core done+tested; Step3 UI done (compiles); real PDF run verify on Windows |
+| 7 | [Packaging CI & Acceptance](./phase-07-packaging-ci-acceptance.md) | CI green (test + publish win-x64 artifact) + docs done; §13 acceptance pending Windows |
 
-### Open blocker (discovered 2026-07-05, session 2)
-Vendored `Web/index.html` is a DesignCanvas **React** component compiled by `support.js`
-(requires `window.React`/`ReactDOM`/`Babel` + a mount step) — **not** in the imported files,
-so the page isn't standalone-runnable. The editor/preview (P5) and PrintToPdf renderer are
-blocked until a bootstrap is added (bundle React/ReactDOM/Babel locally + mount, expose as
-`window.__mltlComponent` for `bridge.js`) or the page is reworked to a standalone render path.
-This must be resolved and verified on Windows before P3–P6 UI work continues.
+### Bootstrap resolved (2026-07-05, session 2)
+Vendored `Web/index.html` is a DesignCanvas **React** component compiled by `support.js`.
+Resolved by bundling pinned React/ReactDOM/@babel-standalone UMD in `Web/lib/` (support.js's
+CDN loaders short-circuit when the globals exist) and exposing the mounted instance as
+`window.__mltlComponent` for `bridge.js`. **Not yet verified live** — this env's Chrome is
+network-isolated and macOS has no WebView2; confirm render + the PrintToPdf spike on Windows.
 
 ## Dependencies
 Chuỗi: **P1 → P2, P3**; **(P2 + P3) → P4, P5, P6**; **(P4+P5+P6) → P7**.
