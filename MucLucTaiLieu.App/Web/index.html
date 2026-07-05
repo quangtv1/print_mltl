@@ -3,7 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Local UMD builds so support.js's loadReactUmd()/Babel loaders short-circuit
+     (window.React/ReactDOM/Babel already present) — no CDN needed, works offline. -->
+<script src="./lib/react.production.min.js"></script>
+<script src="./lib/react-dom.production.min.js"></script>
+<script src="./lib/babel.min.js"></script>
 <script src="./support.js"></script>
+<script src="./bridge.js"></script>
 </head>
 <body>
 <template id="__bundler_thumbnail" data-bg-color="#0043a5">
@@ -662,6 +668,7 @@ class Component extends DCLogic {
   tpl() { return this.templates.find(t => t.id === this.state.templateId) || this.templates[0]; }
 
   componentDidMount() {
+    window.__mltlComponent = this; // expose the mounted instance for the C# bridge (bridge.js)
     const map = { 'Đầu vào': 0, 'Thiết kế': 1, 'Chạy': 2 };
     const s = map[this.props.startStep];
     if (s != null) this.setState({ step: s });
