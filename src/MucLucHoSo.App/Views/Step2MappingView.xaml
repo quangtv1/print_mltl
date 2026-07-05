@@ -99,7 +99,7 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Border BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1">
-                                        <Grid MinHeight="58">
+                                        <Grid MinHeight="40">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="4"/>
                                                 <ColumnDefinition Width="220"/>
@@ -120,24 +120,13 @@
                                                 </Border.Style>
                                             </Border>
 
-                                            <!-- Biến + nhãn loại -->
-                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="14,8">
-                                                <TextBlock Text="{Binding Variable, StringFormat={}{{{0}}}}" FontFamily="Consolas" FontSize="14" Foreground="{StaticResource Accent}"/>
-                                                <TextBlock FontSize="12" Foreground="{StaticResource Muted}" Margin="0,2,0,0">
-                                                    <TextBlock.Style>
-                                                        <Style TargetType="TextBlock">
-                                                            <Setter Property="Text" Value="Biến hồ sơ"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding IsRowField}" Value="True"><Setter Property="Text" Value="Biến trong bảng"/></DataTrigger>
-                                                                <DataTrigger Binding="{Binding IsAutoField}" Value="True"><Setter Property="Text" Value="Tự động (Word tính)"/></DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </TextBlock.Style>
-                                                </TextBlock>
-                                            </StackPanel>
+                                            <!-- Biến (loại phân biệt bằng thanh màu bên trái) -->
+                                            <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="14,0"
+                                                       Text="{Binding Variable, StringFormat={}{{{0}}}}" FontFamily="Consolas" FontSize="14"
+                                                       Foreground="{StaticResource Accent}" TextTrimming="CharacterEllipsis"/>
 
                                             <!-- Nguồn: combo (cột/hằng) hoặc ghi chú tự động -->
-                                            <Grid Grid.Column="2" Margin="8,8,12,8" VerticalAlignment="Center">
+                                            <Grid Grid.Column="2" Margin="8,4,12,4" VerticalAlignment="Center">
                                                 <Grid Visibility="{Binding IsAutoField, Converter={StaticResource InverseBoolToVis}}">
                                                     <ComboBox IsEditable="True" ItemsSource="{Binding AvailableColumns}"
                                                               Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"/>
