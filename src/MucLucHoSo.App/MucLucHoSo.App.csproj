@@ -7,8 +7,8 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <RootNamespace>MucLucHoSo.App</RootNamespace>
-    <AssemblyName>MucLucHoSo</AssemblyName>
-    <Version>1.5.0</Version>
+    <AssemblyName>MLHS</AssemblyName>
+    <Version>1.6.0</Version>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />

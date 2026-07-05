@@ -41,14 +41,14 @@ jobs:
           -p:DebugType=none
           -o publish
 
-      - name: Zip artifact (MucLucHoSo.exe + templates/)
-        run: Compress-Archive -Path publish/* -DestinationPath "MucLucHoSo-${{ github.ref_name }}-win-x64.zip"
+      - name: Zip artifact (MLHS.exe + templates/)
+        run: Compress-Archive -Path publish/* -DestinationPath "MLHS-${{ github.ref_name }}-win-x64.zip"
 
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: >
           gh release create "${{ github.ref_name }}"
-          "MucLucHoSo-${{ github.ref_name }}-win-x64.zip"
-          --title "MụcLụcHồSơ ${{ github.ref_name }}"
-          --notes "Bản build .NET 8 WPF — **1 file MucLucHoSo.exe** (self-contained, không cần cài .NET). Giải nén zip rồi chạy MucLucHoSo.exe; giữ nguyên thư mục templates/ cạnh exe. Đường DOCX chạy độc lập; xuất PDF cần cài **Microsoft Word** trên máy đích."
+          "MLHS-${{ github.ref_name }}-win-x64.zip"
+          --title "MLHS ${{ github.ref_name }}"
+          --notes "Bản build .NET 8 WPF — **1 file MLHS.exe** (self-contained, không cần cài .NET). Giải nén zip rồi chạy MLHS.exe; giữ nguyên thư mục templates/ cạnh exe. Đường DOCX chạy độc lập; xuất PDF cần cài **Microsoft Word** trên máy đích."
