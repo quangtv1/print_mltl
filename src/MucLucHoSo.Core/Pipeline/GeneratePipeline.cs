@@ -28,6 +28,13 @@ public sealed class GeneratePipeline
     private readonly object _ckLock = new();
     // Chống trùng tên trong một mẻ: giữ các tên (không phân biệt hoa/thường) đã dùng.
     private readonly System.Collections.Concurrent.ConcurrentDictionary<string, byte> _usedNames = new();
+
+    // Cổng tạm dừng: mở (set) = chạy; đóng (reset) = worker chờ giữa các hồ sơ. Không huỷ job.
+    private readonly ManualResetEventSlim _pauseGate = new(true);
+    /// <summary>Tạm dừng: worker sẽ dừng trước hồ sơ kế tiếp (giữ nguyên tiến trình, Word vẫn ấm).</summary>
+    public void Pause() => _pauseGate.Reset();
+    /// <summary>Chạy tiếp sau khi tạm dừng.</summary>
+    public void Continue() => _pauseGate.Set();
     private JobState _state = new();
     private string _jobStatePath = "";
     private int _done;
@@ -45,6 +52,7 @@ public sealed class GeneratePipeline
     {
         Directory.CreateDirectory(_opt.OutputDirectory);
         _usedNames.Clear();
+        _pauseGate.Set();   // mở cổng khi bắt đầu mẻ
         _jobStatePath = jobStatePath;
         _state = _opt.Resume ? JobState.LoadOrNew(jobStatePath) : new JobState();
         int startAfter = _opt.Resume ? _state.LastCompletedGroupIndex : -1;
@@ -68,6 +76,7 @@ public sealed class GeneratePipeline
             foreach (var job in EnumerateJobs(readerFactory, startAfter))
             {
                 ct.ThrowIfCancellationRequested();
+                _pauseGate.Wait(ct);   // điểm tạm dừng: dừng trước khi nhận hồ sơ kế tiếp
                 await throttle.WaitAsync(ct);
                 int fi = Interlocked.Increment(ref fileIndex);
                 var captured = job;
@@ -139,6 +148,7 @@ public sealed class GeneratePipeline
             using var pdf = _pdfFactory();
             await foreach (var item in reader.ReadAllAsync(ct))
             {
+                _pauseGate.Wait(ct);   // tạm dừng cả tầng xuất PDF
                 try
                 {
                     pdf.Convert(item.docx, item.pdf);

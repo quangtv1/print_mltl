@@ -61,8 +61,32 @@ public partial class Step4GenerateViewModel : StepViewModel
         }
     }
 
-    public override ICommand? PrimaryCommand => GenerateCommand;
-    public override string PrimaryLabel => HasRun ? "Tạo lại" : "Tạo mục lục";
+    [ObservableProperty] private bool _isPaused;
+    private GeneratePipeline? _pipeline;
+    private int _completed;
+
+    // Nút chính đổi theo trạng thái: chạy → "Tạm dừng" (đỏ); đang dừng → "Chạy tiếp" (xanh); xong hết → "Chạy lại".
+    public override ICommand? PrimaryCommand => IsRunning ? PauseResumeCommand : GenerateCommand;
+    public override string PrimaryLabel =>
+        !IsRunning ? (HasRun ? "Chạy lại" : "Tạo mục lục")
+        : IsPaused ? "Chạy tiếp" : "Tạm dừng";
+    public override System.Windows.Media.Brush PrimaryBackground =>
+        !IsRunning ? Brushes.Accent : IsPaused ? Brushes.Success : Brushes.Danger;
+
+    private void RaisePrimary()
+    {
+        OnPropertyChanged(nameof(PrimaryLabel));
+        OnPropertyChanged(nameof(PrimaryCommand));
+        OnPropertyChanged(nameof(PrimaryBackground));
+    }
+
+    [RelayCommand]
+    private void PauseResume()
+    {
+        if (!IsRunning || _pipeline is null) return;
+        if (IsPaused) { _pipeline.Continue(); IsPaused = false; Log("> Chạy tiếp.", CInfo); }
+        else { _pipeline.Pause(); IsPaused = true; Log("> Tạm dừng — sẽ dừng sau khi xong các hồ sơ đang chạy.", CInfo); }
+    }
 
     public Step4GenerateViewModel(WizardViewModel w)
         : base(w, 4, "Tạo mục lục", "Kết xuất DOCX/PDF hàng loạt.")
@@ -76,7 +100,9 @@ public partial class Step4GenerateViewModel : StepViewModel
 
     partial void OnProgressValueChanged(double value) => OnPropertyChanged(nameof(ProgressText));
     partial void OnProgressMaxChanged(double value) => OnPropertyChanged(nameof(ProgressText));
-    partial void OnHasRunChanged(bool value) => OnPropertyChanged(nameof(PrimaryLabel));
+    partial void OnHasRunChanged(bool value) => RaisePrimary();
+    partial void OnIsRunningChanged(bool value) => RaisePrimary();
+    partial void OnIsPausedChanged(bool value) => RaisePrimary();
 
     public override void OnActivated()
     {
@@ -135,7 +161,7 @@ public partial class Step4GenerateViewModel : StepViewModel
         if (string.IsNullOrWhiteSpace(S.OutputDirectory))
             S.OutputDirectory = Path.Combine(Path.GetDirectoryName(S.SourcePath ?? "") ?? Environment.CurrentDirectory, "Output");
 
-        IsRunning = true; CanOpenFolder = false; DoneText = ""; LogLines.Clear();
+        IsRunning = true; IsPaused = false; _completed = 0; CanOpenFolder = false; DoneText = ""; LogLines.Clear();
         while (_logQueue.TryDequeue(out _)) { }
         // Tổng = số hồ sơ đã Validation ở Bước 2 (thanh tiến trình hiện đúng ngay từ đầu).
         Volatile.Write(ref _pendingDone, 0);
@@ -175,15 +201,20 @@ public partial class Step4GenerateViewModel : StepViewModel
             else pdfFactory = () => new NullPdfConverter();
 
             var pipe = Wizard.Core.BuildPipeline(S, pdfFactory, log);
+            _pipeline = pipe;
             pipe.OnProgress += (d, t) => { Volatile.Write(ref _pendingDone, d); Volatile.Write(ref _pendingTotal, t); };
             pipe.OnHoSo += o =>
             {
+                int n = Interlocked.Increment(ref _completed);
+                int total = Math.Max(n, S.ValidatedGroupCount);
                 if (o.Status == HoSoStatus.Ok)
                 {
-                    var b = (S.FileNamePrefix ?? "") + o.GroupKey;
-                    Log($"✓ Hồ sơ {o.GroupKey} → {b}.docx" + (S.ExportPdf ? " + .pdf" : ""), COk);
+                    // Tên file đầy đủ (kèm .pdf nếu có), lấy đúng tên thật (kể cả hậu tố chống trùng).
+                    var names = (o.DocxPath is null ? "" : Path.GetFileName(o.DocxPath))
+                              + (o.PdfPath is null ? "" : " + " + Path.GetFileName(o.PdfPath));
+                    Log($"[{n}/{total}] ✓ {names}", COk);
                 }
-                else Log($"✗ Hồ sơ {o.GroupKey}" + (o.Message is null ? "" : " — " + o.Message), CErr);
+                else Log($"[{n}/{total}] ✗ Hồ sơ {o.GroupKey}" + (o.Message is null ? "" : " — " + o.Message), CErr);
             };
 
             var jobState = Path.Combine(S.OutputDirectory, "job.state.json");
@@ -201,7 +232,7 @@ public partial class Step4GenerateViewModel : StepViewModel
             Log("✗ Lỗi: " + ex.Message, CErr);
             DoneText = "Lỗi";
         }
-        finally { StopUiPump(); IsRunning = false; HasRun = true; GenerateCommand.NotifyCanExecuteChanged(); }
+        finally { StopUiPump(); _pipeline = null; IsPaused = false; IsRunning = false; HasRun = true; GenerateCommand.NotifyCanExecuteChanged(); }
     }
     private bool CanGenerate() => !IsRunning && S.Runtime != null;
 

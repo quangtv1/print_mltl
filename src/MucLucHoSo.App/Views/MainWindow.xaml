@@ -88,6 +88,7 @@
                             Command="{Binding NextCommand}"
                             Visibility="{Binding IsLastStep, Converter={StaticResource InverseBoolToVis}}"/>
                     <Button Content="{Binding CurrentStep.PrimaryLabel}" Style="{StaticResource PrimaryButton}" Margin="10,0,0,0"
+                            Background="{Binding CurrentStep.PrimaryBackground}"
                             Command="{Binding CurrentStep.PrimaryCommand}"
                             Visibility="{Binding IsLastStep, Converter={StaticResource BoolToVis}}"/>
                 </StackPanel>

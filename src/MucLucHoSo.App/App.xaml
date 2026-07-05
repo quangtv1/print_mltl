@@ -189,19 +189,21 @@
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="Button">
+                            <!-- Hover/pressed = lớp phủ tối trung tính → dùng được cho mọi màu nền (accent/đỏ/xanh). -->
                             <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="6"
                                     BorderThickness="1" BorderBrush="{TemplateBinding Background}" SnapsToDevicePixels="True"
                                     TextElement.Foreground="{TemplateBinding Foreground}">
-                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                                <Grid>
+                                    <Border x:Name="ov" Background="Transparent" CornerRadius="6"/>
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                                </Grid>
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="bd" Property="Background" Value="{StaticResource AccentHover}"/>
-                                    <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource AccentHover}"/>
+                                    <Setter TargetName="ov" Property="Background" Value="#22000000"/>
                                 </Trigger>
                                 <Trigger Property="IsPressed" Value="True">
-                                    <Setter TargetName="bd" Property="Background" Value="{StaticResource AccentPress}"/>
-                                    <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource AccentPress}"/>
+                                    <Setter TargetName="ov" Property="Background" Value="#33000000"/>
                                 </Trigger>
                                 <Trigger Property="IsKeyboardFocused" Value="True">
                                     <Setter TargetName="bd" Property="BorderBrush" Value="White"/>
