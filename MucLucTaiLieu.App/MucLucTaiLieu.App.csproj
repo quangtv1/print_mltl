@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>MucLucTaiLieu.App</RootNamespace>
-    <AssemblyName>MucLucTaiLieu</AssemblyName>
+    <AssemblyName>print_mltl</AssemblyName>
     <Version>0.1.0</Version>
     <AssemblyTitle>MụcLụcTàiLiệu</AssemblyTitle>
     <!-- Allows building the Windows-targeted app on non-Windows dev machines (macOS/Linux).

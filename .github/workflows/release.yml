@@ -37,14 +37,14 @@ jobs:
           -p:DebugType=none
           -o publish
 
-      - name: Zip artifact (MucLucTaiLieu.exe + Web/ + Assets/)
-        run: Compress-Archive -Path publish/* -DestinationPath "MucLucTaiLieu-${{ github.ref_name }}-win-x64.zip"
+      - name: Zip artifact (print_mltl.exe + Web/ + Assets/)
+        run: Compress-Archive -Path publish/* -DestinationPath "print_mltl-${{ github.ref_name }}-win-x64.zip"
 
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: >
           gh release create "${{ github.ref_name }}"
-          "MucLucTaiLieu-${{ github.ref_name }}-win-x64.zip"
+          "print_mltl-${{ github.ref_name }}-win-x64.zip"
           --title "MụcLụcTàiLiệu ${{ github.ref_name }}"
-          --notes "Bản build .NET 8 WinForms + WebView2 — **1 file MucLucTaiLieu.exe** (self-contained, không cần cài .NET). Giải nén zip rồi chạy MucLucTaiLieu.exe; giữ nguyên thư mục Web/ và Assets/ cạnh exe. Cần WebView2 Runtime trên máy đích (đa số Win10/11 có sẵn). Lưu ý: giao diện/PrintToPdf nên kiểm thử trên Windows (xem docs/winform-webview2-app.md)."
+          --notes "Bản build .NET 8 WinForms + WebView2 — **1 file print_mltl.exe** (self-contained, không cần cài .NET). Giải nén zip rồi chạy print_mltl.exe; giữ nguyên thư mục Web/ và Assets/ cạnh exe. Cần WebView2 Runtime trên máy đích (đa số Win10/11 có sẵn). Lưu ý: giao diện/PrintToPdf nên kiểm thử trên Windows (xem docs/winform-webview2-app.md)."
