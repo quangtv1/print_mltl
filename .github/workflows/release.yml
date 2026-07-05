@@ -1,0 +1,49 @@
+name: Release
+
+# On a version tag (v*): run Core tests, publish the portable win-x64 app, zip it,
+# and create a GitHub Release with the zip attached. Marked pre-release because the
+# WinForms/WebView2 UI still needs manual verification on Windows (mota3 §13).
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Run Core tests
+        run: dotnet test MucLucTaiLieu.sln -c Release
+
+      - name: Publish App (portable, self-contained win-x64)
+        run: >
+          dotnet publish MucLucTaiLieu.App/MucLucTaiLieu.App.csproj
+          -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=false
+          -o publish
+
+      - name: Zip artifact
+        run: Compress-Archive -Path publish/* -DestinationPath "MucLucTaiLieu-${{ github.ref_name }}-win-x64.zip"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create "${{ github.ref_name }}"
+          "MucLucTaiLieu-${{ github.ref_name }}-win-x64.zip"
+          --title "MụcLụcTàiLiệu ${{ github.ref_name }}"
+          --prerelease
+          --notes "Bản build .NET 8 WinForms + WebView2 (portable win-x64, self-contained). Cần WebView2 Runtime trên máy đích. **Pre-release:** giao diện/PrintToPdf chưa nghiệm thu tay trên Windows (xem docs/winform-webview2-app.md)."
