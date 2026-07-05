@@ -126,6 +126,18 @@ header/footer, logo & ảnh tĩnh, page setup; field PAGE/NUMPAGES; placeholder 
 ## Mở bằng VS Code
 Thư mục `.vscode/` có sẵn `tasks.json` + `launch.json`. Mở thư mục gốc → cài **C# Dev Kit** → **F5** (cấu hình "Chạy MucLucHoSo.App").
 
+## Lịch sử phiên bản
+Bản phát hành: [GitHub Releases](https://github.com/quangtv1/print_mltl/releases) (tag `v*` → CI build self-contained win-x64).
+
+### v1.1.0
+- **Nút bấm** đồng bộ: bo góc, trạng thái hover/pressed/disabled/focus theo brand, con trỏ tay; nút "Tạo lại" rộng bằng "Tạo mục lục".
+- **Màn Xem trước:** nút zoom & tiến/lùi hồ sơ tự mờ ở biên (hết click chết); bấm "%" về 100%; **Ctrl + lăn chuột** zoom; phím tắt **Ctrl +/−/0**, **Ctrl ←/→** đổi hồ sơ; tooltip + nhãn trợ năng cho nút icon.
+- Tab "Xem Template / Xem trước" có gạch chân khi chọn; chip biến đang chọn được tô sáng.
+- Sửa tương phản chữ biến tự động đạt **WCAG AA**; thêm phím tắt **Alt ←/→** điều hướng wizard.
+
+### v1.0.0
+- Bản đầu: app WPF 4 bước (Nguồn → Ghép biến → Xem trước → Tạo mục lục), pipeline merge OpenXML 2 tầng + xuất PDF qua Word Interop, 4 template thật, Resume/Audit/Validation.
+
 ## Còn phải làm (theo đặc tả §16)
 - **Spike:** ổn định Word Interop batch 500–1000 file; fidelity merge 4 template (nhất là Mẫu 03 chín cột); độ trễ Preview.
 - **Test:** thêm project `MucLucHoSo.Tests` cho GroupEngine / DocxMerger / Validator (chưa có trong repo).
