@@ -6,22 +6,7 @@ get_link_pdf_.json
 # === Personal signature (excluded from public repo) ===
 chuky_tung.png
 
-# === Python ===
-__pycache__/
-*.py[cod]
-*.egg-info/
-.venv/
-venv/
-env/
-
-# === PyInstaller build output ===
-build/
-dist/
-*.manifest
-
 # === Generated output ===
-MLHS_*.docx
-Muc_Luc_Ho_So.xlsx
 *.pdf
 
 # === Local sample data (large, not for repo) ===
@@ -32,6 +17,7 @@ Biên mục*.xlsx
 # === .NET build output ===
 bin/
 obj/
+publish/
 
 # === OS / editor ===
 .DS_Store
