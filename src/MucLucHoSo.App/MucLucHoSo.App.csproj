@@ -9,6 +9,8 @@
     <RootNamespace>MucLucHoSo.App</RootNamespace>
     <AssemblyName>MLHS</AssemblyName>
     <Version>1.6.0</Version>
+    <!-- Icon nhúng vào MLHS.exe → Explorer/taskbar hiển thị icon ứng dụng -->
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
