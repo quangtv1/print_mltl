@@ -1,0 +1,120 @@
+<UserControl x:Class="MucLucHoSo.App.Views.Step3PreviewView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Thanh công cụ: chia 2 cột trùng với vùng bên dưới -->
+        <Border Grid.Row="0" Background="White" BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="14,8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="320"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Toolbar phía trên khung Preview -->
+                <Grid Grid.Column="0">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                        <RadioButton Style="{StaticResource TextToggle}" Content="Xem Template" Margin="0,0,16,0"
+                                     IsChecked="{Binding ShowFilled, Converter={StaticResource InverseBool}}"/>
+                        <RadioButton Style="{StaticResource TextToggle}" Content="Xem trước" Margin="0,0,16,0" IsChecked="{Binding ShowFilled}"/>
+                        <Border Width="1" Background="{StaticResource Line}" Margin="0,3,16,3"/>
+                        <Button Content="−" Style="{StaticResource GhostButton}" Padding="0" Width="36" Command="{Binding ZoomOutCommand}"/>
+                        <TextBlock Text="{Binding ZoomText}" VerticalAlignment="Center" MinWidth="52" TextAlignment="Center"/>
+                        <Button Content="+" Style="{StaticResource GhostButton}" Padding="0" Width="36" Command="{Binding ZoomInCommand}"/>
+                    </StackPanel>
+                    <!-- Bộ nút Tiến/Lùi hồ sơ: sát cạnh phải khung Preview -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0">
+                        <Button Content="◀" Style="{StaticResource GhostButton}" Padding="0" Width="36" Command="{Binding PrevCommand}"/>
+                        <TextBlock Text="{Binding NavText}" VerticalAlignment="Center" Margin="10,0" MinWidth="150" TextAlignment="Center" FontWeight="SemiBold"/>
+                        <Button Content="▶" Style="{StaticResource GhostButton}" Padding="0" Width="36" Command="{Binding NextCommand}"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Tiêu đề sidebar: ngang hàng với thanh zoom -->
+                <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="16,0,0,0" TextTrimming="CharacterEllipsis">
+                    <Run Text="Biến của mẫu · " FontWeight="SemiBold"/>
+                    <Run Text="{Binding TemplateName, Mode=OneWay}" FontWeight="SemiBold" Foreground="{StaticResource Ink}"/>
+                </TextBlock>
+            </Grid>
+        </Border>
+
+        <!-- Nội dung -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="320"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Khung Preview -->
+            <Grid Grid.Column="0" Background="#FFEDEDED">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding PreviewPages}" HorizontalAlignment="Center">
+                        <ItemsControl.LayoutTransform>
+                            <ScaleTransform ScaleX="{Binding ZoomFactor}" ScaleY="{Binding ZoomFactor}"/>
+                        </ItemsControl.LayoutTransform>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="White" Margin="14" SnapsToDevicePixels="True">
+                                    <Image Source="{Binding}" Stretch="Uniform"/>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+                <Border Background="#FFEDEDED" Visibility="{Binding HasPreview, Converter={StaticResource InverseBoolToVis}}">
+                    <TextBlock Text="{Binding StatusText}" Foreground="{StaticResource Muted}" TextWrapping="Wrap"
+                               Margin="30" VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center"/>
+                </Border>
+                <ProgressBar Height="6" IsIndeterminate="True" VerticalAlignment="Top"
+                             Visibility="{Binding Busy, Converter={StaticResource BoolToVis}}"/>
+            </Grid>
+
+            <!-- Sidebar biến (tiêu đề đã đưa lên toolbar) -->
+            <Border Grid.Column="1" Background="White" BorderBrush="{StaticResource Line}" BorderThickness="1,0,0,0">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
+                    <StackPanel>
+                        <TextBlock TextWrapping="Wrap" Foreground="{StaticResource Muted}" FontSize="13" Margin="0,0,0,14">
+                            Bấm một biến để <Run Text="nổi sáng" FontWeight="SemiBold"/> giá trị của biến đó trên trang
+                            (biến trong bảng sẽ sáng cả cột). Bấm lại để tắt.
+                        </TextBlock>
+
+                        <TextBlock Text="TÀI LIỆU (HỒ SƠ)" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Muted}" Margin="0,0,0,6"/>
+                        <ItemsControl ItemsSource="{Binding HeaderVars}" Margin="0,0,0,14">
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate><DataTemplate>
+                                <Button Style="{StaticResource ChipButton}" Content="{Binding StringFormat={}{{{0}}}}"
+                                        Command="{Binding DataContext.SelectVarCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                        CommandParameter="{Binding}"/>
+                            </DataTemplate></ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock Text="HÀNG (BẢNG VĂN BẢN)" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Muted}" Margin="0,0,0,6"/>
+                        <ItemsControl ItemsSource="{Binding RowVars}" Margin="0,0,0,14">
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate><DataTemplate>
+                                <Button Style="{StaticResource ChipButton}" Content="{Binding StringFormat={}{{{0}}}}"
+                                        Command="{Binding DataContext.SelectVarCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                        CommandParameter="{Binding}"/>
+                            </DataTemplate></ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <Border Height="1" Background="{StaticResource Line}" Margin="0,2,0,12"/>
+                        <TextBlock Text="BIẾN TỰ ĐỘNG" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Muted}" Margin="0,0,0,6"/>
+                        <ItemsControl ItemsSource="{Binding AutoVars}">
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate><DataTemplate>
+                                <Border Background="White" BorderBrush="#FFA6D8BC" BorderThickness="1" CornerRadius="4" Padding="9,4" Margin="0,0,7,7"><TextBlock Text="{Binding StringFormat={}{{{0}}}}" FontFamily="Consolas" FontSize="13.5" Foreground="{StaticResource Ok}"/></Border>
+                            </DataTemplate></ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Text="{}{trang_so}/{tong_so_trang}: số trang / tổng số trang — tự động khi xuất."
+                                   Foreground="{StaticResource Muted}" FontSize="12.5" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

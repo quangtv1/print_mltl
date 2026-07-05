@@ -1,26 +1,6 @@
-# === Secrets — NEVER commit ===
-get_link_pdf_.json
-*service-account*.json
-*credentials*.json
-
-# === Personal signature (excluded from public repo) ===
-chuky_tung.png
-
-# === Generated output ===
-*.pdf
-
-# === Local sample data (large, not for repo) ===
-Biên mục*.xlsx
-.thumbnail
-*.thumbnail
-
-# === .NET build output ===
 bin/
 obj/
-publish/
-
-# === OS / editor ===
+Output/
+*.user
 .DS_Store
-Thumbs.db
-.idea/
-.vscode/
+publish/

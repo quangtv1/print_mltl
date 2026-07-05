@@ -1,8 +1,9 @@
 name: Release
 
-# On a version tag (v*): run Core tests, publish the portable win-x64 app, zip it,
-# and create a GitHub Release with the zip attached. Marked pre-release because the
-# WinForms/WebView2 UI still needs manual verification on Windows (mota3 §13).
+# On a version tag (v*): build the MucLucHoSo solution, publish the WPF app as a
+# self-contained single-file win-x64 build (kèm templates/), zip it, and create a
+# GitHub Release with the zip attached. Xuất PDF cần Microsoft Word trên máy đích;
+# đường DOCX chạy độc lập không cần Word.
 
 on:
   push:
@@ -25,26 +26,29 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
-      - name: Run Core tests
-        run: dotnet test MucLucTaiLieu.sln -c Release
+      - name: Restore
+        run: dotnet restore MucLucHoSo.sln
+
+      - name: Build (Release)
+        run: dotnet build MucLucHoSo.sln -c Release --no-restore
 
       - name: Publish App (single-file exe, self-contained win-x64)
         run: >
-          dotnet publish MucLucTaiLieu.App/MucLucTaiLieu.App.csproj
+          dotnet publish src/MucLucHoSo.App/MucLucHoSo.App.csproj
           -c Release -r win-x64 --self-contained true
           -p:PublishSingleFile=true
           -p:IncludeNativeLibrariesForSelfExtract=true
           -p:DebugType=none
           -o publish
 
-      - name: Zip artifact (print_mltl.exe + Web/ + Assets/)
-        run: Compress-Archive -Path publish/* -DestinationPath "print_mltl-${{ github.ref_name }}-win-x64.zip"
+      - name: Zip artifact (MucLucHoSo.exe + templates/)
+        run: Compress-Archive -Path publish/* -DestinationPath "MucLucHoSo-${{ github.ref_name }}-win-x64.zip"
 
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: >
           gh release create "${{ github.ref_name }}"
-          "print_mltl-${{ github.ref_name }}-win-x64.zip"
-          --title "MụcLụcTàiLiệu ${{ github.ref_name }}"
-          --notes "Bản build .NET 8 WinForms + WebView2 — **1 file print_mltl.exe** (self-contained, không cần cài .NET). Giải nén zip rồi chạy print_mltl.exe; giữ nguyên thư mục Web/ và Assets/ cạnh exe. Cần WebView2 Runtime trên máy đích (đa số Win10/11 có sẵn). Lưu ý: giao diện/PrintToPdf nên kiểm thử trên Windows (xem docs/winform-webview2-app.md)."
+          "MucLucHoSo-${{ github.ref_name }}-win-x64.zip"
+          --title "MụcLụcHồSơ ${{ github.ref_name }}"
+          --notes "Bản build .NET 8 WPF — **1 file MucLucHoSo.exe** (self-contained, không cần cài .NET). Giải nén zip rồi chạy MucLucHoSo.exe; giữ nguyên thư mục templates/ cạnh exe. Đường DOCX chạy độc lập; xuất PDF cần cài **Microsoft Word** trên máy đích."

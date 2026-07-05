@@ -1,0 +1,140 @@
+<Application x:Class="MucLucHoSo.App.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="clr-namespace:MucLucHoSo.App.Converters"
+             StartupUri="Views/MainWindow.xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <!-- Màu -->
+            <SolidColorBrush x:Key="Accent" Color="#FF0043A5"/>
+            <SolidColorBrush x:Key="Cyan" Color="#FF00A9B4"/>
+            <SolidColorBrush x:Key="Ink" Color="#FF1A1A1A"/>
+            <SolidColorBrush x:Key="Muted" Color="#FF5A6472"/>
+            <SolidColorBrush x:Key="Line" Color="#FFD9DEE6"/>
+            <SolidColorBrush x:Key="Panel" Color="#FFF5F7FA"/>
+            <SolidColorBrush x:Key="Ok" Color="#FF1F9D55"/>
+            <SolidColorBrush x:Key="Warn" Color="#FFD98300"/>
+
+            <!-- Converters -->
+            <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+            <conv:InverseBoolConverter x:Key="InverseBool"/>
+            <conv:NullToVisibilityConverter x:Key="NullToVis"/>
+            <conv:EnumEqualsConverter x:Key="EnumEquals"/>
+            <conv:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis"/>
+
+            <!-- Style ngầm: mọi TextBox/ComboBox cao 32 (bằng ô nhập cạnh nút Duyệt) -->
+            <Style TargetType="TextBox">
+                <Setter Property="MinHeight" Value="32"/>
+                <Setter Property="Padding" Value="8,0"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+            </Style>
+            <Style TargetType="ComboBox">
+                <Setter Property="MinHeight" Value="32"/>
+                <Setter Property="Padding" Value="8,0"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+            </Style>
+
+            <Style TargetType="TextBlock">
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+
+            <!-- Nút: mọi nút cao 32, padding như nút điều hướng; CHỈ đổi màu nền -->
+            <Style x:Key="PrimaryButton" TargetType="Button">
+                <Setter Property="Background" Value="{StaticResource Accent}"/>
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="Padding" Value="16,6"/>
+                <Setter Property="MinHeight" Value="32"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            </Style>
+            <Style x:Key="TealButton" TargetType="Button">
+                <Setter Property="Background" Value="{StaticResource Cyan}"/>
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="Padding" Value="16,6"/>
+                <Setter Property="MinHeight" Value="32"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            </Style>
+            <Style x:Key="GhostButton" TargetType="Button">
+                <Setter Property="Padding" Value="16,6"/>
+                <Setter Property="MinHeight" Value="32"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            </Style>
+
+            <!-- Toggle dạng chữ (không có nút tròn) -->
+            <Style x:Key="TextToggle" TargetType="RadioButton">
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Foreground" Value="{StaticResource Muted}"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="RadioButton">
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+                <Style.Triggers>
+                    <Trigger Property="IsChecked" Value="True">
+                        <Setter Property="Foreground" Value="{StaticResource Accent}"/>
+                        <Setter Property="FontWeight" Value="SemiBold"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <!-- Chip biến dạng outline (nền trắng, viền + chữ theo màu) -->
+            <Style x:Key="ChipButton" TargetType="Button">
+                <Setter Property="Background" Value="White"/>
+                <Setter Property="Foreground" Value="{StaticResource Accent}"/>
+                <Setter Property="BorderBrush" Value="#FF9CC3EE"/>
+                <Setter Property="FontFamily" Value="Consolas"/>
+                <Setter Property="FontSize" Value="13.5"/>
+                <Setter Property="Margin" Value="0,0,7,7"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="b" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="1" CornerRadius="4" Padding="9,4">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="b" Property="Background" Value="#FFEFF4FC"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="VarChip" TargetType="Border">
+                <Setter Property="Background" Value="#FFEDF2FB"/>
+                <Setter Property="CornerRadius" Value="4"/>
+                <Setter Property="Padding" Value="9,4"/>
+                <Setter Property="Margin" Value="0,0,7,7"/>
+            </Style>
+
+            <Style x:Key="Card" TargetType="Border">
+                <Setter Property="Background" Value="White"/>
+                <Setter Property="BorderBrush" Value="{StaticResource Line}"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="CornerRadius" Value="8"/>
+                <Setter Property="Padding" Value="16"/>
+            </Style>
+
+            <Style x:Key="H2" TargetType="TextBlock">
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="FontSize" Value="16"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="Foreground" Value="{StaticResource Ink}"/>
+                <Setter Property="Margin" Value="0,0,0,8"/>
+            </Style>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
