@@ -16,16 +16,20 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <!-- Block: Cột gom nhóm -->
-            <Border Grid.Row="0" Background="#FFEFF4FC" BorderBrush="#FFCADCF5" BorderThickness="1" CornerRadius="10" Padding="14,12">
+            <!-- Block: Cột gom nhóm — làm nổi bật vì đây là lựa chọn quyết định kết quả -->
+            <Border Grid.Row="0" Background="#FFE7F0FC" BorderBrush="{StaticResource Accent}" BorderThickness="1.5" CornerRadius="10" Padding="16,14">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                        <TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" FontSize="15" Foreground="{StaticResource Accent}" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="Cột gom nhóm hồ sơ" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{StaticResource Accent}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Cột gom nhóm hồ sơ" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource Ink}" VerticalAlignment="Center"/>
+                        <Border Background="{StaticResource Accent}" CornerRadius="9" Padding="7,1" Margin="8,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="BẮT BUỘC" FontSize="10.5" FontWeight="SemiBold" Foreground="White"/>
+                        </Border>
                     </StackPanel>
-                    <TextBlock Text="(mỗi hồ sơ 1 file)" Foreground="{StaticResource Muted}" Margin="0,0,0,8"/>
-                    <ComboBox ItemsSource="{Binding S.Headers}" SelectedItem="{Binding S.GroupColumn}"/>
-                    <TextBlock Text="{Binding FileEstimateText}" Margin="0,8,0,0" Foreground="{StaticResource Accent}" TextWrapping="Wrap"/>
+                    <TextBlock Text="Mỗi giá trị khác nhau của cột này = 1 file mục lục. Chọn sai cột → gom nhóm sai, kết quả không như mong muốn."
+                               Foreground="{StaticResource Muted}" FontSize="12.5" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <ComboBox Height="38" FontSize="14" ItemsSource="{Binding S.Headers}" SelectedItem="{Binding S.GroupColumn}"/>
+                    <TextBlock Text="{Binding FileEstimateText}" Margin="0,10,0,0" FontWeight="SemiBold" Foreground="{StaticResource Accent}" TextWrapping="Wrap"/>
                 </StackPanel>
             </Border>
 
@@ -62,7 +66,7 @@
             </Grid.RowDefinitions>
 
             <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="2,0,0,8">
-                <TextBlock Text="Ghép biến trong mẫu ↔ cột trong file Excel" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <TextBlock Text="Ghép biến trong mẫu ↔ cột trong file Excel" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource Ink}" VerticalAlignment="Center"/>
                 <TextBlock Text="{Binding MappedCountText}" FontWeight="SemiBold" Margin="6,0,0,0" VerticalAlignment="Center">
                     <TextBlock.Style>
                         <Style TargetType="TextBlock">
