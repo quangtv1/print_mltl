@@ -1,6 +1,6 @@
 bin/
 obj/
-Output/
+/Output/
 *.user
 .DS_Store
 publish/
