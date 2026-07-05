@@ -1,0 +1,46 @@
+name: Build WinForms App
+
+# Builds the .NET 8 WinForms + WebView2 app on Windows: runs the cross-platform
+# Core tests, then publishes a portable self-contained win-x64 build and uploads it.
+# UI / PrintToPdf fidelity still require manual verification on Windows (mota3 §13).
+
+on:
+  push:
+    branches:
+      - "feat/winform-webview2"
+      - "main"
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: dotnet restore MucLucTaiLieu.sln
+
+      - name: Run Core tests
+        run: dotnet test MucLucTaiLieu.sln -c Release --no-restore
+
+      - name: Publish App (portable, self-contained win-x64)
+        run: >
+          dotnet publish MucLucTaiLieu.App/MucLucTaiLieu.App.csproj
+          -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=false
+          -o publish
+
+      - name: Upload app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MucLucTaiLieu-win-x64
+          path: publish
+          if-no-files-found: error
