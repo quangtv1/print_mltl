@@ -102,7 +102,7 @@
 
         <!-- Cửa sổ log nền đen -->
         <Border Grid.Row="2" Background="#FF1B1B1B" BorderBrush="#FF333333" BorderThickness="1" CornerRadius="4">
-            <ListBox ItemsSource="{Binding LogLines}" Background="Transparent" BorderThickness="0"
+            <ListBox x:Name="LogList" ItemsSource="{Binding LogLines}" Background="Transparent" BorderThickness="0"
                      ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
