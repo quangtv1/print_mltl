@@ -29,6 +29,7 @@ public partial class Step3PreviewViewModel : StepViewModel
     public ObservableCollection<string> HeaderVars { get; } = new();
     public ObservableCollection<string> RowVars { get; } = new();
     public ObservableCollection<string> AutoVars { get; } = new();
+    [ObservableProperty] private bool _hasAutoVars;
 
     private readonly ConcurrentDictionary<string, List<ImageSource>> _cache = new();
     private CancellationTokenSource? _prefetchCts;
@@ -57,10 +58,12 @@ public partial class Step3PreviewViewModel : StepViewModel
     private void RebuildVarGroups()
     {
         HeaderVars.Clear(); RowVars.Clear(); AutoVars.Clear();
+        HasAutoVars = false;
         if (S.Runtime is null) return;
         foreach (var v in S.Runtime.HeaderFields.OrderBy(x => x)) HeaderVars.Add(v);
         foreach (var v in S.Runtime.RowFields.OrderBy(x => x)) RowVars.Add(v);
         foreach (var v in S.Runtime.AutoFields.OrderBy(x => x)) AutoVars.Add(v);
+        HasAutoVars = AutoVars.Count > 0;
     }
 
     private const double ZoomMin = 0.4, ZoomMax = 3.0;

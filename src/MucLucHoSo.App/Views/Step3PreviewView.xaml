@@ -91,7 +91,7 @@
                         <ItemsControl ItemsSource="{Binding HeaderVars}" Margin="0,0,0,14">
                             <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate><DataTemplate>
-                                <Button Style="{StaticResource ChipButton}" Content="{Binding StringFormat={}{{{0}}}}"
+                                <Button Style="{StaticResource ChipButton}" Content="{Binding}" ContentStringFormat="{}{{{0}}}"
                                         Command="{Binding DataContext.SelectVarCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                         CommandParameter="{Binding}"/>
                             </DataTemplate></ItemsControl.ItemTemplate>
@@ -101,22 +101,25 @@
                         <ItemsControl ItemsSource="{Binding RowVars}" Margin="0,0,0,14">
                             <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate><DataTemplate>
-                                <Button Style="{StaticResource ChipButton}" Tag="purple" Content="{Binding StringFormat={}{{{0}}}}"
+                                <Button Style="{StaticResource ChipButton}" Tag="purple" Content="{Binding}" ContentStringFormat="{}{{{0}}}"
                                         Command="{Binding DataContext.SelectVarCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                         CommandParameter="{Binding}"/>
                             </DataTemplate></ItemsControl.ItemTemplate>
                         </ItemsControl>
 
-                        <Border Height="1" Background="{StaticResource Line}" Margin="0,2,0,12"/>
-                        <TextBlock Text="Biến tự động" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Muted}" Margin="0,0,0,6"/>
-                        <ItemsControl ItemsSource="{Binding AutoVars}">
-                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate><DataTemplate>
-                                <Border Background="#FFEBF7EF" CornerRadius="4" Padding="9,4" Margin="0,0,7,7"><TextBlock Text="{Binding StringFormat={}{{{0}}}}" FontFamily="Consolas" FontSize="13.5" Foreground="{StaticResource OkText}"/></Border>
-                            </DataTemplate></ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                        <TextBlock Text="{}{trang_so}/{tong_so_trang}: số trang / tổng số trang — tự động khi xuất."
-                                   Foreground="{StaticResource Muted}" FontSize="12.5" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                        <!-- Chỉ hiện khối "Biến tự động" khi template thực sự dùng biến tự động -->
+                        <StackPanel Visibility="{Binding HasAutoVars, Converter={StaticResource BoolToVis}}">
+                            <Border Height="1" Background="{StaticResource Line}" Margin="0,2,0,12"/>
+                            <TextBlock Text="Biến tự động" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Muted}" Margin="0,0,0,6"/>
+                            <ItemsControl ItemsSource="{Binding AutoVars}">
+                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate><DataTemplate>
+                                    <Border Background="#FFEBF7EF" CornerRadius="4" Padding="9,4" Margin="0,0,7,7"><TextBlock Text="{Binding StringFormat={}{{{0}}}}" FontFamily="Consolas" FontSize="13.5" Foreground="{StaticResource OkText}"/></Border>
+                                </DataTemplate></ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Text="{}{trang_so}/{tong_so_trang}: số trang / tổng số trang — tự động khi xuất."
+                                       Foreground="{StaticResource Muted}" FontSize="12.5" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                        </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
             </Border>
