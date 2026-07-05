@@ -31,11 +31,13 @@ jobs:
       - name: Run Core tests
         run: dotnet test MucLucTaiLieu.sln -c Release --no-restore
 
-      - name: Publish App (portable, self-contained win-x64)
+      - name: Publish App (single-file exe, self-contained win-x64)
         run: >
           dotnet publish MucLucTaiLieu.App/MucLucTaiLieu.App.csproj
           -c Release -r win-x64 --self-contained true
-          -p:PublishSingleFile=false
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:DebugType=none
           -o publish
 
       - name: Upload app artifact
