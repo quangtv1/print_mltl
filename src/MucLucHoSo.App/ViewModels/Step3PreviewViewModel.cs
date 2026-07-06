@@ -1,11 +1,14 @@
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Threading;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Win32;
 using MucLucHoSo.App.Shared;
 using MucLucHoSo.Core.Models;
+using MucLucHoSo.Core.Output;
 
 namespace MucLucHoSo.App.ViewModels;
 
@@ -16,6 +19,11 @@ public partial class Step3PreviewViewModel : StepViewModel
     [ObservableProperty] private bool _showFilled = true;
     [ObservableProperty] private bool _hasPreview;
     [ObservableProperty] private string _navText = "";
+    [ObservableProperty] private string _jumpText = "";      // ô tên (giá trị gom nhóm) — gõ + Enter để nhảy
+    // Popup "Tạo file" cho hồ sơ đang xem
+    [ObservableProperty] private bool _isCreatePopupOpen;
+    [ObservableProperty] private bool _exportPdfChecked;
+    [ObservableProperty] private string _createResult = "";
     [ObservableProperty] private string _statusText = "";
     [ObservableProperty] private bool _wordAvailable = true;
     [ObservableProperty] private bool _busy;
@@ -25,6 +33,12 @@ public partial class Step3PreviewViewModel : StepViewModel
     public ObservableCollection<ImageSource> PreviewPages { get; } = new();
     public string ZoomText => $"{ZoomFactor * 100:0}%";
     public string TemplateName => S.Runtime?.Name ?? "";
+
+    private HoSoJob? CurrentJob => _jobs.Count > 0 ? _jobs[Math.Clamp(_index, 0, _jobs.Count - 1)] : null;
+    private string ExportBaseName => CurrentJob is null ? "" : FileNameBuilder.Build(S.FileNamePrefix, CurrentJob, _index + 1);
+    public string ExportDocxName => ExportBaseName + ".docx";
+    public string ExportPdfName => ExportBaseName + ".pdf";
+    public string ExportDirText => string.IsNullOrWhiteSpace(S.OutputDirectory) ? "(sẽ tạo thư mục Output cạnh file Excel)" : S.OutputDirectory;
 
     public ObservableCollection<string> HeaderVars { get; } = new();
     public ObservableCollection<string> RowVars { get; } = new();
@@ -101,6 +115,70 @@ public partial class Step3PreviewViewModel : StepViewModel
 
     [RelayCommand] private void ZoomReset() { ZoomFactor = 1.0; }
 
+    /// <summary>Gõ giá trị gom nhóm + Enter → nhảy đến hồ sơ khớp (chính xác trước, rồi chứa).</summary>
+    [RelayCommand]
+    private void Jump()
+    {
+        if (_jobs.Count == 0) return;
+        var q = (JumpText ?? "").Trim();
+        if (q.Length == 0) return;
+        int idx = _jobs.FindIndex(j => string.Equals((j.GroupKey ?? "").Trim(), q, StringComparison.OrdinalIgnoreCase));
+        if (idx < 0) idx = _jobs.FindIndex(j => (j.GroupKey ?? "").Contains(q, StringComparison.OrdinalIgnoreCase));
+        if (idx >= 0) { _index = idx; NotifyNavCanExec(); _ = RefreshAsync(); }
+        else StatusText = $"Không tìm thấy hồ sơ có giá trị \"{q}\".";
+    }
+
+    [RelayCommand]
+    private void OpenCreatePopup()
+    {
+        if (CurrentJob is null) return;
+        if (string.IsNullOrWhiteSpace(S.OutputDirectory) && !string.IsNullOrEmpty(S.SourcePath))
+            S.OutputDirectory = Path.Combine(Path.GetDirectoryName(S.SourcePath!)!, "Output");
+        ExportPdfChecked = S.ExportPdf && WordAvailable;
+        CreateResult = "";
+        RaiseExportInfo();
+        IsCreatePopupOpen = true;
+    }
+
+    [RelayCommand]
+    private void ChangeExportDir()
+    {
+        var dlg = new OpenFolderDialog { Title = "Chọn thư mục lưu" };
+        if (dlg.ShowDialog() == true) { S.OutputDirectory = dlg.FolderName; RaiseExportInfo(); }
+    }
+
+    [RelayCommand]
+    private async Task CreateFileAsync()
+    {
+        var job = CurrentJob;
+        if (job is null || S.Runtime is null) return;
+        var dir = string.IsNullOrWhiteSpace(S.OutputDirectory)
+            ? Path.Combine(Path.GetDirectoryName(S.SourcePath ?? "") ?? Environment.CurrentDirectory, "Output")
+            : S.OutputDirectory;
+        bool wantPdf = ExportPdfChecked;
+        Busy = true; CreateResult = "Đang tạo…";
+        try
+        {
+            Directory.CreateDirectory(dir);
+            var baseName = FileNameBuilder.Build(S.FileNamePrefix, job, _index + 1);
+            var docx = Path.Combine(dir, baseName + ".docx");
+            string? pdf = wantPdf ? Path.Combine(dir, baseName + ".pdf") : null;
+            var map = S.BuildMapping();
+            var rt = S.Runtime!;
+            await Task.Run(() => Wizard.Preview.ExportFile(rt, map, job, docx, pdf));
+            CreateResult = $"✓ Đã tạo {baseName}.docx" + (pdf != null ? " + .pdf" : "") + " tại " + dir;
+        }
+        catch (Exception ex) { CreateResult = "Lỗi tạo file: " + ex.Message; }
+        finally { Busy = false; }
+    }
+
+    private void RaiseExportInfo()
+    {
+        OnPropertyChanged(nameof(ExportDocxName));
+        OnPropertyChanged(nameof(ExportPdfName));
+        OnPropertyChanged(nameof(ExportDirText));
+    }
+
     [RelayCommand]
     private void SelectVar(string? variable)
     {
@@ -130,9 +208,14 @@ public partial class Step3PreviewViewModel : StepViewModel
         try
         {
             HoSoJob? job = ShowFilled && _jobs.Count > 0 ? _jobs[Math.Clamp(_index, 0, _jobs.Count - 1)] : null;
-            NavText = _jobs.Count > 0 && job != null
-                ? $"{job.GroupKey} ({Math.Min(_index + 1, _jobs.Count)}/{_jobs.Count})"
-                : "(không có dữ liệu mẫu)";
+            if (_jobs.Count > 0)
+            {
+                var cur = _jobs[Math.Clamp(_index, 0, _jobs.Count - 1)];
+                JumpText = cur.GroupKey ?? "";
+                NavText = $"{Math.Min(_index + 1, _jobs.Count)}/{_jobs.Count}";
+            }
+            else { JumpText = ""; NavText = "(không có dữ liệu mẫu)"; }
+            RaiseExportInfo();
             var pages = await GetPagesAsync(ShowFilled, _index, SelectedHighlight);
             PreviewPages.Clear();
             foreach (var p in pages) PreviewPages.Add(p);

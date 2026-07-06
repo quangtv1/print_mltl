@@ -79,5 +79,13 @@ public sealed class PreviewService : IDisposable
         return pdf;
     }
 
+    /// <summary>Tạo file thật cho MỘT hồ sơ: merge DOCX (không tô sáng) → ghi; nếu có pdfPath thì convert bằng Word.</summary>
+    public void ExportFile(RuntimeTemplate rt, MappingConfig map, HoSoJob job, string docxPath, string? pdfPath)
+    {
+        var bytes = new DocxMerger(map).Merge(rt, job);
+        File.WriteAllBytes(docxPath, bytes);
+        if (pdfPath != null) { EnsurePdf(); _pdf!.Convert(docxPath, pdfPath); }
+    }
+
     public void Dispose() { try { _pdf?.Dispose(); } catch { } }
 }
