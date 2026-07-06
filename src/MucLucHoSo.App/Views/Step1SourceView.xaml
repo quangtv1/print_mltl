@@ -137,6 +137,16 @@
                                     <Border Style="{StaticResource VarChip}" Background="#FFF2EEFC"><TextBlock Text="{Binding StringFormat={}{{{0}}}}" FontFamily="Consolas" FontSize="13.5" Foreground="#FF7A3FF2"/></Border>
                                 </DataTemplate></ItemsControl.ItemTemplate>
                             </ItemsControl>
+
+                            <StackPanel Visibility="{Binding HasImageVars, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Margin="0,8,0,6"><Run Text="Biến ảnh:" FontWeight="SemiBold"/><Run Text=" (chèn ảnh theo Alt Text, duyệt file ở Bước 2)" Foreground="{StaticResource Muted}" FontSize="13"/></TextBlock>
+                                <ItemsControl ItemsSource="{Binding ImageVars}">
+                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate><DataTemplate>
+                                        <Border Style="{StaticResource VarChip}" Background="#FFFBEBD2"><TextBlock Text="{Binding}" FontFamily="Consolas" FontSize="13.5" Foreground="#FFB26A00"/></Border>
+                                    </DataTemplate></ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
                         </StackPanel>
                     </ScrollViewer>
                 </DockPanel>

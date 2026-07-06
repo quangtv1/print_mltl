@@ -12,13 +12,19 @@ namespace MucLucHoSo.Core.Templating;
 public sealed class DocxMerger
 {
     private readonly Dictionary<string, string> _rowVarColumn; // biến cấp dòng -> cột Excel
+    private readonly Dictionary<string, string> _images;       // biến ảnh -> đường dẫn file
 
     public DocxMerger(MappingConfig map)
     {
         _rowVarColumn = new(StringComparer.Ordinal);
+        _images = new(StringComparer.Ordinal);
         foreach (var b in map.Bindings)
+        {
             if (b.Kind == BindingKind.Column && b.Column is not null)
                 _rowVarColumn[b.Variable] = b.Column; // dùng chung cho cả header & row
+            else if (b.Kind == BindingKind.Image && !string.IsNullOrWhiteSpace(b.ImagePath))
+                _images[b.Variable] = b.ImagePath!;
+        }
     }
 
     public byte[] Merge(RuntimeTemplate rt, HoSoJob job, string? highlightVar = null)
@@ -54,6 +60,14 @@ public sealed class DocxMerger
             OpenXmlHelpers.ReplaceEverywhere(main,
                 name => job.HeaderValues.TryGetValue(name, out var v) ? v : null,
                 rt.AutoFields, highlightVar);
+
+            // 3) Đổi ruột ảnh (chữ ký/logo/con dấu) — ở body + header + footer
+            if (_images.Count > 0)
+            {
+                OpenXmlHelpers.ReplaceImages(main, body, _images);
+                foreach (var hp in main.HeaderParts) OpenXmlHelpers.ReplaceImages(hp, hp.Header, _images);
+                foreach (var fp in main.FooterParts) OpenXmlHelpers.ReplaceImages(fp, fp.Footer, _images);
+            }
 
             main.Document.Save();
         }

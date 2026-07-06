@@ -19,6 +19,7 @@ public partial class Step1SourceViewModel : StepViewModel
     public ObservableCollection<string> FreeVars { get; } = new();
     public ObservableCollection<string> TableVars { get; } = new();
     public ObservableCollection<string> AutoVars { get; } = new();
+    public ObservableCollection<string> ImageVars { get; } = new();
 
     [ObservableProperty] private TemplateItem? _selectedTemplate;
     [ObservableProperty] private string _statusText = "Chưa đọc dữ liệu.";
@@ -32,6 +33,7 @@ public partial class Step1SourceViewModel : StepViewModel
     [ObservableProperty] private bool _wordAvailable = true;
     [ObservableProperty] private string _previewTitle = "Xem nhanh";
     [ObservableProperty] private bool _isImportedTemplate;
+    [ObservableProperty] private bool _hasImageVars;
 
     public string UsingTemplateText => $"Đang sử dụng template \"{TemplateFileName}\"";
 
@@ -129,7 +131,7 @@ public partial class Step1SourceViewModel : StepViewModel
 
     partial void OnSelectedTemplateChanged(TemplateItem? value)
     {
-        FreeVars.Clear(); TableVars.Clear(); AutoVars.Clear();
+        FreeVars.Clear(); TableVars.Clear(); AutoVars.Clear(); ImageVars.Clear(); HasImageVars = false;
         S.Runtime = null; S.TemplatePath = null;
         IsImportedTemplate = value?.IsImported ?? false;
         if (value is null) { OnPropertyChanged(nameof(UsingTemplateText)); UpdateCanGoNext(); return; }
@@ -140,6 +142,8 @@ public partial class Step1SourceViewModel : StepViewModel
             foreach (var v in rt.HeaderFields.OrderBy(x => x)) FreeVars.Add(v);
             foreach (var v in rt.RowFields.OrderBy(x => x)) TableVars.Add(v);
             foreach (var v in rt.AutoFields.OrderBy(x => x)) AutoVars.Add(v);
+            foreach (var v in rt.ImageFields.OrderBy(x => x)) ImageVars.Add(v);
+            HasImageVars = ImageVars.Count > 0;
         }
         catch (Exception ex) { SetStatus("Lỗi biên dịch template: " + ex.Message, false); }
         OnPropertyChanged(nameof(TemplateFileName));

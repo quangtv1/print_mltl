@@ -49,6 +49,7 @@ public sealed partial class SessionState : ObservableObject
         foreach (var r in Bindings)
         {
             if (r.IsAutoField) { list.Add(VariableBinding.AutoField(r.Variable)); continue; }
+            if (r.IsImageField) { if (!string.IsNullOrWhiteSpace(r.Value)) list.Add(VariableBinding.Image(r.Variable, r.Value!)); continue; }
             if (r.IsColumn) list.Add(VariableBinding.FromColumn(r.Variable, r.Value!));
             else if (!string.IsNullOrWhiteSpace(r.Value)) list.Add(VariableBinding.FromConstant(r.Variable, r.Value!));
         }

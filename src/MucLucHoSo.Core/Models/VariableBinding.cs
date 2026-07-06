@@ -1,10 +1,10 @@
 namespace MucLucHoSo.Core.Models;
 
-public enum BindingKind { Column, Constant, Auto }
+public enum BindingKind { Column, Constant, Auto, Image }
 
 /// <summary>
 /// Ràng buộc một biến của template với: một CỘT Excel, một HẰNG do người dùng nhập,
-/// hoặc biến TỰ ĐỘNG (trang_so/tong_so_trang).
+/// biến TỰ ĐỘNG (trang_so/tong_so_trang), hoặc ẢNH (đường dẫn tuyệt đối, áp cho mọi hồ sơ).
 /// </summary>
 public sealed class VariableBinding
 {
@@ -12,6 +12,7 @@ public sealed class VariableBinding
     public BindingKind Kind { get; init; }
     public string? Column { get; init; }
     public string? Constant { get; init; }
+    public string? ImagePath { get; init; }
 
     public static VariableBinding FromColumn(string variable, string column)
         => new() { Variable = variable, Kind = BindingKind.Column, Column = column };
@@ -19,4 +20,6 @@ public sealed class VariableBinding
         => new() { Variable = variable, Kind = BindingKind.Constant, Constant = value };
     public static VariableBinding AutoField(string variable)
         => new() { Variable = variable, Kind = BindingKind.Auto };
+    public static VariableBinding Image(string variable, string path)
+        => new() { Variable = variable, Kind = BindingKind.Image, ImagePath = path };
 }

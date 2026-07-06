@@ -47,6 +47,14 @@ public static class TemplateCompiler
             all.Where(v => !rowFields.Contains(v) && !RuntimeTemplate.KnownAutoFields.Contains(v)),
             StringComparer.Ordinal);
 
+        // Biến ảnh: alt-text/tên ảnh bắt đầu bằng "image" (body + header + footer).
+        var imageFields = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var m in OpenXmlHelpers.ImageMarkersIn(body)) imageFields.Add(m);
+        foreach (var hp in doc.MainDocumentPart!.HeaderParts)
+            foreach (var m in OpenXmlHelpers.ImageMarkersIn(hp.Header)) imageFields.Add(m);
+        foreach (var fp in doc.MainDocumentPart!.FooterParts)
+            foreach (var m in OpenXmlHelpers.ImageMarkersIn(fp.Footer)) imageFields.Add(m);
+
         return new RuntimeTemplate
         {
             Id = id ?? Path.GetFileNameWithoutExtension(docxPath),
@@ -57,6 +65,7 @@ public static class TemplateCompiler
             RowFields = rowFields,
             HeaderFields = headerFields,
             AutoFields = autoFields,
+            ImageFields = imageFields,
         };
     }
 

@@ -21,6 +21,8 @@ public sealed class RuntimeTemplate
     public required IReadOnlySet<string> HeaderFields { get; init; }
     /// <summary>Biến tự động có mặt trong template (trang_so/tong_so_trang).</summary>
     public required IReadOnlySet<string> AutoFields { get; init; }
+    /// <summary>Biến ảnh: alt-text của ảnh trong template bắt đầu bằng "image" (chữ ký/logo/con dấu).</summary>
+    public IReadOnlySet<string> ImageFields { get; init; } = new HashSet<string>();
 
     public static readonly IReadOnlySet<string> KnownAutoFields =
         new HashSet<string> { "trang_so", "tong_so_trang" };

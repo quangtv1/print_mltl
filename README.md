@@ -80,6 +80,10 @@ tự động `{trang_so}` / `{tong_so_trang}` (engine chèn thành field Word **
   hàng đó là prototype (hàng có nhiều biến cấp dòng nhất) và nhân bản theo từng văn bản của hồ sơ.
 - Biên dịch một lần → Runtime Template (byte[] bất biến + phân tích). Merge từng hồ sơ = clone byte[] →
   thay biến header → nhân bản prototype row → xoá prototype. Clone riêng nên **an toàn đa luồng**.
+- **Biến ảnh (chữ ký / logo / con dấu):** chèn một ảnh vào Word đúng vị trí/kích thước/kiểu bao chữ (kể cả "Behind Text"
+  cho con dấu đè chữ), rồi đặt **Alt Text** của ảnh bắt đầu bằng `image` (VD `image_chu_ky`, `image_logo`, `image_con_dau`).
+  Ở Bước 2, mỗi biến ảnh có nút **Duyệt ảnh…** chọn đường dẫn (áp cho mọi hồ sơ); engine đổi ruột ảnh, giữ nguyên bố cục.
+  Nên dùng **PNG nền trong suốt**. Đổi ruột ảnh thuần OpenXML (không cần Word).
 
 ## Ràng buộc biến = Cột HOẶC Hằng
 Dữ liệu thật thường thiếu cột cho một số biến (vd `{don_vi}`, `{chi_nhanh}`, `{nguoi_lap}`). Mỗi biến bind theo:

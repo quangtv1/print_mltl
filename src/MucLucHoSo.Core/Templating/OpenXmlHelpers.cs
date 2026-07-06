@@ -1,12 +1,87 @@
 using System.Text.RegularExpressions;
 using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using A = DocumentFormat.OpenXml.Drawing;
+using DW = DocumentFormat.OpenXml.Drawing.Wordprocessing;
+using PIC = DocumentFormat.OpenXml.Drawing.Pictures;
 
 namespace MucLucHoSo.Core.Templating;
 
 internal static class OpenXmlHelpers
 {
     public static readonly Regex TokenRx = new(@"\{([a-zA-Z0-9_]+)\}", RegexOptions.Compiled);
+
+    // ===== Biến ẢNH: nhận diện bằng alt-text/tên ảnh bắt đầu bằng "image" =====
+
+    /// <summary>Tên biến ảnh của một Drawing (alt-text/title/name bắt đầu bằng "image"), hoặc null.</summary>
+    public static string? ImageMarker(Drawing d)
+    {
+        foreach (var dp in d.Descendants<DW.DocProperties>())
+        {
+            var s = PickImage(dp.Description?.Value, dp.Title?.Value, dp.Name?.Value);
+            if (s != null) return s;
+        }
+        foreach (var cn in d.Descendants<PIC.NonVisualDrawingProperties>())
+        {
+            var s = PickImage(cn.Description?.Value, cn.Name?.Value);
+            if (s != null) return s;
+        }
+        return null;
+    }
+
+    private static string? PickImage(params string?[] vals)
+    {
+        foreach (var v in vals)
+            if (!string.IsNullOrWhiteSpace(v) && v.Trim().StartsWith("image", StringComparison.OrdinalIgnoreCase))
+                return v.Trim();
+        return null;
+    }
+
+    /// <summary>Liệt kê tên biến ảnh trong một phạm vi (body/header/footer).</summary>
+    public static IEnumerable<string> ImageMarkersIn(OpenXmlElement scope)
+    {
+        foreach (var d in scope.Descendants<Drawing>())
+        {
+            var m = ImageMarker(d);
+            if (m != null) yield return m;
+        }
+    }
+
+    /// <summary>
+    /// Đổi RUỘT ảnh: với mỗi Drawing có alt-text khớp images[name], nạp file mới thành ImagePart
+    /// và trỏ blip sang đó — giữ nguyên vị trí/kích thước/bao chữ đã vẽ trong Word.
+    /// </summary>
+    public static void ReplaceImages<T>(T part, OpenXmlElement scope, IReadOnlyDictionary<string, string> images)
+        where T : OpenXmlPart, ISupportedRelationship<ImagePart>
+    {
+        if (images.Count == 0) return;
+        foreach (var drawing in scope.Descendants<Drawing>().ToList())
+        {
+            var name = ImageMarker(drawing);
+            if (name == null || !images.TryGetValue(name, out var path)) continue;
+            var blip = drawing.Descendants<A.Blip>().FirstOrDefault();
+            if (blip == null || string.IsNullOrEmpty(blip.Embed?.Value)) continue;
+            if (!File.Exists(path)) continue;
+
+            var oldId = blip.Embed!.Value!;
+            var imgPart = part.AddImagePart(ImageTypeOf(path));
+            using (var fs = File.OpenRead(path)) imgPart.FeedData(fs);
+            blip.Embed = part.GetIdOfPart(imgPart);
+            try { part.DeletePart(part.GetPartById(oldId)); } catch { /* ảnh giả có thể dùng chung — bỏ qua */ }
+        }
+    }
+
+    private static PartTypeInfo ImageTypeOf(string path) =>
+        Path.GetExtension(path).ToLowerInvariant() switch
+        {
+            ".png" => ImagePartType.Png,
+            ".jpg" or ".jpeg" => ImagePartType.Jpeg,
+            ".bmp" => ImagePartType.Bmp,
+            ".gif" => ImagePartType.Gif,
+            ".tif" or ".tiff" => ImagePartType.Tiff,
+            _ => ImagePartType.Png,
+        };
 
     /// <summary>Text đầy đủ của một paragraph (nối mọi Text).</summary>
     public static string ParagraphText(Paragraph p) =>

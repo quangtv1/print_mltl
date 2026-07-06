@@ -39,10 +39,10 @@ public partial class Step2MappingViewModel : StepViewModel
         S.Bindings.Clear();
         var cols = S.Headers;
         int idx = 1;
-        void Add(string v, bool isRow, bool isAuto)
+        void Add(string v, bool isRow, bool isAuto, bool isImage = false)
         {
-            var row = new VariableBindingRowViewModel(idx++, v, isRow, isAuto, cols, MappingChanged);
-            if (!isAuto)
+            var row = new VariableBindingRowViewModel(idx++, v, isRow, isAuto, cols, MappingChanged, isImage);
+            if (!isAuto && !isImage)
             {
                 var match = cols.FirstOrDefault(c => TextUtil.Normalize(c) == TextUtil.Normalize(v))
                             ?? cols.FirstOrDefault(c => TextUtil.Normalize(c).Contains(TextUtil.Normalize(v)));
@@ -53,6 +53,7 @@ public partial class Step2MappingViewModel : StepViewModel
         foreach (var v in S.Runtime!.HeaderFields.OrderBy(x => x)) Add(v, false, false);
         foreach (var v in S.Runtime!.RowFields.OrderBy(x => x)) Add(v, true, false);
         foreach (var v in S.Runtime!.AutoFields.OrderBy(x => x)) Add(v, false, true);
+        foreach (var v in S.Runtime!.ImageFields.OrderBy(x => x)) Add(v, false, false, isImage: true);
 
         S.GroupColumn ??= S.Headers.FirstOrDefault(c => TextUtil.Normalize(c).Contains("hoso"))
                           ?? S.Headers.FirstOrDefault();

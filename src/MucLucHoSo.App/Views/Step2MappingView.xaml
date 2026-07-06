@@ -118,6 +118,7 @@
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding IsRowField}" Value="True"><Setter Property="Background" Value="#FF7A3FF2"/></DataTrigger>
                                                             <DataTrigger Binding="{Binding IsAutoField}" Value="True"><Setter Property="Background" Value="{StaticResource Ok}"/></DataTrigger>
+                                                            <DataTrigger Binding="{Binding IsImageField}" Value="True"><Setter Property="Background" Value="#FFE08A00"/></DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
                                                 </Border.Style>
@@ -128,9 +129,9 @@
                                                        Text="{Binding Variable, StringFormat={}{{{0}}}}" FontFamily="Consolas" FontSize="14"
                                                        Foreground="{StaticResource Accent}" TextTrimming="CharacterEllipsis"/>
 
-                                            <!-- Nguồn: combo (cột/hằng) hoặc ghi chú tự động -->
+                                            <!-- Nguồn: combo (cột/hằng) · ghi chú tự động · hoặc duyệt ảnh -->
                                             <Grid Grid.Column="2" Margin="8,4,12,4" VerticalAlignment="Center">
-                                                <Grid Visibility="{Binding IsAutoField, Converter={StaticResource InverseBoolToVis}}">
+                                                <Grid Visibility="{Binding IsFieldEditable, Converter={StaticResource BoolToVis}}">
                                                     <ComboBox IsEditable="True" ItemsSource="{Binding AvailableColumns}"
                                                               Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"/>
                                                     <TextBlock Text="Chọn cột hoặc gõ hằng…" Foreground="{StaticResource Muted}" FontStyle="Italic"
@@ -140,6 +141,15 @@
                                                 <TextBlock Text="Word tự tính khi render (PAGE/NUMPAGES)" Foreground="{StaticResource Muted}" FontStyle="Italic"
                                                            VerticalAlignment="Center" Margin="2,0,0,0"
                                                            Visibility="{Binding IsAutoField, Converter={StaticResource BoolToVis}}"/>
+                                                <!-- Biến ảnh: duyệt file -->
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center"
+                                                            Visibility="{Binding IsImageField, Converter={StaticResource BoolToVis}}">
+                                                    <Button Content="Duyệt ảnh…" Style="{StaticResource GhostButton}" Padding="12,4" MinHeight="0" Command="{Binding BrowseImageCommand}"/>
+                                                    <TextBlock Text="{Binding Value}" TextTrimming="CharacterEllipsis" MaxWidth="280" VerticalAlignment="Center" Margin="10,0,0,0"
+                                                               Foreground="{StaticResource Ink}" Visibility="{Binding Value, Converter={StaticResource NullToVis}}"/>
+                                                    <TextBlock Text="(chưa chọn ảnh)" Foreground="{StaticResource Muted}" FontStyle="Italic" VerticalAlignment="Center" Margin="10,0,0,0"
+                                                               Visibility="{Binding Value, Converter={StaticResource NullToVis}, ConverterParameter=invert}"/>
+                                                </StackPanel>
                                             </Grid>
 
                                             <!-- Trạng thái (pill) -->
@@ -151,6 +161,13 @@
                                                             <DataTrigger Binding="{Binding IsBound}" Value="True"><Setter Property="Background" Value="#FFE3ECFA"/></DataTrigger>
                                                             <DataTrigger Binding="{Binding IsColumn}" Value="True"><Setter Property="Background" Value="#FFDDF1E5"/></DataTrigger>
                                                             <DataTrigger Binding="{Binding IsAutoField}" Value="True"><Setter Property="Background" Value="#FFDDF1E5"/></DataTrigger>
+                                                            <MultiDataTrigger>
+                                                                <MultiDataTrigger.Conditions>
+                                                                    <Condition Binding="{Binding IsImageField}" Value="True"/>
+                                                                    <Condition Binding="{Binding IsBound}" Value="True"/>
+                                                                </MultiDataTrigger.Conditions>
+                                                                <Setter Property="Background" Value="#FFFBEBD2"/>
+                                                            </MultiDataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
                                                 </Border.Style>
@@ -163,6 +180,13 @@
                                                                 <DataTrigger Binding="{Binding IsBound}" Value="True"><Setter Property="Text" Value="Hằng"/><Setter Property="Foreground" Value="{StaticResource Accent}"/></DataTrigger>
                                                                 <DataTrigger Binding="{Binding IsColumn}" Value="True"><Setter Property="Text" Value="✓ Cột"/><Setter Property="Foreground" Value="{StaticResource OkText}"/></DataTrigger>
                                                                 <DataTrigger Binding="{Binding IsAutoField}" Value="True"><Setter Property="Text" Value="Tự động"/><Setter Property="Foreground" Value="{StaticResource OkText}"/></DataTrigger>
+                                                                <MultiDataTrigger>
+                                                                    <MultiDataTrigger.Conditions>
+                                                                        <Condition Binding="{Binding IsImageField}" Value="True"/>
+                                                                        <Condition Binding="{Binding IsBound}" Value="True"/>
+                                                                    </MultiDataTrigger.Conditions>
+                                                                    <Setter Property="Text" Value="Ảnh"/><Setter Property="Foreground" Value="#FFB26A00"/>
+                                                                </MultiDataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
                                                     </TextBlock.Style>
