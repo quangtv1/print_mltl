@@ -134,5 +134,33 @@
                 </ListBox.ItemContainerStyle>
             </ListBox>
         </Border>
+
+        <!-- Hộp thoại thống kê khi chạy xong (overlay giữa màn hình) -->
+        <Grid Grid.RowSpan="3" Margin="-18" Background="#66000000" Panel.ZIndex="10"
+              Visibility="{Binding IsSummaryOpen, Converter={StaticResource BoolToVis}}">
+            <Border Background="White" CornerRadius="10" Padding="22" MinWidth="360"
+                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Border.Effect><DropShadowEffect BlurRadius="24" ShadowDepth="3" Opacity="0.3" Color="#FF000000"/></Border.Effect>
+                <StackPanel>
+                    <TextBlock Text="Đã tạo xong" Style="{StaticResource H2}"/>
+                    <Grid Margin="0,4,0,0">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="File DOCX:" Foreground="{StaticResource Muted}" Margin="0,3,24,3"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SummaryDocx}" FontWeight="SemiBold" Foreground="{StaticResource OkText}" Margin="0,3"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="File PDF:" Foreground="{StaticResource Muted}" Margin="0,3,24,3"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SummaryPdf}" FontWeight="SemiBold" Foreground="{StaticResource OkText}" Margin="0,3"/>
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="File lỗi:" Foreground="{StaticResource Muted}" Margin="0,3,24,3"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SummaryErrors}" FontWeight="SemiBold" Foreground="{StaticResource Warn}" Margin="0,3"/>
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Thời gian:" Foreground="{StaticResource Muted}" Margin="0,3,24,3"/>
+                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SummaryTime}" FontWeight="SemiBold" Foreground="{StaticResource Ink}" Margin="0,3"/>
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
+                        <Button Content="Đóng" Style="{StaticResource GhostButton}" Command="{Binding CloseSummaryCommand}"/>
+                        <Button Content="Mở thư mục" Style="{StaticResource PrimaryButton}" Margin="10,0,0,0" Command="{Binding OpenOutputFolderCommand}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>

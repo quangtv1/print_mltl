@@ -41,42 +41,16 @@
                         </TextBox>
                         <Button Content="▶" Style="{StaticResource GhostButton}" Padding="0" Width="32" Command="{Binding NextCommand}"
                                 ToolTip="Hồ sơ sau (Ctrl →)" AutomationProperties.Name="Hồ sơ sau"/>
-                        <TextBlock Text="{Binding NavText}" VerticalAlignment="Center" Margin="10,0,0,0" Foreground="{StaticResource Muted}"/>
+                        <TextBlock Text="{Binding NavText}" VerticalAlignment="Center" Margin="10,0,4,0" Foreground="{StaticResource Muted}"/>
+                        <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{StaticResource Warn}" VerticalAlignment="Center"
+                                   Visibility="{Binding HasMoreThanPreview, Converter={StaticResource BoolToVis}}"
+                                   ToolTip="Thay đổi số lượng dòng đọc ở màn input"/>
                     </StackPanel>
 
-                    <!-- Nút Tạo file (bên phải) + popup -->
-                    <Button x:Name="CreateBtn" Content="Tạo file" Style="{StaticResource TealButton}"
+                    <!-- Nút Tạo file (bên phải) — mở hộp thoại giữa màn hình bên dưới -->
+                    <Button Content="Tạo file" Style="{StaticResource TealButton}"
                             HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0"
                             Command="{Binding OpenCreatePopupCommand}"/>
-                    <Popup IsOpen="{Binding IsCreatePopupOpen}" StaysOpen="False" Placement="Bottom"
-                           PlacementTarget="{Binding ElementName=CreateBtn}" AllowsTransparency="True" PopupAnimation="Fade">
-                        <Border Background="White" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="8"
-                                Padding="16" Margin="0,6,8,10" MinWidth="320">
-                            <Border.Effect><DropShadowEffect BlurRadius="16" ShadowDepth="2" Opacity="0.2" Color="#FF000000"/></Border.Effect>
-                            <StackPanel>
-                                <TextBlock Text="Tạo file cho hồ sơ đang xem" Style="{StaticResource H2}"/>
-                                <CheckBox Content="Tạo kèm PDF (cần Microsoft Word)" IsChecked="{Binding ExportPdfChecked}"
-                                          IsEnabled="{Binding WordAvailable}" Margin="0,0,0,10"/>
-                                <TextBlock Text="Lưu vào:" Foreground="{StaticResource Muted}" FontSize="12.5"/>
-                                <Grid Margin="0,2,0,10">
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="{Binding ExportDirText}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <Button Grid.Column="1" Content="Đổi…" Style="{StaticResource GhostButton}" Padding="10,4" MinHeight="0" Command="{Binding ChangeExportDirCommand}"/>
-                                </Grid>
-                                <Border Background="{StaticResource Panel}" CornerRadius="6" Padding="10,8" Margin="0,0,0,12">
-                                    <StackPanel>
-                                        <TextBlock FontFamily="Consolas" FontSize="13"><Run Text="DOCX: " Foreground="{StaticResource Muted}"/><Run Text="{Binding ExportDocxName, Mode=OneWay}" FontWeight="SemiBold"/></TextBlock>
-                                        <TextBlock FontFamily="Consolas" FontSize="13" Margin="0,3,0,0"
-                                                   Visibility="{Binding ExportPdfChecked, Converter={StaticResource BoolToVis}}"><Run Text="PDF : " Foreground="{StaticResource Muted}"/><Run Text="{Binding ExportPdfName, Mode=OneWay}" FontWeight="SemiBold"/></TextBlock>
-                                    </StackPanel>
-                                </Border>
-                                <Button Content="Tạo" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left"
-                                        Command="{Binding CreateFileCommand}"/>
-                                <TextBlock Text="{Binding CreateResult}" TextWrapping="Wrap" Foreground="{StaticResource Ok}" FontSize="12.5" Margin="0,10,0,0"
-                                           Visibility="{Binding CreateResult, Converter={StaticResource NullToVis}}"/>
-                            </StackPanel>
-                        </Border>
-                    </Popup>
                 </Grid>
 
                 <!-- Tiêu đề sidebar: ngang hàng với thanh zoom -->
@@ -162,6 +136,46 @@
                         </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <!-- Hộp thoại "Tạo file" giữa màn hình (overlay) -->
+        <Grid Grid.RowSpan="2" Background="#66000000" Panel.ZIndex="10"
+              Visibility="{Binding IsCreatePopupOpen, Converter={StaticResource BoolToVis}}">
+            <Border Background="White" CornerRadius="10" Padding="20" MinWidth="400" MaxWidth="480"
+                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Border.Effect><DropShadowEffect BlurRadius="24" ShadowDepth="3" Opacity="0.3" Color="#FF000000"/></Border.Effect>
+                <StackPanel>
+                    <TextBlock Text="Tạo file cho hồ sơ đang xem" Style="{StaticResource H2}"/>
+                    <!-- Trước khi tạo -->
+                    <StackPanel Visibility="{Binding CreateDone, Converter={StaticResource InverseBoolToVis}}">
+                        <CheckBox Content="Tạo kèm PDF (cần Microsoft Word)" IsChecked="{Binding ExportPdfChecked}"
+                                  IsEnabled="{Binding WordAvailable}" Margin="0,0,0,10"/>
+                        <TextBlock Text="Lưu vào:" Foreground="{StaticResource Muted}" FontSize="12.5"/>
+                        <Grid Margin="0,2,0,10">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{Binding ExportDirText}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <Button Grid.Column="1" Content="Đổi…" Style="{StaticResource GhostButton}" Padding="10,4" MinHeight="0" Command="{Binding ChangeExportDirCommand}"/>
+                        </Grid>
+                        <Border Background="{StaticResource Panel}" CornerRadius="6" Padding="10,8">
+                            <StackPanel>
+                                <TextBlock FontFamily="Consolas" FontSize="13"><Run Text="DOCX: " Foreground="{StaticResource Muted}"/><Run Text="{Binding ExportDocxName, Mode=OneWay}" FontWeight="SemiBold"/></TextBlock>
+                                <TextBlock FontFamily="Consolas" FontSize="13" Margin="0,3,0,0"
+                                           Visibility="{Binding ExportPdfChecked, Converter={StaticResource BoolToVis}}"><Run Text="PDF : " Foreground="{StaticResource Muted}"/><Run Text="{Binding ExportPdfName, Mode=OneWay}" FontWeight="SemiBold"/></TextBlock>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                    <!-- Sau khi tạo xong -->
+                    <TextBlock Text="{Binding CreateResult}" TextWrapping="Wrap" Foreground="{StaticResource Ok}" FontWeight="SemiBold" Margin="0,4,0,0"
+                               Visibility="{Binding CreateDone, Converter={StaticResource BoolToVis}}"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
+                        <Button Content="Đóng" Style="{StaticResource GhostButton}" Command="{Binding CloseCreatePopupCommand}"/>
+                        <Button Content="Tạo file" Style="{StaticResource PrimaryButton}" Margin="10,0,0,0" Command="{Binding CreateFileCommand}"
+                                Visibility="{Binding CreateDone, Converter={StaticResource InverseBoolToVis}}"/>
+                        <Button Content="Mở thư mục" Style="{StaticResource PrimaryButton}" Margin="10,0,0,0" Command="{Binding OpenCreatedFolderCommand}"
+                                Visibility="{Binding CreateDone, Converter={StaticResource BoolToVis}}"/>
+                    </StackPanel>
+                </StackPanel>
             </Border>
         </Grid>
     </Grid>

@@ -20,10 +20,13 @@ public partial class Step3PreviewViewModel : StepViewModel
     [ObservableProperty] private bool _hasPreview;
     [ObservableProperty] private string _navText = "";
     [ObservableProperty] private string _jumpText = "";      // ô tên (giá trị gom nhóm) — gõ + Enter để nhảy
+    [ObservableProperty] private bool _hasMoreThanPreview;   // tổng > số hồ sơ đọc được → gợi ý tăng số dòng đọc
     // Popup "Tạo file" cho hồ sơ đang xem
     [ObservableProperty] private bool _isCreatePopupOpen;
     [ObservableProperty] private bool _exportPdfChecked;
+    [ObservableProperty] private bool _createDone;           // đã tạo xong → đổi nút sang Đóng / Mở thư mục
     [ObservableProperty] private string _createResult = "";
+    private string _lastExportDir = "";
     [ObservableProperty] private string _statusText = "";
     [ObservableProperty] private bool _wordAvailable = true;
     [ObservableProperty] private bool _busy;
@@ -136,8 +139,19 @@ public partial class Step3PreviewViewModel : StepViewModel
             S.OutputDirectory = Path.Combine(Path.GetDirectoryName(S.SourcePath!)!, "Output");
         ExportPdfChecked = S.ExportPdf && WordAvailable;
         CreateResult = "";
+        CreateDone = false;
         RaiseExportInfo();
         IsCreatePopupOpen = true;
+    }
+
+    [RelayCommand] private void CloseCreatePopup() => IsCreatePopupOpen = false;
+
+    [RelayCommand]
+    private void OpenCreatedFolder()
+    {
+        var dir = string.IsNullOrWhiteSpace(_lastExportDir) ? S.OutputDirectory : _lastExportDir;
+        if (Directory.Exists(dir))
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"\"{dir}\"") { UseShellExecute = true });
     }
 
     [RelayCommand]
@@ -166,7 +180,9 @@ public partial class Step3PreviewViewModel : StepViewModel
             var map = S.BuildMapping();
             var rt = S.Runtime!;
             await Task.Run(() => Wizard.Preview.ExportFile(rt, map, job, docx, pdf));
-            CreateResult = $"✓ Đã tạo {baseName}.docx" + (pdf != null ? " + .pdf" : "") + " tại " + dir;
+            _lastExportDir = dir;
+            CreateResult = $"✓ Đã tạo xong: {baseName}.docx" + (pdf != null ? " + " + baseName + ".pdf" : "") + "\nTại: " + dir;
+            CreateDone = true;
         }
         catch (Exception ex) { CreateResult = "Lỗi tạo file: " + ex.Message; }
         finally { Busy = false; }
@@ -212,9 +228,12 @@ public partial class Step3PreviewViewModel : StepViewModel
             {
                 var cur = _jobs[Math.Clamp(_index, 0, _jobs.Count - 1)];
                 JumpText = cur.GroupKey ?? "";
-                NavText = $"{Math.Min(_index + 1, _jobs.Count)}/{_jobs.Count}";
+                // y = tổng hồ sơ đã Validation ở Bước 2 (nếu chưa có thì tạm dùng số đọc được).
+                int total = S.ValidatedGroupCount > 0 ? S.ValidatedGroupCount : _jobs.Count;
+                NavText = $"{Math.Min(_index + 1, _jobs.Count)}/{total}";
+                HasMoreThanPreview = total > _jobs.Count;
             }
-            else { JumpText = ""; NavText = "(không có dữ liệu mẫu)"; }
+            else { JumpText = ""; NavText = "(không có dữ liệu mẫu)"; HasMoreThanPreview = false; }
             RaiseExportInfo();
             var pages = await GetPagesAsync(ShowFilled, _index, SelectedHighlight);
             PreviewPages.Clear();

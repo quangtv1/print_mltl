@@ -24,6 +24,7 @@ public partial class Step1SourceViewModel : StepViewModel
     [ObservableProperty] private string _statusText = "Chưa đọc dữ liệu.";
     [ObservableProperty] private bool _statusIsOk;
     [ObservableProperty] private bool _busy;
+    [ObservableProperty] private string _rowLimitText = "100";   // số dòng đọc (chỉnh ở dòng Định dạng)
 
     public ObservableCollection<ImageSource> PreviewPages { get; } = new();
     [ObservableProperty] private bool _hasPreview;
@@ -88,11 +89,19 @@ public partial class Step1SourceViewModel : StepViewModel
     private async Task ReadDataAsync()
     {
         if (string.IsNullOrEmpty(S.SourcePath)) { SetStatus("Chưa chọn tệp nguồn.", false); return; }
+        if (!int.TryParse((RowLimitText ?? "").Trim(), out int limit) || limit <= 0)
+        {
+            System.Windows.MessageBox.Show("Số dòng đọc phải là số nguyên dương (VD 100).",
+                "Số dòng đọc không hợp lệ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+            return;
+        }
+        S.ReadRowLimit = limit;
         Busy = true;
         try
         {
+            // Đọc tối đa 'limit' dòng; nếu file ít hơn thì đọc hết.
             var (headers, rows) = await Task.Run(() =>
-                Wizard.Core.ReadHead(S.SourcePath!, S.SheetName, S.CsvDelimiter, 100));
+                Wizard.Core.ReadHead(S.SourcePath!, S.SheetName, S.CsvDelimiter, limit));
             S.Headers = headers; S.PreviewRows = rows; S.PreviewRowCount = rows.Count;
             S.DataLoaded = true;
             SetStatus($"✓ Đã đọc {rows.Count} dòng mẫu · {headers.Count} cột", true);

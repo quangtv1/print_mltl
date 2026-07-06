@@ -43,6 +43,10 @@
                                      IsChecked="{Binding S.SourceKind, Converter={StaticResource EnumEquals}, ConverterParameter=Xlsb}"/>
                         <RadioButton Content="CSV" VerticalAlignment="Center"
                                      IsChecked="{Binding S.SourceKind, Converter={StaticResource EnumEquals}, ConverterParameter=Csv}"/>
+                        <Border Width="1" Background="{StaticResource Line}" Margin="16,2,14,2"/>
+                        <TextBlock Text="Số dòng đọc:" VerticalAlignment="Center" Foreground="{StaticResource Muted}" Margin="0,0,8,0"/>
+                        <TextBox Text="{Binding RowLimitText, UpdateSourceTrigger=PropertyChanged}" Width="72" VerticalContentAlignment="Center"
+                                 ToolTip="Số dòng đọc từ file (mặc định 100). Nếu lớn hơn số dòng thật thì đọc hết."/>
                     </StackPanel>
 
                     <TextBlock Grid.Row="2" Grid.Column="0" Text="Tệp:" VerticalAlignment="Center" Margin="0,0,0,10"/>

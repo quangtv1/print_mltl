@@ -17,7 +17,8 @@ public sealed partial class SessionState : ObservableObject
     public ObservableCollection<string> AvailableSheets { get; } = new();
 
     [ObservableProperty] private bool _dataLoaded;
-    [ObservableProperty] private int _previewRowCount;   // số dòng đọc để xem nhanh (<=100)
+    [ObservableProperty] private int _readRowLimit = 100;   // số dòng đọc từ file (người dùng chỉnh ở Bước 1)
+    [ObservableProperty] private int _previewRowCount;   // số dòng thực đọc để xem nhanh
     public List<string> Headers { get; set; } = new();
     public List<RowRecord> PreviewRows { get; set; } = new();
 

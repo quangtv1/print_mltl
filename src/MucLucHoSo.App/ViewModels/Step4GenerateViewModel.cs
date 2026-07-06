@@ -65,6 +65,14 @@ public partial class Step4GenerateViewModel : StepViewModel
     private GeneratePipeline? _pipeline;
     private int _completed;
 
+    // Popup thống kê khi chạy xong
+    [ObservableProperty] private bool _isSummaryOpen;
+    [ObservableProperty] private string _summaryDocx = "0";
+    [ObservableProperty] private string _summaryPdf = "0";
+    [ObservableProperty] private string _summaryErrors = "0";
+    [ObservableProperty] private string _summaryTime = "";
+    [RelayCommand] private void CloseSummary() => IsSummaryOpen = false;
+
     // Nút chính đổi theo trạng thái: chạy → "Tạm dừng" (đỏ); đang dừng → "Chạy tiếp" (xanh); xong hết → "Chạy lại".
     public override ICommand? PrimaryCommand => IsRunning ? PauseResumeCommand : GenerateCommand;
     public override string PrimaryLabel =>
@@ -207,14 +215,15 @@ public partial class Step4GenerateViewModel : StepViewModel
             {
                 int n = Interlocked.Increment(ref _completed);
                 int total = Math.Max(n, S.ValidatedGroupCount);
+                string ts = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
                 if (o.Status == HoSoStatus.Ok)
                 {
                     // Tên file đầy đủ (kèm .pdf nếu có), lấy đúng tên thật (kể cả hậu tố chống trùng).
                     var names = (o.DocxPath is null ? "" : Path.GetFileName(o.DocxPath))
                               + (o.PdfPath is null ? "" : " + " + Path.GetFileName(o.PdfPath));
-                    Log($"[{n}/{total}] ✓ {names}", COk);
+                    Log($"[{n}/{total}] ✓ {names} · {ts}", COk);
                 }
-                else Log($"[{n}/{total}] ✗ Hồ sơ {o.GroupKey}" + (o.Message is null ? "" : " — " + o.Message), CErr);
+                else Log($"[{n}/{total}] ✗ Hồ sơ {o.GroupKey}" + (o.Message is null ? "" : " — " + o.Message) + $" · {ts}", CErr);
             };
 
             var jobState = Path.Combine(S.OutputDirectory, "job.state.json");
@@ -226,6 +235,12 @@ public partial class Step4GenerateViewModel : StepViewModel
             Log($"✓ Hoàn tất: {sum.Ok} {fmt} • {sum.Elapsed.TotalSeconds:F0} giây • {sum.Errors} lỗi", COk);
             DoneText = "Hoàn tất";
             CanOpenFolder = true;
+            // Thống kê để hiện popup khi xong
+            SummaryDocx = sum.Ok.ToString();
+            SummaryPdf = (S.ExportPdf ? sum.Ok : 0).ToString();
+            SummaryErrors = sum.Errors.ToString();
+            SummaryTime = $"{(int)sum.Elapsed.TotalMinutes} phút {sum.Elapsed.Seconds} giây";
+            IsSummaryOpen = true;
         }
         catch (Exception ex)
         {
