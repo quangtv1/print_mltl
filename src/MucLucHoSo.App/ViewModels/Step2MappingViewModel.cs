@@ -50,10 +50,11 @@ public partial class Step2MappingViewModel : StepViewModel
             }
             S.Bindings.Add(row);
         }
-        foreach (var v in S.Runtime!.HeaderFields.OrderBy(x => x)) Add(v, false, false);
-        foreach (var v in S.Runtime!.RowFields.OrderBy(x => x)) Add(v, true, false);
-        foreach (var v in S.Runtime!.AutoFields.OrderBy(x => x)) Add(v, false, true);
-        foreach (var v in S.Runtime!.ImageFields.OrderBy(x => x)) Add(v, false, false, isImage: true);
+        // Trong mỗi nhóm, xếp theo thứ tự biến xuất hiện trong template (trái→phải, trên→xuống).
+        foreach (var v in S.Runtime!.HeaderFields.OrderBy(S.Runtime!.OrderOf)) Add(v, false, false);
+        foreach (var v in S.Runtime!.RowFields.OrderBy(S.Runtime!.OrderOf)) Add(v, true, false);
+        foreach (var v in S.Runtime!.AutoFields.OrderBy(S.Runtime!.OrderOf)) Add(v, false, true);
+        foreach (var v in S.Runtime!.ImageFields.OrderBy(S.Runtime!.OrderOf)) Add(v, false, false, isImage: true);
 
         S.GroupColumn ??= S.Headers.FirstOrDefault(c => TextUtil.Normalize(c).Contains("hoso"))
                           ?? S.Headers.FirstOrDefault();
@@ -83,6 +84,18 @@ public partial class Step2MappingViewModel : StepViewModel
         MappedCountText = $"(đã ghép {bound}/{total})";
         // Bắt buộc chạy Validation hợp lệ mới cho qua bước sau.
         CanGoNext = allBound && Validated && ValidationIsOk;
+    }
+
+    [RelayCommand]
+    private void ClearMapping()
+    {
+        if (S.Bindings.Count == 0) return;
+        var res = System.Windows.MessageBox.Show(
+            "Xóa trắng tất cả biến đã ghép (cột / hằng / đường dẫn ảnh)? Bạn sẽ phải ghép lại.",
+            "Clear ghép", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
+        if (res != System.Windows.MessageBoxResult.Yes) return;
+        foreach (var b in S.Bindings) if (!b.IsAutoField) b.Value = null;   // OnValueChanged → MappingChanged
+        MappingChanged();
     }
 
     [RelayCommand]

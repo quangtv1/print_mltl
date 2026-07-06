@@ -55,6 +55,16 @@ public static class TemplateCompiler
         foreach (var fp in doc.MainDocumentPart!.FooterParts)
             foreach (var m in OpenXmlHelpers.ImageMarkersIn(fp.Footer)) imageFields.Add(m);
 
+        // Thứ tự đọc: token theo vị trí trong tài liệu (body → header → footer), rồi tới ảnh.
+        var order = new List<string>();
+        void AddOrdered(IEnumerable<string> names) { foreach (var n in names) if (!order.Contains(n)) order.Add(n); }
+        AddOrdered(OrderedTokensIn(body));
+        foreach (var hp in doc.MainDocumentPart!.HeaderParts) AddOrdered(OrderedTokensIn(hp.Header));
+        foreach (var fp in doc.MainDocumentPart!.FooterParts) AddOrdered(OrderedTokensIn(fp.Footer));
+        AddOrdered(OpenXmlHelpers.ImageMarkersIn(body));
+        foreach (var hp in doc.MainDocumentPart!.HeaderParts) AddOrdered(OpenXmlHelpers.ImageMarkersIn(hp.Header));
+        foreach (var fp in doc.MainDocumentPart!.FooterParts) AddOrdered(OpenXmlHelpers.ImageMarkersIn(fp.Footer));
+
         return new RuntimeTemplate
         {
             Id = id ?? Path.GetFileNameWithoutExtension(docxPath),
@@ -66,7 +76,16 @@ public static class TemplateCompiler
             HeaderFields = headerFields,
             AutoFields = autoFields,
             ImageFields = imageFields,
+            FieldOrder = order,
         };
+    }
+
+    /// <summary>Token theo thứ tự xuất hiện (đọc trái→phải, trên→xuống) trong một phạm vi.</summary>
+    private static IEnumerable<string> OrderedTokensIn(DocumentFormat.OpenXml.OpenXmlElement el)
+    {
+        var text = string.Concat(el.Descendants<Text>().Select(t => t.Text));
+        foreach (System.Text.RegularExpressions.Match m in OpenXmlHelpers.TokenRx.Matches(text))
+            yield return m.Groups[1].Value;
     }
 
     private static HashSet<string> TokensInElement(DocumentFormat.OpenXml.OpenXmlElement el)

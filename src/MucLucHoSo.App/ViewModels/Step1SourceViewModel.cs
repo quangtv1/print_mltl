@@ -139,10 +139,10 @@ public partial class Step1SourceViewModel : StepViewModel
         {
             var rt = Wizard.Core.Compile(value.Path);
             S.Runtime = rt; S.TemplatePath = value.Path;
-            foreach (var v in rt.HeaderFields.OrderBy(x => x)) FreeVars.Add(v);
-            foreach (var v in rt.RowFields.OrderBy(x => x)) TableVars.Add(v);
-            foreach (var v in rt.AutoFields.OrderBy(x => x)) AutoVars.Add(v);
-            foreach (var v in rt.ImageFields.OrderBy(x => x)) ImageVars.Add(v);
+            foreach (var v in rt.HeaderFields.OrderBy(rt.OrderOf)) FreeVars.Add(v);
+            foreach (var v in rt.RowFields.OrderBy(rt.OrderOf)) TableVars.Add(v);
+            foreach (var v in rt.AutoFields.OrderBy(rt.OrderOf)) AutoVars.Add(v);
+            foreach (var v in rt.ImageFields.OrderBy(rt.OrderOf)) ImageVars.Add(v);
             HasImageVars = ImageVars.Count > 0;
         }
         catch (Exception ex) { SetStatus("Lỗi biên dịch template: " + ex.Message, false); }

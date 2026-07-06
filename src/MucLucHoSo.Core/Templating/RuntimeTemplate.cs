@@ -24,6 +24,17 @@ public sealed class RuntimeTemplate
     /// <summary>Biến ảnh: alt-text của ảnh trong template bắt đầu bằng "image" (chữ ký/logo/con dấu).</summary>
     public IReadOnlySet<string> ImageFields { get; init; } = new HashSet<string>();
 
+    /// <summary>Thứ tự biến xuất hiện trong template (đọc trái→phải, trên→xuống) — để sắp xếp bảng ghép.</summary>
+    public IReadOnlyList<string> FieldOrder { get; init; } = Array.Empty<string>();
+
+    /// <summary>Hạng của một biến theo thứ tự đọc (nhỏ = xuất hiện trước). Không có → cuối bảng.</summary>
+    public int OrderOf(string field)
+    {
+        for (int i = 0; i < FieldOrder.Count; i++)
+            if (FieldOrder[i] == field) return i;
+        return int.MaxValue;
+    }
+
     public static readonly IReadOnlySet<string> KnownAutoFields =
         new HashSet<string> { "trang_so", "tong_so_trang" };
 }

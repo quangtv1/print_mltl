@@ -77,9 +77,9 @@ public partial class Step3PreviewViewModel : StepViewModel
         HeaderVars.Clear(); RowVars.Clear(); AutoVars.Clear();
         HasAutoVars = false;
         if (S.Runtime is null) return;
-        foreach (var v in S.Runtime.HeaderFields.OrderBy(x => x)) HeaderVars.Add(v);
-        foreach (var v in S.Runtime.RowFields.OrderBy(x => x)) RowVars.Add(v);
-        foreach (var v in S.Runtime.AutoFields.OrderBy(x => x)) AutoVars.Add(v);
+        foreach (var v in S.Runtime.HeaderFields.OrderBy(S.Runtime.OrderOf)) HeaderVars.Add(v);
+        foreach (var v in S.Runtime.RowFields.OrderBy(S.Runtime.OrderOf)) RowVars.Add(v);
+        foreach (var v in S.Runtime.AutoFields.OrderBy(S.Runtime.OrderOf)) AutoVars.Add(v);
         HasAutoVars = AutoVars.Count > 0;
     }
 
