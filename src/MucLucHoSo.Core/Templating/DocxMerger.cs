@@ -12,19 +12,39 @@ namespace MucLucHoSo.Core.Templating;
 public sealed class DocxMerger
 {
     private readonly Dictionary<string, string> _rowVarColumn; // biến cấp dòng -> cột Excel
-    private readonly Dictionary<string, string> _images;       // biến ảnh -> đường dẫn file
+    private readonly Dictionary<string, string> _imageConst;   // biến ảnh HẰNG -> đường dẫn file
+    private readonly Dictionary<string, string> _imageColumn;  // biến ảnh THEO CỘT -> cột chứa đường dẫn
 
     public DocxMerger(MappingConfig map)
     {
         _rowVarColumn = new(StringComparer.Ordinal);
-        _images = new(StringComparer.Ordinal);
+        _imageConst = new(StringComparer.Ordinal);
+        _imageColumn = new(StringComparer.Ordinal);
         foreach (var b in map.Bindings)
         {
             if (b.Kind == BindingKind.Column && b.Column is not null)
                 _rowVarColumn[b.Variable] = b.Column; // dùng chung cho cả header & row
             else if (b.Kind == BindingKind.Image && !string.IsNullOrWhiteSpace(b.ImagePath))
-                _images[b.Variable] = b.ImagePath!;
+                _imageConst[b.Variable] = b.ImagePath!;
+            else if (b.Kind == BindingKind.Image && !string.IsNullOrWhiteSpace(b.Column))
+                _imageColumn[b.Variable] = b.Column!;
         }
+    }
+
+    /// <summary>Đường dẫn ảnh cho một hồ sơ: hằng + (theo cột lấy từ dòng đầu nhóm).</summary>
+    private Dictionary<string, string> ResolveImages(HoSoJob job)
+    {
+        var images = new Dictionary<string, string>(_imageConst, StringComparer.Ordinal);
+        if (_imageColumn.Count > 0 && job.Rows.Count > 0)
+        {
+            var first = job.Rows[0];
+            foreach (var kv in _imageColumn)
+            {
+                var p = first.Get(kv.Value);
+                if (!string.IsNullOrWhiteSpace(p)) images[kv.Key] = p;   // rỗng -> giữ placeholder
+            }
+        }
+        return images;
     }
 
     public byte[] Merge(RuntimeTemplate rt, HoSoJob job, string? highlightVar = null)
@@ -61,12 +81,13 @@ public sealed class DocxMerger
                 name => job.HeaderValues.TryGetValue(name, out var v) ? v : null,
                 rt.AutoFields, highlightVar);
 
-            // 3) Đổi ruột ảnh (chữ ký/logo/con dấu) — ở body + header + footer
-            if (_images.Count > 0)
+            // 3) Đổi ruột ảnh (chữ ký/logo/con dấu/QR) — hằng + theo cột (mỗi hồ sơ một ảnh)
+            var images = ResolveImages(job);
+            if (images.Count > 0)
             {
-                OpenXmlHelpers.ReplaceImages(main, body, _images);
-                foreach (var hp in main.HeaderParts) OpenXmlHelpers.ReplaceImages(hp, hp.Header, _images);
-                foreach (var fp in main.FooterParts) OpenXmlHelpers.ReplaceImages(fp, fp.Footer, _images);
+                OpenXmlHelpers.ReplaceImages(main, body, images);
+                foreach (var hp in main.HeaderParts) OpenXmlHelpers.ReplaceImages(hp, hp.Header, images);
+                foreach (var fp in main.FooterParts) OpenXmlHelpers.ReplaceImages(fp, fp.Footer, images);
             }
 
             main.Document.Save();

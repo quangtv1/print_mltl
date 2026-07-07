@@ -20,6 +20,10 @@ public sealed class VariableBinding
         => new() { Variable = variable, Kind = BindingKind.Constant, Constant = value };
     public static VariableBinding AutoField(string variable)
         => new() { Variable = variable, Kind = BindingKind.Auto };
+    /// <summary>Ảnh hằng: một file áp cho mọi hồ sơ.</summary>
     public static VariableBinding Image(string variable, string path)
         => new() { Variable = variable, Kind = BindingKind.Image, ImagePath = path };
+    /// <summary>Ảnh theo cột: đường dẫn ảnh lấy từ một cột Excel (mỗi hồ sơ một ảnh).</summary>
+    public static VariableBinding ImageColumn(string variable, string column)
+        => new() { Variable = variable, Kind = BindingKind.Image, Column = column };
 }

@@ -82,7 +82,8 @@ tự động `{trang_so}` / `{tong_so_trang}` (engine chèn thành field Word **
   thay biến header → nhân bản prototype row → xoá prototype. Clone riêng nên **an toàn đa luồng**.
 - **Biến ảnh (chữ ký / logo / con dấu):** chèn một ảnh vào Word đúng vị trí/kích thước/kiểu bao chữ (kể cả "Behind Text"
   cho con dấu đè chữ), rồi đặt **Alt Text** của ảnh bắt đầu bằng `image` (VD `image_chu_ky`, `image_logo`, `image_con_dau`).
-  Ở Bước 2, mỗi biến ảnh có nút **Duyệt ảnh…** chọn đường dẫn (áp cho mọi hồ sơ); engine đổi ruột ảnh, giữ nguyên bố cục.
+  Ở Bước 2, mỗi biến ảnh chọn **Hằng** (Duyệt 1 file, áp mọi hồ sơ — logo/chữ ký/con dấu) hoặc **Theo cột**
+  (đường dẫn ảnh lấy từ một cột Excel, **mỗi hồ sơ một ảnh** — vd QR). Ô rỗng/file thiếu → giữ ảnh gốc, bỏ qua.
   Nên dùng **PNG nền trong suốt**. Đổi ruột ảnh thuần OpenXML (không cần Word).
 
 ## Ràng buộc biến = Cột HOẶC Hằng

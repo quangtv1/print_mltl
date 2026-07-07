@@ -146,14 +146,25 @@
                                                 <TextBlock Text="Word tự tính khi render (PAGE/NUMPAGES)" Foreground="{StaticResource Muted}" FontStyle="Italic"
                                                            VerticalAlignment="Center" Margin="2,0,0,0"
                                                            Visibility="{Binding IsAutoField, Converter={StaticResource BoolToVis}}"/>
-                                                <!-- Biến ảnh: duyệt file -->
+                                                <!-- Biến ảnh: Hằng (duyệt 1 file) hoặc Theo cột (đường dẫn mỗi hồ sơ) -->
                                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center"
                                                             Visibility="{Binding IsImageField, Converter={StaticResource BoolToVis}}">
-                                                    <Button Content="Duyệt ảnh…" Style="{StaticResource GhostButton}" Padding="12,4" MinHeight="0" Command="{Binding BrowseImageCommand}"/>
-                                                    <TextBlock Text="{Binding Value}" TextTrimming="CharacterEllipsis" MaxWidth="280" VerticalAlignment="Center" Margin="10,0,0,0"
-                                                               Foreground="{StaticResource Ink}" Visibility="{Binding Value, Converter={StaticResource NullToVis}}"/>
-                                                    <TextBlock Text="(chưa chọn ảnh)" Foreground="{StaticResource Muted}" FontStyle="Italic" VerticalAlignment="Center" Margin="10,0,0,0"
-                                                               Visibility="{Binding Value, Converter={StaticResource NullToVis}, ConverterParameter=invert}"/>
+                                                    <RadioButton Content="Hằng" GroupName="{Binding Variable}" VerticalAlignment="Center" Margin="0,0,10,0"
+                                                                 IsChecked="{Binding ImageFromColumn, Converter={StaticResource InverseBool}}"/>
+                                                    <RadioButton Content="Theo cột" GroupName="{Binding Variable}" VerticalAlignment="Center" Margin="0,0,12,0"
+                                                                 IsChecked="{Binding ImageFromColumn}"/>
+                                                    <!-- Hằng -->
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center"
+                                                                Visibility="{Binding ImageFromColumn, Converter={StaticResource InverseBoolToVis}}">
+                                                        <Button Content="Duyệt ảnh…" Style="{StaticResource GhostButton}" Padding="12,4" MinHeight="0" Command="{Binding BrowseImageCommand}"/>
+                                                        <TextBlock Text="{Binding Value}" TextTrimming="CharacterEllipsis" MaxWidth="220" VerticalAlignment="Center" Margin="10,0,0,0"
+                                                                   Foreground="{StaticResource Ink}" Visibility="{Binding Value, Converter={StaticResource NullToVis}}"/>
+                                                        <TextBlock Text="(chưa chọn ảnh)" Foreground="{StaticResource Muted}" FontStyle="Italic" VerticalAlignment="Center" Margin="10,0,0,0"
+                                                                   Visibility="{Binding Value, Converter={StaticResource NullToVis}, ConverterParameter=invert}"/>
+                                                    </StackPanel>
+                                                    <!-- Theo cột: chọn cột chứa đường dẫn ảnh -->
+                                                    <ComboBox Width="200" ItemsSource="{Binding AvailableColumns}" SelectedItem="{Binding Value}"
+                                                              Visibility="{Binding ImageFromColumn, Converter={StaticResource BoolToVis}}"/>
                                                 </StackPanel>
                                             </Grid>
 

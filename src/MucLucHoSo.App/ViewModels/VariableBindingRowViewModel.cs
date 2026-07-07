@@ -21,8 +21,11 @@ public partial class VariableBindingRowViewModel : ObservableObject
     public IReadOnlyList<string> AvailableColumns { get; }
     private readonly Action _changed;
 
-    /// <summary>Giá trị ô nguồn: tên cột / chuỗi hằng / đường dẫn ảnh.</summary>
+    /// <summary>Giá trị ô nguồn: tên cột / chuỗi hằng / đường dẫn ảnh (hoặc tên cột chứa đường dẫn ảnh).</summary>
     [ObservableProperty] private string? _value;
+
+    /// <summary>Biến ảnh: true = đường dẫn lấy theo CỘT (mỗi hồ sơ một ảnh), false = một file HẰNG.</summary>
+    [ObservableProperty] private bool _imageFromColumn;
 
     public VariableBindingRowViewModel(int index, string variable, bool isRowField, bool isAuto,
         IReadOnlyList<string> columns, Action changed, bool isImage = false)
@@ -37,7 +40,11 @@ public partial class VariableBindingRowViewModel : ObservableObject
     public bool IsColumn => !IsImageField && !string.IsNullOrEmpty(Value) && AvailableColumns.Contains(Value!);
 
     public bool IsBound => IsAutoField
-        || (IsImageField ? (!string.IsNullOrWhiteSpace(Value) && File.Exists(Value)) : !string.IsNullOrWhiteSpace(Value));
+        || (IsImageField
+            ? (ImageFromColumn
+                ? (!string.IsNullOrWhiteSpace(Value) && AvailableColumns.Contains(Value!))
+                : (!string.IsNullOrWhiteSpace(Value) && File.Exists(Value)))
+            : !string.IsNullOrWhiteSpace(Value));
 
     /// <summary>Nhãn cột "Tự khớp".</summary>
     public string MatchText => IsAutoField ? "tự động"
@@ -46,6 +53,15 @@ public partial class VariableBindingRowViewModel : ObservableObject
         : string.IsNullOrWhiteSpace(Value) ? "chưa ghép" : "hằng";
 
     public bool MatchOk => IsAutoField || IsBound;
+
+    partial void OnImageFromColumnChanged(bool value)
+    {
+        Value = null;   // đổi chế độ → xoá giá trị cũ (đường dẫn ≠ tên cột)
+        OnPropertyChanged(nameof(IsBound));
+        OnPropertyChanged(nameof(MatchText));
+        OnPropertyChanged(nameof(MatchOk));
+        _changed();
+    }
 
     [RelayCommand]
     private void BrowseImage()
