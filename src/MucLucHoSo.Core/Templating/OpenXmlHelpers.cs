@@ -135,8 +135,10 @@ internal static class OpenXmlHelpers
     /// resolve(var) -> giá trị text (thay bằng text) hoặc null (giữ nguyên token).
     /// autoFields: token thuộc nhóm này -> chèn field PAGE/NUMPAGES thay vì text.
     /// </summary>
-    public static void ReplaceTokens(OpenXmlElement scope, Func<string, string?> resolve,
-                                     IReadOnlySet<string>? autoFields = null, string? highlightVar = null)
+    public static void ReplaceTokens<TPart>(TPart owner, OpenXmlElement scope, Func<string, string?> resolve,
+                                     IReadOnlySet<string>? autoFields = null, string? highlightVar = null,
+                                     IReadOnlySet<string>? imageTokens = null)
+        where TPart : OpenXmlPart, ISupportedRelationship<ImagePart>
     {
         foreach (var r in scope.Descendants<Run>().ToList())
         {
@@ -149,8 +151,10 @@ internal static class OpenXmlHelpers
             bool hasHighlight = highlightVar != null && s.Contains("{" + highlightVar + "}");
             bool hasField = autoFields != null &&
                 TokenRx.Matches(s).Any(m => autoFields.Contains(m.Groups[1].Value));
+            bool hasImage = imageTokens != null &&
+                TokenRx.Matches(s).Any(m => imageTokens.Contains(m.Groups[1].Value));
 
-            if (!hasField)
+            if (!hasField && !hasImage)
             {
                 // chỉ thay text
                 t.Text = TokenRx.Replace(s, m =>
@@ -163,7 +167,7 @@ internal static class OpenXmlHelpers
                 continue;
             }
 
-            // có field: dựng lại run thành chuỗi run/field xen kẽ
+            // có field / ảnh: dựng lại run thành chuỗi run/field/ảnh xen kẽ
             var rpr = r.GetFirstChild<RunProperties>();
             var parent = r.Parent!;
             var pieces = new List<OpenXmlElement>();
@@ -172,8 +176,10 @@ internal static class OpenXmlHelpers
             {
                 if (m.Index > last) pieces.Add(MkRun(rpr, s[last..m.Index]));
                 var name = m.Groups[1].Value;
-                if (autoFields!.Contains(name))
+                if (autoFields != null && autoFields.Contains(name))
                     pieces.Add(MkField(rpr, name == "trang_so" ? "PAGE" : "NUMPAGES"));
+                else if (imageTokens != null && imageTokens.Contains(name))
+                    pieces.Add(MkImageRun(owner, resolve(name)));   // giá trị = đường dẫn ảnh
                 else
                 {
                     var v = resolve(name);
@@ -198,11 +204,82 @@ internal static class OpenXmlHelpers
     }
 
     /// <summary>Áp dụng ReplaceTokens cho body + mọi header/footer part.</summary>
-    public static void ReplaceEverywhere(DocumentFormat.OpenXml.Packaging.MainDocumentPart main,
-        Func<string, string?> resolve, IReadOnlySet<string>? autoFields = null, string? highlightVar = null)
+    public static void ReplaceEverywhere(MainDocumentPart main,
+        Func<string, string?> resolve, IReadOnlySet<string>? autoFields = null, string? highlightVar = null,
+        IReadOnlySet<string>? imageTokens = null)
     {
-        ReplaceTokens(main.Document.Body!, resolve, autoFields, highlightVar);
-        foreach (var hp in main.HeaderParts) ReplaceTokens(hp.Header, resolve, autoFields, highlightVar);
-        foreach (var fp in main.FooterParts) ReplaceTokens(fp.Footer, resolve, autoFields, highlightVar);
+        ReplaceTokens(main, main.Document.Body!, resolve, autoFields, highlightVar, imageTokens);
+        foreach (var hp in main.HeaderParts) ReplaceTokens(hp, hp.Header, resolve, autoFields, highlightVar, imageTokens);
+        foreach (var fp in main.FooterParts) ReplaceTokens(fp, fp.Footer, resolve, autoFields, highlightVar, imageTokens);
     }
+
+    /// <summary>Run chứa ảnh inline từ đường dẫn (kích thước = tự nhiên của ảnh; lỗi/không có → run rỗng).</summary>
+    private static OpenXmlElement MkImageRun<TPart>(TPart owner, string? path)
+        where TPart : OpenXmlPart, ISupportedRelationship<ImagePart>
+    {
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path)) return new Run();
+        var imgPart = owner.AddImagePart(ImageTypeOf(path));
+        using (var fs = File.OpenRead(path)) imgPart.FeedData(fs);
+        var relId = owner.GetIdOfPart(imgPart);
+        var (cx, cy) = ImageSizeEmu(path);
+        return new Run(BuildInlineDrawing(relId, cx, cy));
+    }
+
+    private static Drawing BuildInlineDrawing(string relId, long cx, long cy) =>
+        new Drawing(new DW.Inline(
+            new DW.Extent { Cx = cx, Cy = cy },
+            new DW.DocProperties { Id = 1U, Name = "img" },
+            new A.Graphic(new A.GraphicData(
+                new PIC.Picture(
+                    new PIC.NonVisualPictureProperties(
+                        new PIC.NonVisualDrawingProperties { Id = 0U, Name = "img" },
+                        new PIC.NonVisualPictureDrawingProperties()),
+                    new PIC.BlipFill(new A.Blip { Embed = relId }, new A.Stretch(new A.FillRectangle())),
+                    new PIC.ShapeProperties(
+                        new A.Transform2D(new A.Offset { X = 0, Y = 0 }, new A.Extents { Cx = cx, Cy = cy }),
+                        new A.PresetGeometry(new A.AdjustValueList()) { Preset = A.ShapeTypeValues.Rectangle }))
+            ) { Uri = "http://schemas.openxmlformats.org/drawingml/2006/picture" }))
+        { DistanceFromTop = 0U, DistanceFromBottom = 0U, DistanceFromLeft = 0U, DistanceFromRight = 0U });
+
+    // Kích thước tự nhiên (px) -> EMU (1px @96dpi = 9525 EMU); không đọc được -> ~2cm vuông.
+    private static (long cx, long cy) ImageSizeEmu(string path)
+    {
+        try { var (w, h) = ReadPixelSize(path); if (w > 0 && h > 0) return (w * 9525L, h * 9525L); }
+        catch { }
+        return (1905000L, 1905000L);
+    }
+
+    private static (int w, int h) ReadPixelSize(string path)
+    {
+        var ext = Path.GetExtension(path).ToLowerInvariant();
+        using var fs = File.OpenRead(path);
+        using var br = new BinaryReader(fs);
+        if (ext == ".png")
+        {
+            fs.Seek(16, SeekOrigin.Begin);
+            return (ReadBE32(br), ReadBE32(br));
+        }
+        if (ext is ".jpg" or ".jpeg")
+        {
+            fs.Seek(2, SeekOrigin.Begin);
+            while (fs.Position < fs.Length - 1)
+            {
+                if (br.ReadByte() != 0xFF) continue;
+                byte marker = br.ReadByte();
+                if (marker is >= 0xC0 and <= 0xC3)
+                {
+                    ReadBE16(br); br.ReadByte();           // length + precision
+                    int h = ReadBE16(br), w = ReadBE16(br);
+                    return (w, h);
+                }
+                int len = ReadBE16(br);
+                if (len < 2) break;
+                fs.Seek(len - 2, SeekOrigin.Current);
+            }
+        }
+        return (0, 0);
+    }
+
+    private static int ReadBE32(BinaryReader b) { var x = b.ReadBytes(4); return (x[0] << 24) | (x[1] << 16) | (x[2] << 8) | x[3]; }
+    private static int ReadBE16(BinaryReader b) { var x = b.ReadBytes(2); return (x[0] << 8) | x[1]; }
 }

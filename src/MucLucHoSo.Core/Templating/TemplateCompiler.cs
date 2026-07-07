@@ -47,6 +47,11 @@ public static class TemplateCompiler
             all.Where(v => !rowFields.Contains(v) && !RuntimeTemplate.KnownAutoFields.Contains(v)),
             StringComparer.Ordinal);
 
+        // Token chữ {image...} (cả trong hàng mẫu lẫn ngoài) → chèn ảnh từ đường dẫn (giá trị cột/hằng).
+        var imageTokenFields = new HashSet<string>(
+            all.Concat(rowFields).Where(v => v.StartsWith("image", StringComparison.OrdinalIgnoreCase)),
+            StringComparer.Ordinal);
+
         // Biến ảnh: alt-text/tên ảnh bắt đầu bằng "image" (body + header + footer).
         var imageFields = new HashSet<string>(StringComparer.Ordinal);
         foreach (var m in OpenXmlHelpers.ImageMarkersIn(body)) imageFields.Add(m);
@@ -76,6 +81,7 @@ public static class TemplateCompiler
             HeaderFields = headerFields,
             AutoFields = autoFields,
             ImageFields = imageFields,
+            ImageTokenFields = imageTokenFields,
             FieldOrder = order,
         };
     }

@@ -85,6 +85,9 @@ tự động `{trang_so}` / `{tong_so_trang}` (engine chèn thành field Word **
   Ở Bước 2, mỗi biến ảnh chọn **Hằng** (Duyệt 1 file, áp mọi hồ sơ — logo/chữ ký/con dấu) hoặc **Theo cột**
   (đường dẫn ảnh lấy từ một cột Excel, **mỗi hồ sơ một ảnh** — vd QR). Ô rỗng/file thiếu → giữ ảnh gốc, bỏ qua.
   Nên dùng **PNG nền trong suốt**. Đổi ruột ảnh thuần OpenXML (không cần Word).
+- **Cách 2 — token chữ `{image...}`:** gõ thẳng token bắt đầu bằng `image` (vd `{image_qr}`) vào Word; **giá trị** bạn
+  ghép (cột/hằng) chính là **đường dẫn ảnh** → engine chèn ảnh inline ngay tại token, **kích thước = tự nhiên của ảnh**.
+  Đơn giản khi không cần canh vị trí/đè chữ (vd QR mỗi hồ sơ). Đặt token trong **hàng mẫu** → ảnh theo từng dòng.
 
 ## Ràng buộc biến = Cột HOẶC Hằng
 Dữ liệu thật thường thiếu cột cho một số biến (vd `{don_vi}`, `{chi_nhanh}`, `{nguoi_lap}`). Mỗi biến bind theo:

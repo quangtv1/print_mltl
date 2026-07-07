@@ -68,9 +68,9 @@ public sealed class DocxMerger
             foreach (var docRow in job.Rows)
             {
                 var clone = (TableRow)proto.CloneNode(true);
-                OpenXmlHelpers.ReplaceTokens(clone, name =>
+                OpenXmlHelpers.ReplaceTokens(main, clone, name =>
                     rt.RowFields.Contains(name) && _rowVarColumn.TryGetValue(name, out var col)
-                        ? docRow.Get(col) : null, null, highlightVar);
+                        ? docRow.Get(col) : null, null, highlightVar, rt.ImageTokenFields);
                 table.InsertAfter(clone, anchor);
                 anchor = clone;
             }
@@ -79,7 +79,7 @@ public sealed class DocxMerger
             // 2) Thay biến cấp hồ sơ / hằng + field tự động (PAGE/NUMPAGES) trên toàn tài liệu
             OpenXmlHelpers.ReplaceEverywhere(main,
                 name => job.HeaderValues.TryGetValue(name, out var v) ? v : null,
-                rt.AutoFields, highlightVar);
+                rt.AutoFields, highlightVar, rt.ImageTokenFields);
 
             // 3) Đổi ruột ảnh (chữ ký/logo/con dấu/QR) — hằng + theo cột (mỗi hồ sơ một ảnh)
             var images = ResolveImages(job);

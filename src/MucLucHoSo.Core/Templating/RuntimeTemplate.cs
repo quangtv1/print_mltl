@@ -23,6 +23,8 @@ public sealed class RuntimeTemplate
     public required IReadOnlySet<string> AutoFields { get; init; }
     /// <summary>Biến ảnh: alt-text của ảnh trong template bắt đầu bằng "image" (chữ ký/logo/con dấu).</summary>
     public IReadOnlySet<string> ImageFields { get; init; } = new HashSet<string>();
+    /// <summary>Token chữ {image...}: giá trị (từ cột/hằng) là ĐƯỜNG DẪN ảnh → chèn ảnh inline tại vị trí token.</summary>
+    public IReadOnlySet<string> ImageTokenFields { get; init; } = new HashSet<string>();
 
     /// <summary>Thứ tự biến xuất hiện trong template (đọc trái→phải, trên→xuống) — để sắp xếp bảng ghép.</summary>
     public IReadOnlyList<string> FieldOrder { get; init; } = Array.Empty<string>();
