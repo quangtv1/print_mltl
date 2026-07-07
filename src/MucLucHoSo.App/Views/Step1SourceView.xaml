@@ -93,20 +93,18 @@
             <Border Grid.Row="2" Style="{StaticResource Card}">
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top" Text="Mẫu template" Style="{StaticResource H2}"/>
+                    <!-- Chọn mẫu: dòng cuối ComboBox "➕ Import DOCX…" mở dialog (thay nút Import rời) -->
                     <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="76"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <Grid Grid.Column="1" Width="230">
+                        <Grid Grid.Column="1">
                             <ComboBox ItemsSource="{Binding Templates}" SelectedItem="{Binding SelectedTemplate}"/>
                             <TextBlock Text="Chưa chọn mẫu" Foreground="{StaticResource Muted}" Margin="9,0,0,0"
                                        VerticalAlignment="Center" IsHitTestVisible="False"
                                        Visibility="{Binding SelectedTemplate, Converter={StaticResource NullToVis}, ConverterParameter=invert}"/>
                         </Grid>
-                        <Button Grid.Column="2" Content="Import DOCX…" Width="130" Margin="10,0,0,0"
-                                Style="{StaticResource GhostButton}" Command="{Binding ImportTemplateCommand}"/>
                     </Grid>
 
                     <!-- Chỉ hiện khi import mẫu mới -->
@@ -121,7 +119,23 @@
                         <TextBlock Text="{Binding TemplateWarning}" Foreground="{StaticResource Warn}" FontWeight="SemiBold" TextWrapping="Wrap"/>
                     </Border>
 
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <!-- Vùng biến: 3 trạng thái chồng nhau, mỗi lúc chỉ 1 hiện -->
+                    <Grid>
+                        <!-- (a) Chưa chọn mẫu -->
+                        <TextBlock Text="Hãy chọn mẫu để tiếp tục" Style="{StaticResource H2}"
+                                   Foreground="{StaticResource Accent}" TextWrapping="Wrap"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"
+                                   Visibility="{Binding ShowEmptyPrompt, Converter={StaticResource BoolToVis}}"/>
+
+                        <!-- (b) Chọn mẫu nhưng không có biến dữ liệu -->
+                        <TextBlock Text="Mẫu này không có biến, hãy chọn lại !" Style="{StaticResource H2}"
+                                   Foreground="{StaticResource Warn}" TextWrapping="Wrap"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"
+                                   Visibility="{Binding ShowNoVarWarning, Converter={StaticResource BoolToVis}}"/>
+
+                        <!-- (c) Chọn mẫu có biến → danh sách token -->
+                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                      Visibility="{Binding ShowVarLists, Converter={StaticResource BoolToVis}}">
                         <StackPanel>
                             <TextBlock Text="Biến tự do:" FontWeight="SemiBold" Margin="0,0,0,6"/>
                             <ItemsControl ItemsSource="{Binding FreeVars}">
@@ -145,7 +159,7 @@
                             </ItemsControl>
 
                             <StackPanel Visibility="{Binding HasImageVars, Converter={StaticResource BoolToVis}}">
-                                <TextBlock Margin="0,8,0,6"><Run Text="Biến ảnh:" FontWeight="SemiBold"/><Run Text=" (chèn ảnh theo Alt Text, duyệt file ở Bước 2)" Foreground="{StaticResource Muted}" FontSize="13"/></TextBlock>
+                                <TextBlock Margin="0,8,0,6"><Run Text="Biến ảnh:" FontWeight="SemiBold"/><Run Text=" (ảnh Alt Text hoặc token {image…} — đường dẫn duyệt ở Bước 2)" Foreground="{StaticResource Muted}" FontSize="13"/></TextBlock>
                                 <ItemsControl ItemsSource="{Binding ImageVars}">
                                     <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate><DataTemplate>
@@ -155,6 +169,7 @@
                             </StackPanel>
                         </StackPanel>
                     </ScrollViewer>
+                    </Grid>
                 </DockPanel>
             </Border>
         </Grid>

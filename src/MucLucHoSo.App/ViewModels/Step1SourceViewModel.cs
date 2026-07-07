@@ -9,7 +9,7 @@ using MucLucHoSo.Core.Models;
 
 namespace MucLucHoSo.App.ViewModels;
 
-public sealed record TemplateItem(string Name, string Path, bool IsImported = false) { public override string ToString() => Name; }
+public sealed record TemplateItem(string Name, string Path, bool IsImported = false, bool IsImportAction = false) { public override string ToString() => Name; }
 
 public partial class Step1SourceViewModel : StepViewModel
 {
@@ -35,6 +35,16 @@ public partial class Step1SourceViewModel : StepViewModel
     [ObservableProperty] private bool _isImportedTemplate;
     [ObservableProperty] private bool _hasImageVars;
     [ObservableProperty] private string _templateWarning = "";   // cảnh báo trùng tên token/Alt-Text
+
+    // Trạng thái vùng biến: chưa chọn / chọn-nhưng-rỗng / chọn-có-biến
+    [ObservableProperty] private bool _hasDataVars;
+    [ObservableProperty] private bool _showEmptyPrompt = true;    // chưa chọn mẫu → "Hãy chọn mẫu để tiếp tục"
+    [ObservableProperty] private bool _showNoVarWarning;          // chọn mẫu nhưng không có biến dữ liệu
+    [ObservableProperty] private bool _showVarLists;              // chọn mẫu có biến → hiện các nhóm
+
+    // Chống kẹt/đệ quy khi dòng cuối ComboBox là hành động Import
+    private TemplateItem? _prevTemplate;                          // mẫu hợp lệ gần nhất (để revert khi hủy Import)
+    private bool _suppressSelectionHandler;
 
     public string UsingTemplateText => $"Đang sử dụng template \"{TemplateFileName}\"";
 
@@ -65,6 +75,8 @@ public partial class Step1SourceViewModel : StepViewModel
                     Templates.Add(new TemplateItem(Path.GetFileNameWithoutExtension(f), f));
         }
         catch { /* bỏ qua */ }
+        // Dòng cuối cùng = hành động Import (thay cho nút "Import DOCX…" rời).
+        Templates.Add(new TemplateItem("➕ Import DOCX…", "", IsImportAction: true));
     }
 
     [RelayCommand]
@@ -113,13 +125,16 @@ public partial class Step1SourceViewModel : StepViewModel
         finally { Busy = false; UpdateCanGoNext(); }
     }
 
-    [RelayCommand]
-    private void ImportTemplate()
+    /// <summary>Mở dialog chọn DOCX. Chèn mẫu mới TRƯỚC dòng "Import" và chọn nó; trả về false nếu người dùng hủy.</summary>
+    private bool PerformImport()
     {
         var dlg = new OpenFileDialog { Filter = "Word (*.docx)|*.docx" };
-        if (dlg.ShowDialog() != true) return;
+        if (dlg.ShowDialog() != true) return false;
         var item = new TemplateItem(Path.GetFileNameWithoutExtension(dlg.FileName), dlg.FileName, IsImported: true);
-        Templates.Add(item); SelectedTemplate = item;
+        int insertAt = Math.Max(0, Templates.Count - 1);   // trước sentinel Import ở cuối
+        Templates.Insert(insertAt, item);
+        SelectedTemplate = item;
+        return true;
     }
 
     [RelayCommand]
@@ -132,19 +147,50 @@ public partial class Step1SourceViewModel : StepViewModel
 
     partial void OnSelectedTemplateChanged(TemplateItem? value)
     {
-        FreeVars.Clear(); TableVars.Clear(); AutoVars.Clear(); ImageVars.Clear(); HasImageVars = false; TemplateWarning = "";
+        if (_suppressSelectionHandler) return;
+
+        // Dòng cuối "➕ Import DOCX…": mở dialog thay vì chọn mẫu.
+        if (value?.IsImportAction == true)
+        {
+            // PerformImport tự gán SelectedTemplate = mẫu mới (chạy lại handler cho mẫu thật).
+            if (!PerformImport())
+            {
+                // Hủy dialog → quay về mẫu trước đó. Defer qua Dispatcher để ComboBox không tự
+                // commit lại giá trị đang chờ (dòng Import) sau setter — WPF Selector reentrancy.
+                System.Windows.Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    _suppressSelectionHandler = true;
+                    SelectedTemplate = _prevTemplate;
+                    _suppressSelectionHandler = false;
+                }));
+            }
+            return;
+        }
+
+        _prevTemplate = value;
+        FreeVars.Clear(); TableVars.Clear(); AutoVars.Clear(); ImageVars.Clear();
+        HasImageVars = false; HasDataVars = false; TemplateWarning = "";
         S.Runtime = null; S.TemplatePath = null;
-        IsImportedTemplate = value?.IsImported ?? false;
-        if (value is null) { OnPropertyChanged(nameof(UsingTemplateText)); UpdateCanGoNext(); return; }
+        IsImportedTemplate = false;   // chỉ bật lại khi compile thành công (tránh banner rỗng khi lỗi)
+        if (value is null)
+        {
+            UpdateVarPanelState();
+            OnPropertyChanged(nameof(UsingTemplateText)); UpdateCanGoNext(); return;
+        }
         try
         {
             var rt = Wizard.Core.Compile(value.Path);
             S.Runtime = rt; S.TemplatePath = value.Path;
-            foreach (var v in rt.HeaderFields.OrderBy(rt.OrderOf)) FreeVars.Add(v);
-            foreach (var v in rt.RowFields.OrderBy(rt.OrderOf)) TableVars.Add(v);
+            IsImportedTemplate = value.IsImported;
+            // Token {image...} gộp vào nhóm Biến ảnh → bỏ khỏi Biến tự do / trong bảng (khử trùng).
+            var tokenImg = rt.ImageTokenFields;
+            foreach (var v in rt.HeaderFields.Except(tokenImg).OrderBy(rt.OrderOf)) FreeVars.Add(v);
+            foreach (var v in rt.RowFields.Except(tokenImg).OrderBy(rt.OrderOf)) TableVars.Add(v);
             foreach (var v in rt.AutoFields.OrderBy(rt.OrderOf)) AutoVars.Add(v);
-            foreach (var v in rt.ImageFields.OrderBy(rt.OrderOf)) ImageVars.Add(v);
+            foreach (var v in rt.ImageFields.Union(tokenImg).OrderBy(rt.OrderOf)) ImageVars.Add(v);
             HasImageVars = ImageVars.Count > 0;
+            // Có biến dữ liệu = biến tự do ∪ trong bảng ∪ ảnh (không tính trang_so/tong_so_trang).
+            HasDataVars = FreeVars.Count > 0 || TableVars.Count > 0 || ImageVars.Count > 0;
             // Trùng tên: cùng một tên vừa là token {image...} vừa là Alt Text ảnh → cảnh báo đổi tên.
             var dup = rt.ImageFields.Intersect(rt.ImageTokenFields).OrderBy(x => x).ToList();
             TemplateWarning = dup.Count > 0
@@ -152,10 +198,22 @@ public partial class Step1SourceViewModel : StepViewModel
                 : "";
         }
         catch (Exception ex) { SetStatus("Lỗi biên dịch template: " + ex.Message, false); }
+        UpdateVarPanelState();
         OnPropertyChanged(nameof(TemplateFileName));
         OnPropertyChanged(nameof(UsingTemplateText));
         UpdateCanGoNext();
         _ = RenderTemplatePreviewAsync();
+    }
+
+    /// <summary>Đồng bộ 3 trạng thái vùng biến theo mẫu đã chọn và có biến dữ liệu hay không.</summary>
+    private void UpdateVarPanelState()
+    {
+        bool selected = SelectedTemplate is { IsImportAction: false };   // đã chọn mẫu thật (không phải dòng Import)
+        bool compiled = S.Runtime != null;
+        ShowVarLists = compiled && HasDataVars;
+        ShowNoVarWarning = compiled && !HasDataVars;
+        // Chưa chọn mẫu → nhắc chọn. Chọn mẫu mà lỗi biên dịch → để trống (status báo lỗi), không nhắc sai.
+        ShowEmptyPrompt = !selected;
     }
 
     private async Task RenderTemplatePreviewAsync()
@@ -181,5 +239,5 @@ public partial class Step1SourceViewModel : StepViewModel
     }
 
     private void SetStatus(string text, bool ok) { StatusText = text; StatusIsOk = ok; }
-    private void UpdateCanGoNext() => CanGoNext = S.DataLoaded && S.Runtime != null;
+    private void UpdateCanGoNext() => CanGoNext = S.DataLoaded && S.Runtime != null && HasDataVars;
 }

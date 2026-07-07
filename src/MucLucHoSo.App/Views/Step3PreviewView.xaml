@@ -96,13 +96,20 @@
             <Border Grid.Column="1" Background="White" BorderBrush="{StaticResource Line}" BorderThickness="1,0,0,0">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
                     <StackPanel>
+                        <!-- Cảnh báo thiếu Word: chỉ mất Preview/PDF, vẫn xuất DOCX (không chặn Tiếp theo) -->
+                        <Border Background="#FFFDF3E6" CornerRadius="6" Padding="10,7" Margin="0,0,0,14"
+                                Visibility="{Binding WordAvailable, Converter={StaticResource InverseBoolToVis}}">
+                            <TextBlock Foreground="{StaticResource Warn}" FontWeight="SemiBold" TextWrapping="Wrap"
+                                       Text="Không có Microsoft Word — chỉ xuất được DOCX, không Preview/PDF."/>
+                        </Border>
+
                         <TextBlock TextWrapping="Wrap" Foreground="{StaticResource Muted}" FontSize="13" Margin="0,0,0,14">
                             Bấm một biến để <Run Text="nổi sáng" FontWeight="SemiBold"/> giá trị của biến đó trên trang
                             (biến trong bảng sẽ sáng cả cột). Bấm lại để tắt.
                         </TextBlock>
 
                         <TextBlock Text="Biến tự do" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Muted}" Margin="0,0,0,6"/>
-                        <ItemsControl ItemsSource="{Binding HeaderVars}" Margin="0,0,0,14">
+                        <ItemsControl ItemsSource="{Binding HeaderVars}">
                             <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate><DataTemplate>
                                 <Button Style="{StaticResource ChipButton}" Content="{Binding}" ContentStringFormat="{}{{{0}}}"
@@ -110,8 +117,19 @@
                                         CommandParameter="{Binding}"/>
                             </DataTemplate></ItemsControl.ItemTemplate>
                         </ItemsControl>
+                        <!-- Biến trang tự động (trang_so/tong_so_trang) gộp chung nhóm Biến tự do như Màn 1 -->
+                        <StackPanel Visibility="{Binding HasAutoVars, Converter={StaticResource BoolToVis}}" Margin="0,0,0,4">
+                            <ItemsControl ItemsSource="{Binding AutoVars}">
+                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate><DataTemplate>
+                                    <Border Background="#FFEBF7EF" CornerRadius="4" Padding="9,4" Margin="0,0,7,7"><TextBlock Text="{Binding StringFormat={}{{{0}}}}" FontFamily="Consolas" FontSize="13.5" Foreground="{StaticResource OkText}"/></Border>
+                                </DataTemplate></ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Text="{}{trang_so}/{tong_so_trang}: số trang / tổng số trang — tự động khi xuất."
+                                       Foreground="{StaticResource Muted}" FontSize="12.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                        </StackPanel>
 
-                        <TextBlock Margin="0,0,0,6"><Run Text="Biến trong bảng" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Muted}"/><Run Text=" (bấm để sáng cả cột)" FontSize="11.5" Foreground="{StaticResource Muted}"/></TextBlock>
+                        <TextBlock Margin="0,10,0,6"><Run Text="Biến trong bảng" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Muted}"/><Run Text=" (bấm để sáng cả cột)" FontSize="11.5" Foreground="{StaticResource Muted}"/></TextBlock>
                         <ItemsControl ItemsSource="{Binding RowVars}" Margin="0,0,0,14">
                             <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate><DataTemplate>
@@ -121,18 +139,15 @@
                             </DataTemplate></ItemsControl.ItemTemplate>
                         </ItemsControl>
 
-                        <!-- Chỉ hiện khối "Biến tự động" khi template thực sự dùng biến tự động -->
-                        <StackPanel Visibility="{Binding HasAutoVars, Converter={StaticResource BoolToVis}}">
-                            <Border Height="1" Background="{StaticResource Line}" Margin="0,2,0,12"/>
-                            <TextBlock Text="Biến tự động" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Muted}" Margin="0,0,0,6"/>
-                            <ItemsControl ItemsSource="{Binding AutoVars}">
+                        <!-- Nhóm Biến ảnh (chip cam, hiển thị-only) — giống Màn 1 -->
+                        <StackPanel Visibility="{Binding HasImageVars, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Margin="0,0,0,6"><Run Text="Biến ảnh" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Muted}"/><Run Text=" (ảnh Alt Text hoặc token {image…})" FontSize="11.5" Foreground="{StaticResource Muted}"/></TextBlock>
+                            <ItemsControl ItemsSource="{Binding ImageVars}">
                                 <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate><DataTemplate>
-                                    <Border Background="#FFEBF7EF" CornerRadius="4" Padding="9,4" Margin="0,0,7,7"><TextBlock Text="{Binding StringFormat={}{{{0}}}}" FontFamily="Consolas" FontSize="13.5" Foreground="{StaticResource OkText}"/></Border>
+                                    <Border Background="#FFFBEBD2" CornerRadius="4" Padding="9,4" Margin="0,0,7,7"><TextBlock Text="{Binding}" FontFamily="Consolas" FontSize="13.5" Foreground="#FFB26A00"/></Border>
                                 </DataTemplate></ItemsControl.ItemTemplate>
                             </ItemsControl>
-                            <TextBlock Text="{}{trang_so}/{tong_so_trang}: số trang / tổng số trang — tự động khi xuất."
-                                       Foreground="{StaticResource Muted}" FontSize="12.5" TextWrapping="Wrap" Margin="0,8,0,0"/>
                         </StackPanel>
                     </StackPanel>
                 </ScrollViewer>

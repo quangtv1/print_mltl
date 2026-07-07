@@ -46,7 +46,9 @@ public partial class Step3PreviewViewModel : StepViewModel
     public ObservableCollection<string> HeaderVars { get; } = new();
     public ObservableCollection<string> RowVars { get; } = new();
     public ObservableCollection<string> AutoVars { get; } = new();
+    public ObservableCollection<string> ImageVars { get; } = new();
     [ObservableProperty] private bool _hasAutoVars;
+    [ObservableProperty] private bool _hasImageVars;
 
     private readonly ConcurrentDictionary<string, List<ImageSource>> _cache = new();
     private CancellationTokenSource? _prefetchCts;
@@ -74,13 +76,18 @@ public partial class Step3PreviewViewModel : StepViewModel
 
     private void RebuildVarGroups()
     {
-        HeaderVars.Clear(); RowVars.Clear(); AutoVars.Clear();
-        HasAutoVars = false;
+        HeaderVars.Clear(); RowVars.Clear(); AutoVars.Clear(); ImageVars.Clear();
+        HasAutoVars = false; HasImageVars = false;
         if (S.Runtime is null) return;
-        foreach (var v in S.Runtime.HeaderFields.OrderBy(S.Runtime.OrderOf)) HeaderVars.Add(v);
-        foreach (var v in S.Runtime.RowFields.OrderBy(S.Runtime.OrderOf)) RowVars.Add(v);
-        foreach (var v in S.Runtime.AutoFields.OrderBy(S.Runtime.OrderOf)) AutoVars.Add(v);
+        var rt = S.Runtime;
+        // Token {image...} gộp vào nhóm Biến ảnh → bỏ khỏi Biến tự do / trong bảng (khử trùng như Màn 1).
+        var tokenImg = rt.ImageTokenFields;
+        foreach (var v in rt.HeaderFields.Except(tokenImg).OrderBy(rt.OrderOf)) HeaderVars.Add(v);
+        foreach (var v in rt.RowFields.Except(tokenImg).OrderBy(rt.OrderOf)) RowVars.Add(v);
+        foreach (var v in rt.AutoFields.OrderBy(rt.OrderOf)) AutoVars.Add(v);
+        foreach (var v in rt.ImageFields.Union(tokenImg).OrderBy(rt.OrderOf)) ImageVars.Add(v);
         HasAutoVars = AutoVars.Count > 0;
+        HasImageVars = ImageVars.Count > 0;
     }
 
     private const double ZoomMin = 0.4, ZoomMax = 3.0;
