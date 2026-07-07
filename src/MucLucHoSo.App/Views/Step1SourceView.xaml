@@ -115,6 +115,12 @@
                                Foreground="{StaticResource Accent}" FontWeight="SemiBold"
                                Visibility="{Binding IsImportedTemplate, Converter={StaticResource BoolToVis}}"/>
 
+                    <!-- Cảnh báo trùng tên token {image…} và Alt Text ảnh -->
+                    <Border DockPanel.Dock="Top" Background="#FFFDF3E6" CornerRadius="6" Padding="10,7" Margin="0,0,0,10"
+                            Visibility="{Binding TemplateWarning, Converter={StaticResource NullToVis}}">
+                        <TextBlock Text="{Binding TemplateWarning}" Foreground="{StaticResource Warn}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                    </Border>
+
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel>
                             <TextBlock Text="Biến tự do:" FontWeight="SemiBold" Margin="0,0,0,6"/>

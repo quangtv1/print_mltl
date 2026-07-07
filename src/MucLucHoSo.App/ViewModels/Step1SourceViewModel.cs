@@ -34,6 +34,7 @@ public partial class Step1SourceViewModel : StepViewModel
     [ObservableProperty] private string _previewTitle = "Xem nhanh";
     [ObservableProperty] private bool _isImportedTemplate;
     [ObservableProperty] private bool _hasImageVars;
+    [ObservableProperty] private string _templateWarning = "";   // cảnh báo trùng tên token/Alt-Text
 
     public string UsingTemplateText => $"Đang sử dụng template \"{TemplateFileName}\"";
 
@@ -131,7 +132,7 @@ public partial class Step1SourceViewModel : StepViewModel
 
     partial void OnSelectedTemplateChanged(TemplateItem? value)
     {
-        FreeVars.Clear(); TableVars.Clear(); AutoVars.Clear(); ImageVars.Clear(); HasImageVars = false;
+        FreeVars.Clear(); TableVars.Clear(); AutoVars.Clear(); ImageVars.Clear(); HasImageVars = false; TemplateWarning = "";
         S.Runtime = null; S.TemplatePath = null;
         IsImportedTemplate = value?.IsImported ?? false;
         if (value is null) { OnPropertyChanged(nameof(UsingTemplateText)); UpdateCanGoNext(); return; }
@@ -144,6 +145,11 @@ public partial class Step1SourceViewModel : StepViewModel
             foreach (var v in rt.AutoFields.OrderBy(rt.OrderOf)) AutoVars.Add(v);
             foreach (var v in rt.ImageFields.OrderBy(rt.OrderOf)) ImageVars.Add(v);
             HasImageVars = ImageVars.Count > 0;
+            // Trùng tên: cùng một tên vừa là token {image...} vừa là Alt Text ảnh → cảnh báo đổi tên.
+            var dup = rt.ImageFields.Intersect(rt.ImageTokenFields).OrderBy(x => x).ToList();
+            TemplateWarning = dup.Count > 0
+                ? $"⚠ Tên {string.Join(", ", dup)} vừa là token {{image…}} vừa là Alt Text ảnh — đổi tên một cái để tránh trùng."
+                : "";
         }
         catch (Exception ex) { SetStatus("Lỗi biên dịch template: " + ex.Message, false); }
         OnPropertyChanged(nameof(TemplateFileName));
