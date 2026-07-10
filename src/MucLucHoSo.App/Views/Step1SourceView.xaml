@@ -68,13 +68,20 @@
                                  ToolTip="Dòng tiêu đề (header). Bỏ qua các dòng trống rồi đếm — mặc định 1."/>
                     </StackPanel>
 
-                    <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,8">
-                        <Button Content="Đọc dữ liệu" Width="130" Style="{StaticResource TealButton}" Command="{Binding ReadDataCommand}"/>
-                        <ProgressBar Width="70" Height="6" IsIndeterminate="True" Margin="10,0,0,0" VerticalAlignment="Center"
-                                     Visibility="{Binding Busy, Converter={StaticResource BoolToVis}}"/>
-                        <TextBlock Text="{Binding ReadInfoText}" VerticalAlignment="Center" Margin="10,0,0,0"
-                                   Foreground="{StaticResource Ok}" FontWeight="SemiBold"
-                                   Visibility="{Binding HasReadInfo, Converter={StaticResource BoolToVis}}"/>
+                    <StackPanel Grid.Row="4" Grid.Column="1" Margin="0,0,0,8">
+                        <StackPanel Orientation="Horizontal">
+                            <Button Content="Đọc dữ liệu" Width="130" Style="{StaticResource TealButton}" Command="{Binding ReadDataCommand}"/>
+                            <ProgressBar Width="70" Height="6" IsIndeterminate="True" Margin="10,0,0,0" VerticalAlignment="Center"
+                                         Visibility="{Binding Busy, Converter={StaticResource BoolToVis}}"/>
+                            <TextBlock Text="{Binding ReadInfoText}" VerticalAlignment="Center" Margin="10,0,0,0"
+                                       Foreground="{StaticResource Ok}" FontWeight="SemiBold"
+                                       Visibility="{Binding HasReadInfo, Converter={StaticResource BoolToVis}}"/>
+                        </StackPanel>
+                        <!-- Gợi ý giá trị dòng dữ liệu đầu tiên: gói 1 dòng, tràn thì tự "…" -->
+                        <TextBlock Text="{Binding FirstRowPreviewText}" Margin="0,6,0,0"
+                                   TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
+                                   Foreground="{StaticResource Muted}"
+                                   Visibility="{Binding HasFirstRowPreview, Converter={StaticResource BoolToVis}}"/>
                     </StackPanel>
 
                     <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding StatusText}" TextWrapping="Wrap" Margin="0,2,0,10">

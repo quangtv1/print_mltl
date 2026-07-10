@@ -29,6 +29,8 @@ public partial class Step1SourceViewModel : StepViewModel
     [ObservableProperty] private string _readFromText = "1";   // dòng header (bỏ dòng trống rồi đếm), mặc định 1
     [ObservableProperty] private bool _hasReadInfo;   // nhãn "đã đọc" ẩn tới khi đọc thành công
     [ObservableProperty] private string _readInfoText = "";
+    [ObservableProperty] private bool _hasFirstRowPreview;   // dòng gợi ý giá trị dòng đầu, ẩn theo HasReadInfo
+    [ObservableProperty] private string _firstRowPreviewText = "";
     private CancellationTokenSource? _reloadCts;   // huỷ lần đọc-lại chờ debounce trước đó
 
     public ObservableCollection<ImageSource> PreviewPages { get; } = new();
@@ -143,6 +145,7 @@ public partial class Step1SourceViewModel : StepViewModel
             S.DataLoaded = true;
             ReadInfoText = $"✓ Đã đọc {rows.Count} dòng · {headers.Count} cột";
             HasReadInfo = true;
+            UpdateFirstRowPreview();   // gợi ý giá trị dòng dữ liệu đầu tiên
             SetStatus("", false);   // thành công → chỉ hiện nhãn inline, xoá thông báo lỗi cũ
         }
         catch (OperationCanceledException) { return; }   // bị huỷ — giữ nguyên trạng thái, để lần mới xử lý
@@ -291,6 +294,21 @@ public partial class Step1SourceViewModel : StepViewModel
         }
         catch (Exception ex) { SetStatus("Lỗi xem nhanh: " + ex.Message, false); }
         finally { PreviewBusy = false; }
+    }
+
+    // Gợi ý giá trị dòng dữ liệu đầu tiên (theo thứ tự cột) — WPF tự cắt gọn 1 dòng + "…".
+    private void UpdateFirstRowPreview()
+    {
+        if (S.PreviewRows.Count == 0) { FirstRowPreviewText = ""; HasFirstRowPreview = false; return; }
+        var first = S.PreviewRows[0];
+        FirstRowPreviewText = "Giá trị: " + string.Join("; ", S.Headers.Select(h => first.Get(h)));
+        HasFirstRowPreview = true;
+    }
+
+    // Ẩn nhãn "đã đọc" (đọc lại/lỗi/đổi tệp) cũng ẩn luôn dòng gợi ý để không hiện dữ liệu cũ lệch pha.
+    partial void OnHasReadInfoChanged(bool value)
+    {
+        if (!value) { FirstRowPreviewText = ""; HasFirstRowPreview = false; }
     }
 
     private void SetStatus(string text, bool ok) { StatusText = text; StatusIsOk = ok; }
