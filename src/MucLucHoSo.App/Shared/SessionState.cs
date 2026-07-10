@@ -18,6 +18,7 @@ public sealed partial class SessionState : ObservableObject
 
     [ObservableProperty] private bool _dataLoaded;
     [ObservableProperty] private int _readRowLimit = 100;   // số dòng đọc từ file (người dùng chỉnh ở Bước 1)
+    [ObservableProperty] private int _readStartRow = 1;   // dòng header: bỏ qua dòng trống rồi đếm; header = dòng không-trống thứ N
     [ObservableProperty] private int _previewRowCount;   // số dòng thực đọc để xem nhanh
     public List<string> Headers { get; set; } = new();
     public List<RowRecord> PreviewRows { get; set; } = new();

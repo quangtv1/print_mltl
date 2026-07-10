@@ -31,6 +31,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
                     <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="Nguồn dữ liệu" Style="{StaticResource H2}" Margin="0,0,0,12"/>
@@ -62,12 +63,21 @@
                     <TextBlock Grid.Row="3" Grid.Column="0" Text="Sheet:" VerticalAlignment="Center" Margin="0,0,0,8"/>
                     <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,8">
                         <ComboBox Width="230" ItemsSource="{Binding S.AvailableSheets}" SelectedItem="{Binding S.SheetName}"/>
-                        <Button Content="Đọc dữ liệu" Width="130" Style="{StaticResource TealButton}" Margin="10,0,0,0" Command="{Binding ReadDataCommand}"/>
-                        <ProgressBar Width="70" Height="6" IsIndeterminate="True" Margin="10,0,0,0" VerticalAlignment="Center"
-                                     Visibility="{Binding Busy, Converter={StaticResource BoolToVis}}"/>
+                        <TextBlock Text="Đọc từ:" VerticalAlignment="Center" Foreground="{StaticResource Muted}" Margin="16,0,8,0"/>
+                        <TextBox Text="{Binding ReadFromText, UpdateSourceTrigger=PropertyChanged}" Width="64" VerticalContentAlignment="Center"
+                                 ToolTip="Dòng tiêu đề (header). Bỏ qua các dòng trống rồi đếm — mặc định 1."/>
                     </StackPanel>
 
-                    <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding StatusText}" TextWrapping="Wrap" Margin="0,2,0,10">
+                    <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,8">
+                        <Button Content="Đọc dữ liệu" Width="130" Style="{StaticResource TealButton}" Command="{Binding ReadDataCommand}"/>
+                        <ProgressBar Width="70" Height="6" IsIndeterminate="True" Margin="10,0,0,0" VerticalAlignment="Center"
+                                     Visibility="{Binding Busy, Converter={StaticResource BoolToVis}}"/>
+                        <TextBlock Text="{Binding ReadInfoText}" VerticalAlignment="Center" Margin="10,0,0,0"
+                                   Foreground="{StaticResource Ok}" FontWeight="SemiBold"
+                                   Visibility="{Binding HasReadInfo, Converter={StaticResource BoolToVis}}"/>
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding StatusText}" TextWrapping="Wrap" Margin="0,2,0,10">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Foreground" Value="{StaticResource Muted}"/>
@@ -81,9 +91,9 @@
                         </TextBlock.Style>
                     </TextBlock>
 
-                    <Border Grid.Row="5" Grid.ColumnSpan="2" Height="1" Background="{StaticResource Line}" Margin="0,2,0,10"/>
+                    <Border Grid.Row="6" Grid.ColumnSpan="2" Height="1" Background="{StaticResource Line}" Margin="0,2,0,10"/>
 
-                    <CheckBox Grid.Row="6" Grid.ColumnSpan="2" IsChecked="{Binding S.UseCsvCache}">
+                    <CheckBox Grid.Row="7" Grid.ColumnSpan="2" IsChecked="{Binding S.UseCsvCache}">
                         <TextBlock><Run Text="Dùng CSV Cache"/><Run Text=" — tăng tốc các lần chạy sau" Foreground="{StaticResource Muted}"/></TextBlock>
                     </CheckBox>
                 </Grid>

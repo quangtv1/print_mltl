@@ -15,13 +15,13 @@ public sealed class ExcelRowReader : IRowReader
     static ExcelRowReader() =>
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance); // cần cho XLSB/legacy
 
-    public ExcelRowReader(string path, string sheetName)
+    public ExcelRowReader(string path, string sheetName, int headerRow = 1)
     {
         _sheet = sheetName;
         _fs = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         _reader = ExcelReaderFactory.CreateReader(_fs); // tự nhận XLSX/XLSB
         MoveToSheet(_sheet);
-        ReadHeaderRow();
+        ReadHeaderRow(headerRow);
     }
 
     private void MoveToSheet(string sheet)
@@ -31,9 +31,28 @@ public sealed class ExcelRowReader : IRowReader
         throw new InvalidOperationException($"Không tìm thấy sheet '{sheet}'.");
     }
 
-    private void ReadHeaderRow()
+    // "Dòng trống" = mọi ô (đã Trim) đều rỗng — dùng chung cho skip-đếm header và bỏ dòng trắng ở ReadRows.
+    private bool CurrentRowHasContent(int fieldCount)
     {
-        if (!_reader.Read()) throw new InvalidOperationException("Sheet rỗng.");
+        for (int i = 0; i < fieldCount; i++)
+            if (((_reader.GetValue(i)?.ToString() ?? string.Empty).Trim()).Length > 0) return true;
+        return false;
+    }
+
+    // Đọc tiến tới dòng KHÔNG-trống kế tiếp; false nếu hết dòng.
+    private bool MoveToNextNonEmptyRow()
+    {
+        while (_reader.Read())
+            if (CurrentRowHasContent(_reader.FieldCount)) return true;
+        return false;
+    }
+
+    private void ReadHeaderRow(int headerRow)
+    {
+        // Bỏ qua headerRow−1 dòng KHÔNG-trống (đồng thời bỏ mọi dòng trống), rồi lấy dòng không-trống kế tiếp làm header.
+        for (int skipped = 0; skipped < headerRow; skipped++)
+            if (!MoveToNextNonEmptyRow())
+                throw new InvalidOperationException($"Không đủ dữ liệu: cần ≥ {headerRow} dòng có nội dung.");
         _headers = new List<string>(_reader.FieldCount);
         for (int i = 0; i < _reader.FieldCount; i++)
             _headers.Add((_reader.GetValue(i)?.ToString() ?? string.Empty).Trim());

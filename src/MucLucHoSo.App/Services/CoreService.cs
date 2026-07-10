@@ -28,9 +28,9 @@ public sealed class CoreService
     }
 
     public (List<string> headers, List<RowRecord> rows) ReadHead(
-        string path, string? sheet, string? delimiter, int maxRows = 100)
+        string path, string? sheet, string? delimiter, int maxRows = 100, int headerRow = 1)
     {
-        using var reader = ReaderFactory.Open(path, sheet, delimiter);
+        using var reader = ReaderFactory.Open(path, sheet, delimiter, headerRow);
         var headers = reader.Headers.ToList();
         var rows = new List<RowRecord>(maxRows);
         foreach (var r in reader.ReadRows())
@@ -46,7 +46,7 @@ public sealed class CoreService
     /// <summary>Validation streaming toàn bộ file (một lượt).</summary>
     public ValidationResult Validate(SessionState s)
     {
-        using var reader = ReaderFactory.Open(s.SourcePath!, s.SheetName, s.CsvDelimiter);
+        using var reader = ReaderFactory.Open(s.SourcePath!, s.SheetName, s.CsvDelimiter, s.ReadStartRow);
         return Validator.Run(reader, s.BuildMapping(), s.Runtime!);
     }
 
@@ -61,5 +61,5 @@ public sealed class CoreService
         new(s.Runtime!, s.BuildMapping(), s.BuildOptions(), pdfFactory, log);
 
     public Func<IRowReader> ReaderFactoryFor(SessionState s) =>
-        () => ReaderFactory.Open(s.SourcePath!, s.SheetName, s.CsvDelimiter);
+        () => ReaderFactory.Open(s.SourcePath!, s.SheetName, s.CsvDelimiter, s.ReadStartRow);
 }

@@ -26,6 +26,10 @@ public partial class Step1SourceViewModel : StepViewModel
     [ObservableProperty] private bool _statusIsOk;
     [ObservableProperty] private bool _busy;
     [ObservableProperty] private string _rowLimitText = "100";   // số dòng đọc (chỉnh ở dòng Định dạng)
+    [ObservableProperty] private string _readFromText = "1";   // dòng header (bỏ dòng trống rồi đếm), mặc định 1
+    [ObservableProperty] private bool _hasReadInfo;   // nhãn "đã đọc" ẩn tới khi đọc thành công
+    [ObservableProperty] private string _readInfoText = "";
+    private CancellationTokenSource? _reloadCts;   // huỷ lần đọc-lại chờ debounce trước đó
 
     public ObservableCollection<ImageSource> PreviewPages { get; } = new();
     [ObservableProperty] private bool _hasPreview;
@@ -97,32 +101,83 @@ public partial class Step1SourceViewModel : StepViewModel
             }
             catch (Exception ex) { SetStatus($"Không đọc được sheet: {ex.Message}", false); }
         }
-        S.DataLoaded = false; UpdateCanGoNext();
+        S.DataLoaded = false; HasReadInfo = false; UpdateCanGoNext();
     }
 
+    private static bool TryPositive(string? s, out int n) => int.TryParse((s ?? "").Trim(), out n) && n >= 1;
+
+    // Nút "Đọc dữ liệu": huỷ lần tự-đọc đang chờ (nếu có) rồi đọc ngay theo yêu cầu người dùng.
     [RelayCommand]
-    private async Task ReadDataAsync()
+    private Task ReadDataAsync()
+    {
+        _reloadCts?.Cancel();
+        return DoReadAsync(CancellationToken.None);
+    }
+
+    // Lõi đọc dùng chung cho nút bấm và tự-đọc debounce. token huỷ → bỏ kết quả (tránh ghi đè bằng dữ liệu cũ).
+    private async Task DoReadAsync(CancellationToken token)
     {
         if (string.IsNullOrEmpty(S.SourcePath)) { SetStatus("Chưa chọn tệp nguồn.", false); return; }
-        if (!int.TryParse((RowLimitText ?? "").Trim(), out int limit) || limit <= 0)
+        if (!TryPositive(RowLimitText, out int limit))
         {
             System.Windows.MessageBox.Show("Số dòng đọc phải là số nguyên dương (VD 100).",
                 "Số dòng đọc không hợp lệ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
             return;
         }
+        if (!TryPositive(ReadFromText, out int start))
+        {
+            System.Windows.MessageBox.Show("Ô \"Đọc từ\" phải là số nguyên ≥ 1 (dòng tiêu đề, mặc định 1).",
+                "Đọc từ không hợp lệ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+            return;
+        }
         S.ReadRowLimit = limit;
-        Busy = true;
+        S.ReadStartRow = start;
+        Busy = true; HasReadInfo = false;
         try
         {
-            // Đọc tối đa 'limit' dòng; nếu file ít hơn thì đọc hết.
+            // Đọc tối đa 'limit' dòng bắt đầu từ dòng header thứ 'start'; nếu file ít hơn thì đọc hết.
             var (headers, rows) = await Task.Run(() =>
-                Wizard.Core.ReadHead(S.SourcePath!, S.SheetName, S.CsvDelimiter, limit));
+                Wizard.Core.ReadHead(S.SourcePath!, S.SheetName, S.CsvDelimiter, limit, start), token);
+            if (token.IsCancellationRequested) return;   // đã có lần đọc mới hơn — bỏ kết quả này
             S.Headers = headers; S.PreviewRows = rows; S.PreviewRowCount = rows.Count;
             S.DataLoaded = true;
-            SetStatus($"✓ Đã đọc {rows.Count} dòng mẫu · {headers.Count} cột", true);
+            ReadInfoText = $"✓ Đã đọc {rows.Count} dòng · {headers.Count} cột";
+            HasReadInfo = true;
+            SetStatus("", false);   // thành công → chỉ hiện nhãn inline, xoá thông báo lỗi cũ
         }
-        catch (Exception ex) { S.DataLoaded = false; SetStatus("Lỗi đọc dữ liệu: " + ex.Message, false); }
-        finally { Busy = false; UpdateCanGoNext(); }
+        catch (OperationCanceledException) { return; }   // bị huỷ — giữ nguyên trạng thái, để lần mới xử lý
+        catch (Exception ex) { S.DataLoaded = false; HasReadInfo = false; SetStatus("Lỗi đọc dữ liệu: " + ex.Message, false); }
+        finally { if (!token.IsCancellationRequested) { Busy = false; UpdateCanGoNext(); } }
+    }
+
+    // Đổi "Đọc từ" / "Số dòng đọc" → ẩn nhãn cũ; nếu đã có file (+sheet với Excel) thì tự đọc lại sau ~400ms.
+    partial void OnReadFromTextChanged(string value) => ScheduleAutoReread();
+    partial void OnRowLimitTextChanged(string value) => ScheduleAutoReread();
+
+    private void ScheduleAutoReread()
+    {
+        HasReadInfo = false;
+        _reloadCts?.Cancel();   // huỷ lần đọc chờ trước — kể cả khi giá trị vừa thành không hợp lệ
+        if (string.IsNullOrEmpty(S.SourcePath)) return;
+        if (S.SourceKind != SourceKind.Csv && string.IsNullOrEmpty(S.SheetName)) return;
+        if (!TryPositive(ReadFromText, out _) || !TryPositive(RowLimitText, out _))
+        {
+            SetStatus("Giá trị \"Đọc từ\" / \"Số dòng đọc\" phải là số nguyên ≥ 1.", false);
+            return;   // không tự đọc khi giá trị chưa hợp lệ (không bật hộp thoại lúc đang gõ)
+        }
+        var cts = new CancellationTokenSource();
+        _reloadCts = cts;
+        _ = DebouncedRereadAsync(cts.Token);
+    }
+
+    private async Task DebouncedRereadAsync(CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(400, token);   // gộp nhiều phím gõ nhanh thành 1 lần đọc
+            await DoReadAsync(token);
+        }
+        catch (OperationCanceledException) { /* bị huỷ do gõ tiếp — bỏ qua */ }
     }
 
     /// <summary>Mở dialog chọn DOCX. Chèn mẫu mới TRƯỚC dòng "Import" và chọn nó; trả về false nếu người dùng hủy.</summary>

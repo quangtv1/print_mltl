@@ -13,7 +13,7 @@ public sealed class CsvRowReader : IRowReader
     private readonly CsvReader _csv;
     private readonly List<string> _headers;
 
-    public CsvRowReader(string path, string? delimiter = null)
+    public CsvRowReader(string path, string? delimiter = null, int headerRow = 1)
     {
         _sr = new StreamReader(path, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
         var cfg = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -24,9 +24,30 @@ public sealed class CsvRowReader : IRowReader
             TrimOptions = TrimOptions.Trim,
         };
         _csv = new CsvReader(_sr, cfg);
-        _csv.Read(); _csv.ReadHeader();
+        // Bỏ qua headerRow−1 bản ghi KHÔNG-trống (đồng thời bỏ mọi bản ghi trống), rồi bản ghi không-trống kế tiếp = header.
+        for (int skipped = 0; skipped < headerRow; skipped++)
+            if (!MoveToNextNonEmptyRecord())
+                throw new InvalidOperationException($"Không đủ dữ liệu: cần ≥ {headerRow} dòng có nội dung.");
+        _csv.ReadHeader();
         _headers = (_csv.HeaderRecord ?? Array.Empty<string>())
                    .Select(h => (h ?? string.Empty).Trim()).ToList();
+    }
+
+    // "Bản ghi trống" = mọi trường (đã Trim) đều rỗng.
+    private bool CurrentRecordHasContent()
+    {
+        var rec = _csv.Parser.Record;
+        if (rec is null) return false;
+        foreach (var f in rec) if (!string.IsNullOrWhiteSpace(f)) return true;
+        return false;
+    }
+
+    // Đọc tiến tới bản ghi KHÔNG-trống kế tiếp; false nếu hết.
+    private bool MoveToNextNonEmptyRecord()
+    {
+        while (_csv.Read())
+            if (CurrentRecordHasContent()) return true;
+        return false;
     }
 
     private static string AutoDetectDelimiter(string path)
