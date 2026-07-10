@@ -8,7 +8,7 @@
     <LangVersion>latest</LangVersion>
     <RootNamespace>MucLucHoSo.App</RootNamespace>
     <AssemblyName>MLHS</AssemblyName>
-    <Version>1.11.0</Version>
+    <Version>1.12.0</Version>
     <!-- Icon nhúng vào MLHS.exe → Explorer/taskbar hiển thị icon ứng dụng -->
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
   </PropertyGroup>
