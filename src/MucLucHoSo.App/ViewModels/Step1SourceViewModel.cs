@@ -24,13 +24,15 @@ public partial class Step1SourceViewModel : StepViewModel
     [ObservableProperty] private TemplateItem? _selectedTemplate;
     [ObservableProperty] private string _statusText = "Chưa đọc dữ liệu.";
     [ObservableProperty] private bool _statusIsOk;
+    [ObservableProperty] private bool _hasStatus = true;   // ẩn dòng status khi rỗng để không chừa khoảng trống
     [ObservableProperty] private bool _busy;
     [ObservableProperty] private string _rowLimitText = "100";   // số dòng đọc (chỉnh ở dòng Định dạng)
     [ObservableProperty] private string _readFromText = "1";   // dòng header (bỏ dòng trống rồi đếm), mặc định 1
     [ObservableProperty] private bool _hasReadInfo;   // nhãn "đã đọc" ẩn tới khi đọc thành công
     [ObservableProperty] private string _readInfoText = "";
     [ObservableProperty] private bool _hasFirstRowPreview;   // dòng gợi ý giá trị dòng đầu, ẩn theo HasReadInfo
-    [ObservableProperty] private string _firstRowPreviewText = "";
+    [ObservableProperty] private string _firstRowPreviewLabel = "";   // "Giá trị dòng x: " (thường)
+    [ObservableProperty] private string _firstRowPreviewText = "";    // các giá trị (in đậm)
     private CancellationTokenSource? _reloadCts;   // huỷ lần đọc-lại chờ debounce trước đó
 
     public ObservableCollection<ImageSource> PreviewPages { get; } = new();
@@ -137,7 +139,7 @@ public partial class Step1SourceViewModel : StepViewModel
         Busy = true; HasReadInfo = false;
         try
         {
-            // Đọc tối đa 'limit' dòng bắt đầu từ dòng header thứ 'start'; nếu file ít hơn thì đọc hết.
+            // Đọc tối đa 'limit' dòng; header = dòng không-trống đầu tiên từ dòng vật lý 'start' trở đi.
             var (headers, rows) = await Task.Run(() =>
                 Wizard.Core.ReadHead(S.SourcePath!, S.SheetName, S.CsvDelimiter, limit, start), token);
             if (token.IsCancellationRequested) return;   // đã có lần đọc mới hơn — bỏ kết quả này
@@ -296,21 +298,22 @@ public partial class Step1SourceViewModel : StepViewModel
         finally { PreviewBusy = false; }
     }
 
-    // Gợi ý giá trị dòng dữ liệu đầu tiên (theo thứ tự cột) — WPF tự cắt gọn 1 dòng + "…".
+    // Gợi ý dòng dữ liệu đầu tiên: nhãn "Giá trị dòng {số dòng Excel}: " + các giá trị theo thứ tự cột (XAML in đậm phần giá trị).
     private void UpdateFirstRowPreview()
     {
-        if (S.PreviewRows.Count == 0) { FirstRowPreviewText = ""; HasFirstRowPreview = false; return; }
+        if (S.PreviewRows.Count == 0) { FirstRowPreviewLabel = ""; FirstRowPreviewText = ""; HasFirstRowPreview = false; return; }
         var first = S.PreviewRows[0];
-        FirstRowPreviewText = "Giá trị: " + string.Join("; ", S.Headers.Select(h => first.Get(h)));
+        FirstRowPreviewLabel = $"Giá trị dòng {first.SourceRow}: ";
+        FirstRowPreviewText = string.Join("; ", S.Headers.Select(h => first.Get(h)));
         HasFirstRowPreview = true;
     }
 
     // Ẩn nhãn "đã đọc" (đọc lại/lỗi/đổi tệp) cũng ẩn luôn dòng gợi ý để không hiện dữ liệu cũ lệch pha.
     partial void OnHasReadInfoChanged(bool value)
     {
-        if (!value) { FirstRowPreviewText = ""; HasFirstRowPreview = false; }
+        if (!value) { FirstRowPreviewLabel = ""; FirstRowPreviewText = ""; HasFirstRowPreview = false; }
     }
 
-    private void SetStatus(string text, bool ok) { StatusText = text; StatusIsOk = ok; }
+    private void SetStatus(string text, bool ok) { StatusText = text; StatusIsOk = ok; HasStatus = !string.IsNullOrEmpty(text); }
     private void UpdateCanGoNext() => CanGoNext = S.DataLoaded && S.Runtime != null && HasDataVars;
 }

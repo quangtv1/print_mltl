@@ -12,11 +12,12 @@ public sealed class CsvRowReader : IRowReader
     private readonly StreamReader _sr;
     private readonly CsvReader _csv;
     private readonly List<string> _headers;
+    private int _row;   // số dòng vật lý (1-based) vừa đọc — mọi lần đọc đi qua ReadRow()
 
     static CsvRowReader() =>
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance); // cần cho code page ANSI (Windows-1258)
 
-    public CsvRowReader(string path, string? delimiter = null, int headerRow = 1)
+    public CsvRowReader(string path, string? delimiter = null, int startRow = 1)
     {
         // detectEncodingFromByteOrderMarks vẫn ưu tiên BOM thật (UTF-8/UTF-16) nếu có; encoding truyền vào
         // chỉ là fallback khi KHÔNG có BOM — dò UTF-8 vs ANSI để không làm hỏng chữ có dấu ở CSV không-UTF8.
@@ -27,12 +28,16 @@ public sealed class CsvRowReader : IRowReader
             BadDataFound = null,
             MissingFieldFound = null,
             TrimOptions = TrimOptions.Trim,
+            IgnoreBlankLines = false,   // giữ dòng trống để đếm số dòng vật lý đồng nhất với Excel
         };
         _csv = new CsvReader(_sr, cfg);
-        // Bỏ qua headerRow−1 bản ghi KHÔNG-trống (đồng thời bỏ mọi bản ghi trống), rồi bản ghi không-trống kế tiếp = header.
-        for (int skipped = 0; skipped < headerRow; skipped++)
-            if (!MoveToNextNonEmptyRecord())
-                throw new InvalidOperationException($"Không đủ dữ liệu: cần ≥ {headerRow} dòng có nội dung.");
+        // startRow = số dòng VẬT LÝ (1-based) để bắt đầu tìm tiêu đề. Bỏ đúng startRow−1 dòng vật lý (kể cả trống),
+        // rồi bản ghi KHÔNG-trống đầu tiên = header.
+        for (int skip = 0; skip < startRow - 1; skip++)
+            if (!ReadRow())
+                throw new InvalidOperationException($"Không đủ dữ liệu: file không có tới dòng {startRow}.");
+        if (!MoveToNextNonEmptyRecord())
+            throw new InvalidOperationException($"Không tìm thấy dòng tiêu đề từ dòng {startRow} trở đi.");
         _csv.ReadHeader();
         _headers = (_csv.HeaderRecord ?? Array.Empty<string>())
                    .Select(h => (h ?? string.Empty).Trim()).ToList();
@@ -47,10 +52,18 @@ public sealed class CsvRowReader : IRowReader
         return false;
     }
 
+    // Đọc 1 bản ghi vật lý, tăng bộ đếm dòng. Mọi lối đọc phải đi qua đây để _row = dòng CSV thật.
+    private bool ReadRow()
+    {
+        if (!_csv.Read()) return false;
+        _row++;
+        return true;
+    }
+
     // Đọc tiến tới bản ghi KHÔNG-trống kế tiếp; false nếu hết.
     private bool MoveToNextNonEmptyRecord()
     {
-        while (_csv.Read())
+        while (ReadRow())
             if (CurrentRecordHasContent()) return true;
         return false;
     }
@@ -100,7 +113,7 @@ public sealed class CsvRowReader : IRowReader
 
     public IEnumerable<RowRecord> ReadRows()
     {
-        while (_csv.Read())
+        while (ReadRow())
         {
             var dict = new Dictionary<string, string>(_headers.Count, StringComparer.Ordinal);
             bool anyValue = false;
@@ -111,7 +124,7 @@ public sealed class CsvRowReader : IRowReader
                 dict[_headers[i]] = v;
             }
             if (!anyValue) continue;
-            yield return new RowRecord(dict);
+            yield return new RowRecord(dict) { SourceRow = _row };
         }
     }
 

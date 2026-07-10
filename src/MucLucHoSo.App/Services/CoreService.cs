@@ -28,9 +28,9 @@ public sealed class CoreService
     }
 
     public (List<string> headers, List<RowRecord> rows) ReadHead(
-        string path, string? sheet, string? delimiter, int maxRows = 100, int headerRow = 1)
+        string path, string? sheet, string? delimiter, int maxRows = 100, int startRow = 1)
     {
-        using var reader = ReaderFactory.Open(path, sheet, delimiter, headerRow);
+        using var reader = ReaderFactory.Open(path, sheet, delimiter, startRow);
         var headers = reader.Headers.ToList();
         var rows = new List<RowRecord>(maxRows);
         foreach (var r in reader.ReadRows())
