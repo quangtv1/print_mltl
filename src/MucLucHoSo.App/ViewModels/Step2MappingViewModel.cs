@@ -44,9 +44,10 @@ public partial class Step2MappingViewModel : StepViewModel
             var row = new VariableBindingRowViewModel(idx++, v, isRow, isAuto, cols, MappingChanged, isImage);
             if (!isAuto && !isImage)
             {
-                // Khớp chặt theo snake_case: Slug(cột)==Slug(biến). Không trùng → để trống (người dùng gõ hằng).
-                var sv = TextUtil.Slug(v);
-                var match = sv.Length == 0 ? null : cols.FirstOrDefault(c => TextUtil.Slug(c) == sv);
+                // Khớp tự động: đưa cột & biến về dạng CHỈ chữ+số (bỏ dấu, thường, bỏ mọi ký tự đặc biệt
+                // và khoảng trắng) rồi so bằng nhau. Trùng → tự khớp; không trùng → để trống (chọn tay).
+                var nv = TextUtil.Normalize(v);
+                var match = nv.Length == 0 ? null : cols.FirstOrDefault(c => TextUtil.Normalize(c) == nv);
                 if (match != null) row.Value = match;
             }
             S.Bindings.Add(row);
