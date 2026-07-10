@@ -12,7 +12,6 @@ public sealed class CsvRowReader : IRowReader
     private readonly StreamReader _sr;
     private readonly CsvReader _csv;
     private readonly List<string> _headers;
-    private int _row;   // số dòng vật lý (1-based) vừa đọc — mọi lần đọc đi qua ReadRow()
 
     static CsvRowReader() =>
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance); // cần cho code page ANSI (Windows-1258)
@@ -34,7 +33,7 @@ public sealed class CsvRowReader : IRowReader
         // startRow = số dòng VẬT LÝ (1-based) để bắt đầu tìm tiêu đề. Bỏ đúng startRow−1 dòng vật lý (kể cả trống),
         // rồi bản ghi KHÔNG-trống đầu tiên = header.
         for (int skip = 0; skip < startRow - 1; skip++)
-            if (!ReadRow())
+            if (!_csv.Read())
                 throw new InvalidOperationException($"Không đủ dữ liệu: file không có tới dòng {startRow}.");
         if (!MoveToNextNonEmptyRecord())
             throw new InvalidOperationException($"Không tìm thấy dòng tiêu đề từ dòng {startRow} trở đi.");
@@ -52,18 +51,10 @@ public sealed class CsvRowReader : IRowReader
         return false;
     }
 
-    // Đọc 1 bản ghi vật lý, tăng bộ đếm dòng. Mọi lối đọc phải đi qua đây để _row = dòng CSV thật.
-    private bool ReadRow()
-    {
-        if (!_csv.Read()) return false;
-        _row++;
-        return true;
-    }
-
     // Đọc tiến tới bản ghi KHÔNG-trống kế tiếp; false nếu hết.
     private bool MoveToNextNonEmptyRecord()
     {
-        while (ReadRow())
+        while (_csv.Read())
             if (CurrentRecordHasContent()) return true;
         return false;
     }
@@ -113,7 +104,7 @@ public sealed class CsvRowReader : IRowReader
 
     public IEnumerable<RowRecord> ReadRows()
     {
-        while (ReadRow())
+        while (_csv.Read())
         {
             var dict = new Dictionary<string, string>(_headers.Count, StringComparer.Ordinal);
             bool anyValue = false;
@@ -124,7 +115,7 @@ public sealed class CsvRowReader : IRowReader
                 dict[_headers[i]] = v;
             }
             if (!anyValue) continue;
-            yield return new RowRecord(dict) { SourceRow = _row };
+            yield return new RowRecord(dict);
         }
     }
 

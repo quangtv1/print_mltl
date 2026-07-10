@@ -303,7 +303,8 @@ public partial class Step1SourceViewModel : StepViewModel
     {
         if (S.PreviewRows.Count == 0) { FirstRowPreviewLabel = ""; FirstRowPreviewText = ""; HasFirstRowPreview = false; return; }
         var first = S.PreviewRows[0];
-        FirstRowPreviewLabel = $"Giá trị dòng {first.SourceRow}: ";
+        // Nhãn echo đúng số dòng người dùng nhập ở ô "Đọc từ dòng" (giá trị hiển thị là dòng dữ liệu đầu đọc từ đó).
+        FirstRowPreviewLabel = $"Giá trị dòng {S.ReadStartRow}: ";
         FirstRowPreviewText = string.Join("; ", S.Headers.Select(h => first.Get(h)));
         HasFirstRowPreview = true;
     }

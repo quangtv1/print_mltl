@@ -79,7 +79,7 @@
                     </StackPanel>
 
                     <!-- Gợi ý giá trị dòng dữ liệu đầu tiên: căn trái thẳng nhãn "Sheet:"; giá trị in đậm, gói 1 dòng, tràn tự "…" -->
-                    <TextBlock Grid.Row="5" Grid.ColumnSpan="2" Margin="0,0,0,0"
+                    <TextBlock Grid.Row="5" Grid.ColumnSpan="2" Margin="0,0,0,9"
                                TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
                                LineHeight="18" LineStackingStrategy="BlockLineHeight" MaxHeight="38"
                                Foreground="{StaticResource Muted}"

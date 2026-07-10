@@ -12,7 +12,6 @@ public sealed class ExcelRowReader : IRowReader
     private readonly IExcelDataReader _reader;
     private readonly string _sheet;
     private List<string> _headers = new();
-    private int _row;   // số dòng vật lý (1-based) vừa đọc — mọi lần đọc đi qua ReadRow()
 
     static ExcelRowReader() =>
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance); // cần cho XLSB/legacy
@@ -57,18 +56,10 @@ public sealed class ExcelRowReader : IRowReader
         _ => value.ToString()?.Trim() ?? string.Empty,
     };
 
-    // Đọc 1 dòng vật lý, tăng bộ đếm dòng. Mọi lối đọc phải đi qua đây để _row luôn = dòng Excel thật.
-    private bool ReadRow()
-    {
-        if (!_reader.Read()) return false;
-        _row++;
-        return true;
-    }
-
     // Đọc tiến tới dòng KHÔNG-trống kế tiếp; false nếu hết dòng.
     private bool MoveToNextNonEmptyRow()
     {
-        while (ReadRow())
+        while (_reader.Read())
             if (CurrentRowHasContent(_reader.FieldCount)) return true;
         return false;
     }
@@ -78,7 +69,7 @@ public sealed class ExcelRowReader : IRowReader
         // startRow = số dòng Excel VẬT LÝ (1-based) để bắt đầu tìm tiêu đề. Bỏ đúng startRow−1 dòng vật lý
         // (kể cả dòng trống — ExcelDataReader vẫn trả dòng trống), rồi lấy dòng KHÔNG-trống đầu tiên làm header.
         for (int skip = 0; skip < startRow - 1; skip++)
-            if (!ReadRow())
+            if (!_reader.Read())
                 throw new InvalidOperationException($"Không đủ dữ liệu: file không có tới dòng {startRow}.");
         if (!MoveToNextNonEmptyRow())
             throw new InvalidOperationException($"Không tìm thấy dòng tiêu đề từ dòng {startRow} trở đi.");
@@ -93,7 +84,7 @@ public sealed class ExcelRowReader : IRowReader
 
     public IEnumerable<RowRecord> ReadRows()
     {
-        while (ReadRow())
+        while (_reader.Read())
         {
             var dict = new Dictionary<string, string>(_headers.Count, StringComparer.Ordinal);
             bool anyValue = false;
@@ -104,7 +95,7 @@ public sealed class ExcelRowReader : IRowReader
                 dict[_headers[i]] = v;
             }
             if (!anyValue) continue; // bỏ dòng trắng hoàn toàn
-            yield return new RowRecord(dict) { SourceRow = _row };
+            yield return new RowRecord(dict);
         }
     }
 
