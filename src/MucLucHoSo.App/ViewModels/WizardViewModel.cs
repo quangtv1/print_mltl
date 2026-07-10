@@ -67,4 +67,17 @@ public partial class WizardViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanBack))]
     private void Back() { if (CurrentStepIndex > 0) CurrentStepIndex--; }
     private bool CanBack() => CurrentStepIndex > 0;
+
+    /// <summary>Phím tắt "Tiến lên" toàn cục (Ctrl+Enter): bước cuối chạy nút chính (Tạo mục lục/Chạy lại),
+    /// các bước khác chạy Tiếp theo — chỉ khi nút đang bấm được.</summary>
+    [RelayCommand]
+    private void Forward()
+    {
+        if (IsLastStep)
+        {
+            var primary = CurrentStep.PrimaryCommand;
+            if (primary?.CanExecute(null) == true) primary.Execute(null);
+        }
+        else if (NextCommand.CanExecute(null)) NextCommand.Execute(null);
+    }
 }

@@ -29,9 +29,6 @@
                                 ToolTip="Về 100% (Ctrl 0)" AutomationProperties.Name="Đặt lại zoom 100%"/>
                         <Button Content="+" Style="{StaticResource GhostButton}" Padding="0" Width="36" Command="{Binding ZoomInCommand}"
                                 ToolTip="Phóng to (Ctrl +, hoặc Ctrl + lăn chuột)" AutomationProperties.Name="Phóng to"/>
-                        <Button Content="&#xE740;" FontFamily="Segoe MDL2 Assets" FontSize="14" Style="{StaticResource GhostButton}"
-                                Padding="0" Width="36" Click="OnFullscreenClick" IsEnabled="{Binding HasPreview}"
-                                ToolTip="Toàn màn hình (Esc để thoát; ←/→ đổi hồ sơ)" AutomationProperties.Name="Toàn màn hình"/>
                         <Border Width="1" Background="{StaticResource Line}" Margin="16,3,14,3"/>
                         <!-- Cụm Tiến/Lùi + ô tên (gõ + Enter để nhảy đến hồ sơ) -->
                         <Button Content="◀" Style="{StaticResource GhostButton}" Padding="0" Width="32" Command="{Binding PrevCommand}"
@@ -103,6 +100,34 @@
                 </Border>
                 <ProgressBar Height="6" IsIndeterminate="True" VerticalAlignment="Top"
                              Visibility="{Binding Busy, Converter={StaticResource BoolToVis}}"/>
+
+                <!-- Nút toàn màn hình: nổi góc trên phải vùng preview, hơi trong suốt, rõ khi rê chuột (Ctrl+F) -->
+                <Button HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,12,12,0" Panel.ZIndex="20"
+                        Width="40" Height="40" Cursor="Hand" Click="OnFullscreenClick"
+                        Visibility="{Binding HasPreview, Converter={StaticResource BoolToVis}}"
+                        ToolTip="Toàn màn hình (Ctrl+F; Esc để thoát)" AutomationProperties.Name="Toàn màn hình">
+                    <TextBlock Text="&#xE740;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="White"/>
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Opacity" Value="0.35"/>
+                            <Setter Property="Foreground" Value="White"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="#DD303030" CornerRadius="6">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Opacity" Value="1"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
             </Grid>
 
             <!-- Sidebar biến (tiêu đề đã đưa lên toolbar) — ẩn hẳn khi thu gọn để preview rộng hết cỡ -->

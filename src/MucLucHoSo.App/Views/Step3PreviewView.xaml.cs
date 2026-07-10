@@ -32,23 +32,14 @@ public partial class Step3PreviewView : UserControl
         e.Handled = true;
     }
 
-    // Phím tắt: Ctrl+Enter tiến (Tiếp theo), Shift+Enter lùi (Quay lại);
-    // Ctrl ←/→ đổi hồ sơ; Ctrl +/−/0 điều chỉnh zoom.
+    // Phím tắt màn Xem trước: Ctrl+F toàn màn hình; Ctrl ←/→ đổi hồ sơ; Ctrl +/−/0 zoom.
+    // (Ctrl+Enter/Shift+Enter điều hướng wizard xử lý toàn cục ở MainWindow.)
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
-        if (Vm is null) return;
-        var mod = Keyboard.Modifiers;
-
-        if (e.Key == Key.Enter)   // Key.Enter == Key.Return (cùng giá trị)
-        {
-            if ((mod & ModifierKeys.Control) != 0) { Exec(Vm.WizardNext); e.Handled = true; }
-            else if ((mod & ModifierKeys.Shift) != 0) { Exec(Vm.WizardBack); e.Handled = true; }
-            return;
-        }
-
-        if ((mod & ModifierKeys.Control) == 0) return;
+        if (Vm is null || (Keyboard.Modifiers & ModifierKeys.Control) == 0) return;
         switch (e.Key)
         {
+            case Key.F: OpenFullscreen(); e.Handled = true; break;
             case Key.Left: Exec(Vm.PrevCommand); e.Handled = true; break;
             case Key.Right: Exec(Vm.NextCommand); e.Handled = true; break;
             case Key.Add or Key.OemPlus: Exec(Vm.ZoomInCommand); e.Handled = true; break;
@@ -60,9 +51,11 @@ public partial class Step3PreviewView : UserControl
     private static void Exec(ICommand c) { if (c.CanExecute(null)) c.Execute(null); }
 
     // Mở cửa sổ toàn màn hình xem ảnh render (dùng chung VM → điều hướng hồ sơ tự đồng bộ preview).
-    private void OnFullscreenClick(object sender, RoutedEventArgs e)
+    private void OnFullscreenClick(object sender, RoutedEventArgs e) => OpenFullscreen();
+
+    private void OpenFullscreen()
     {
-        if (Vm is null) return;
+        if (Vm is null || !Vm.HasPreview) return;
         new FullscreenPreviewWindow { DataContext = Vm, Owner = Window.GetWindow(this) }.ShowDialog();
     }
 }
