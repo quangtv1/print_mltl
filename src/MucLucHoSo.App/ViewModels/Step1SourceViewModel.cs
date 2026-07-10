@@ -139,7 +139,7 @@ public partial class Step1SourceViewModel : StepViewModel
         Busy = true; HasReadInfo = false;
         try
         {
-            // Đọc tối đa 'limit' dòng; header = dòng không-trống đầu tiên từ dòng vật lý 'start' trở đi.
+            // Đọc tối đa 'limit' dòng; header = đúng dòng vật lý 'start' (dữ liệu từ dòng kế, bỏ dòng trắng).
             var (headers, rows) = await Task.Run(() =>
                 Wizard.Core.ReadHead(S.SourcePath!, S.SheetName, S.CsvDelimiter, limit, start), token);
             if (token.IsCancellationRequested) return;   // đã có lần đọc mới hơn — bỏ kết quả này
@@ -298,14 +298,12 @@ public partial class Step1SourceViewModel : StepViewModel
         finally { PreviewBusy = false; }
     }
 
-    // Gợi ý dòng dữ liệu đầu tiên: nhãn "Giá trị dòng {số dòng Excel}: " + các giá trị theo thứ tự cột (XAML in đậm phần giá trị).
+    // Xác nhận đúng dòng: hiện NỘI DUNG dòng vật lý "Đọc từ dòng" (= chính dòng header vừa đọc), nhãn khớp số đã nhập.
     private void UpdateFirstRowPreview()
     {
-        if (S.PreviewRows.Count == 0) { FirstRowPreviewLabel = ""; FirstRowPreviewText = ""; HasFirstRowPreview = false; return; }
-        var first = S.PreviewRows[0];
-        // Nhãn echo đúng số dòng người dùng nhập ở ô "Đọc từ dòng" (giá trị hiển thị là dòng dữ liệu đầu đọc từ đó).
+        if (S.Headers.Count == 0) { FirstRowPreviewLabel = ""; FirstRowPreviewText = ""; HasFirstRowPreview = false; return; }
         FirstRowPreviewLabel = $"Giá trị dòng {S.ReadStartRow}: ";
-        FirstRowPreviewText = string.Join("; ", S.Headers.Select(h => first.Get(h)));
+        FirstRowPreviewText = string.Join("; ", S.Headers);
         HasFirstRowPreview = true;
     }
 

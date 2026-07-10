@@ -64,9 +64,9 @@
                     <TextBlock Grid.Row="3" Grid.Column="0" Text="Sheet:" VerticalAlignment="Center" Margin="0,0,0,8"/>
                     <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,8">
                         <ComboBox Width="230" ItemsSource="{Binding S.AvailableSheets}" SelectedItem="{Binding S.SheetName}"/>
-                        <TextBlock Text="Đọc từ dòng:" VerticalAlignment="Center" Foreground="{StaticResource Muted}" Margin="16,0,8,0"/>
+                        <TextBlock Text="Header là dòng:" VerticalAlignment="Center" Foreground="{StaticResource Muted}" Margin="16,0,8,0"/>
                         <TextBox Text="{Binding ReadFromText, UpdateSourceTrigger=PropertyChanged}" Width="64" VerticalContentAlignment="Center"
-                                 ToolTip="Số dòng Excel (vật lý) của dòng tiêu đề — nhập đúng số dòng thấy trong Excel. Dữ liệu đọc từ dòng kế tiếp. Mặc định 1."/>
+                                 ToolTip="Số dòng Excel của dòng tiêu đề — nhập đúng số dòng thấy trong Excel (đọc thẳng dòng đó, không bỏ dòng trống). Dữ liệu đọc từ dòng kế tiếp. Mặc định 1."/>
                     </StackPanel>
 
                     <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,8">

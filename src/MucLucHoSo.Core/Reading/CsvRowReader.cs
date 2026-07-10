@@ -30,33 +30,13 @@ public sealed class CsvRowReader : IRowReader
             IgnoreBlankLines = false,   // giữ dòng trống để đếm số dòng vật lý đồng nhất với Excel
         };
         _csv = new CsvReader(_sr, cfg);
-        // startRow = số dòng VẬT LÝ (1-based) để bắt đầu tìm tiêu đề. Bỏ đúng startRow−1 dòng vật lý (kể cả trống),
-        // rồi bản ghi KHÔNG-trống đầu tiên = header.
-        for (int skip = 0; skip < startRow - 1; skip++)
+        // startRow = số dòng VẬT LÝ (1-based) của dòng tiêu đề. Đọc ĐÚNG dòng đó làm header — không bỏ dòng trống.
+        for (int skip = 0; skip < startRow; skip++)
             if (!_csv.Read())
                 throw new InvalidOperationException($"Không đủ dữ liệu: file không có tới dòng {startRow}.");
-        if (!MoveToNextNonEmptyRecord())
-            throw new InvalidOperationException($"Không tìm thấy dòng tiêu đề từ dòng {startRow} trở đi.");
         _csv.ReadHeader();
         _headers = (_csv.HeaderRecord ?? Array.Empty<string>())
                    .Select(h => (h ?? string.Empty).Trim()).ToList();
-    }
-
-    // "Bản ghi trống" = mọi trường (đã Trim) đều rỗng.
-    private bool CurrentRecordHasContent()
-    {
-        var rec = _csv.Parser.Record;
-        if (rec is null) return false;
-        foreach (var f in rec) if (!string.IsNullOrWhiteSpace(f)) return true;
-        return false;
-    }
-
-    // Đọc tiến tới bản ghi KHÔNG-trống kế tiếp; false nếu hết.
-    private bool MoveToNextNonEmptyRecord()
-    {
-        while (_csv.Read())
-            if (CurrentRecordHasContent()) return true;
-        return false;
     }
 
     // Fallback encoding khi CSV không có BOM: nếu mẫu đầu file là UTF-8 hợp lệ → UTF-8, ngược lại coi là

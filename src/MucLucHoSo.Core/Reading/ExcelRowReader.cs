@@ -32,14 +32,6 @@ public sealed class ExcelRowReader : IRowReader
         throw new InvalidOperationException($"Không tìm thấy sheet '{sheet}'.");
     }
 
-    // "Dòng trống" = mọi ô (đã Trim) đều rỗng — dùng chung cho skip-đếm header và bỏ dòng trắng ở ReadRows.
-    private bool CurrentRowHasContent(int fieldCount)
-    {
-        for (int i = 0; i < fieldCount; i++)
-            if (FormatCell(_reader.GetValue(i)).Length > 0) return true;
-        return false;
-    }
-
     // ExcelDataReader trả ô số = double, ô ngày = DateTime. Format cố định theo InvariantCulture để không
     // phụ thuộc locale máy (tránh ngày dính "00:00:00", số ra dạng mũ, hay dấu phẩy thập phân theo vùng).
     private static string FormatCell(object? value) => value switch
@@ -56,23 +48,13 @@ public sealed class ExcelRowReader : IRowReader
         _ => value.ToString()?.Trim() ?? string.Empty,
     };
 
-    // Đọc tiến tới dòng KHÔNG-trống kế tiếp; false nếu hết dòng.
-    private bool MoveToNextNonEmptyRow()
-    {
-        while (_reader.Read())
-            if (CurrentRowHasContent(_reader.FieldCount)) return true;
-        return false;
-    }
-
     private void ReadHeaderRow(int startRow)
     {
-        // startRow = số dòng Excel VẬT LÝ (1-based) để bắt đầu tìm tiêu đề. Bỏ đúng startRow−1 dòng vật lý
-        // (kể cả dòng trống — ExcelDataReader vẫn trả dòng trống), rồi lấy dòng KHÔNG-trống đầu tiên làm header.
-        for (int skip = 0; skip < startRow - 1; skip++)
+        // startRow = số dòng Excel VẬT LÝ (1-based) của dòng tiêu đề. Đọc ĐÚNG dòng đó làm header — không bỏ
+        // dòng trống, không trượt. ExcelDataReader trả cả dòng trống nên đọc startRow lần = đúng dòng startRow.
+        for (int skip = 0; skip < startRow; skip++)
             if (!_reader.Read())
                 throw new InvalidOperationException($"Không đủ dữ liệu: file không có tới dòng {startRow}.");
-        if (!MoveToNextNonEmptyRow())
-            throw new InvalidOperationException($"Không tìm thấy dòng tiêu đề từ dòng {startRow} trở đi.");
         _headers = new List<string>(_reader.FieldCount);
         for (int i = 0; i < _reader.FieldCount; i++)
             _headers.Add(FormatCell(_reader.GetValue(i)).Trim());
