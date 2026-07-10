@@ -12,6 +12,12 @@ internal static class OpenXmlHelpers
 {
     public static readonly Regex TokenRx = new(@"\{([a-zA-Z0-9_]+)\}", RegexOptions.Compiled);
 
+    // Đuôi chuỗi là phần MỞ ĐẦU của một token chưa đóng: '{' + các ký tự token [A-Za-z0-9_] tới hết chuỗi.
+    // Dùng để phát hiện token bị Word tách giữa chừng sang run kế tiếp (KHÔNG khớp '{' lạc chuẩn có khoảng trắng).
+    private static readonly Regex OpenTokenTailRx = new(@"\{[a-zA-Z0-9_]*$", RegexOptions.Compiled);
+    // Từ dấu '{' cuối, đã tạo thành một token HOÀN CHỈNH {name} ở đầu phần còn lại.
+    private static readonly Regex ClosedTokenHeadRx = new(@"^\{[a-zA-Z0-9_]+\}", RegexOptions.Compiled);
+
     // ===== Biến ẢNH: nhận diện bằng alt-text/tên ảnh bắt đầu bằng "image" =====
 
     /// <summary>Tên biến ảnh của một Drawing (alt-text/title/name bắt đầu bằng "image"), hoặc null.</summary>
@@ -111,6 +117,49 @@ internal static class OpenXmlHelpers
         }
     }
 
+    /// <summary>
+    /// Gộp các run bị Word tách GIỮA CHỪNG một token {..} về cùng run mở token (giữ định dạng của run đó),
+    /// để ReplaceTokens (chạy trên từng run) nhận diện được token trọn vẹn. Không đụng run nằm ngoài token,
+    /// nên nhãn/định dạng xung quanh giữ nguyên. An toàn với '{' lạc chuẩn (chỉ nuốt khi đuôi là token đang mở).
+    /// </summary>
+    public static void HealSplitTokens(OpenXmlElement scope)
+    {
+        foreach (var p in scope.Descendants<Paragraph>().ToList())
+        {
+            var runs = p.Elements<Run>().ToList();
+            for (int i = 0; i < runs.Count; i++)
+            {
+                var t = SimpleText(runs[i]);
+                if (t == null || !OpenTokenTailRx.IsMatch(t.Text)) continue;
+
+                // NHÌN TRƯỚC (không phá): chỉ gộp khi token THỰC SỰ đóng ('}') ở các run text thuần kế tiếp.
+                // Tránh nuốt nhầm '{' lạc chuẩn trong văn bản/dữ liệu (giữ nguyên định dạng khi không phải token).
+                var tail = t.Text[t.Text.LastIndexOf('{')..];   // từ '{' cuối tới hết run mở
+                int closeAt = -1;
+                for (int j = i + 1; j < runs.Count; j++)
+                {
+                    var nt = SimpleText(runs[j]);
+                    if (nt == null) break;             // barrier (ảnh/break/field) → không gộp qua
+                    tail += nt.Text;
+                    if (ClosedTokenHeadRx.IsMatch(tail)) { closeAt = j; break; }   // đã đủ {name}
+                    if (!OpenTokenTailRx.IsMatch(tail)) break;   // gặp ký tự lạ trước '}' → không phải token
+                }
+                if (closeAt < 0) continue;             // không đóng → để nguyên
+
+                for (int k = i + 1; k <= closeAt; k++) { t.Text += SimpleText(runs[k])!.Text; runs[k].Remove(); }
+                t.Space = SpaceProcessingModeValues.Preserve;
+                runs.RemoveRange(i + 1, closeAt - i);
+            }
+        }
+    }
+
+    /// <summary>Text của run "thuần text" (chỉ có RunProperties + một Text); ngược lại null.</summary>
+    private static Text? SimpleText(Run r)
+    {
+        var t = r.GetFirstChild<Text>();
+        return t != null && r.ChildElements.All(c => c is RunProperties || c is Text) ? t : null;
+    }
+
     private static Text MkText(string s) =>
         new(s) { Space = SpaceProcessingModeValues.Preserve };
 
@@ -140,6 +189,7 @@ internal static class OpenXmlHelpers
                                      IReadOnlySet<string>? imageTokens = null)
         where TPart : OpenXmlPart, ISupportedRelationship<ImagePart>
     {
+        HealSplitTokens(scope);   // gộp token bị Word tách qua nhiều run về một run trước khi thay
         foreach (var r in scope.Descendants<Run>().ToList())
         {
             var t = r.GetFirstChild<Text>();
