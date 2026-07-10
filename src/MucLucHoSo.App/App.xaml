@@ -30,6 +30,7 @@
             <conv:NullToVisibilityConverter x:Key="NullToVis"/>
             <conv:EnumEqualsConverter x:Key="EnumEquals"/>
             <conv:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis"/>
+            <conv:SubtractConverter x:Key="Subtract"/>
             <conv:SelectedChipBrushConverter x:Key="ChipBrush"/>
 
             <!-- ===== Ô nhập & Select box: phẳng, bo góc 6, viền theo brand ===== -->

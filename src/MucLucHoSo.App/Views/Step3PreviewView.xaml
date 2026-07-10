@@ -29,6 +29,9 @@
                                 ToolTip="Về 100% (Ctrl 0)" AutomationProperties.Name="Đặt lại zoom 100%"/>
                         <Button Content="+" Style="{StaticResource GhostButton}" Padding="0" Width="36" Command="{Binding ZoomInCommand}"
                                 ToolTip="Phóng to (Ctrl +, hoặc Ctrl + lăn chuột)" AutomationProperties.Name="Phóng to"/>
+                        <Button Content="&#xE740;" FontFamily="Segoe MDL2 Assets" FontSize="14" Style="{StaticResource GhostButton}"
+                                Padding="0" Width="36" Click="OnFullscreenClick" IsEnabled="{Binding HasPreview}"
+                                ToolTip="Toàn màn hình (Esc để thoát; ←/→ đổi hồ sơ)" AutomationProperties.Name="Toàn màn hình"/>
                         <Border Width="1" Background="{StaticResource Line}" Margin="16,3,14,3"/>
                         <!-- Cụm Tiến/Lùi + ô tên (gõ + Enter để nhảy đến hồ sơ) -->
                         <Button Content="◀" Style="{StaticResource GhostButton}" Padding="0" Width="32" Command="{Binding PrevCommand}"

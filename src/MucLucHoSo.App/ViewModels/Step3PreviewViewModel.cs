@@ -243,9 +243,12 @@ public partial class Step3PreviewViewModel : StepViewModel
         return pages;
     }
 
+    private int _refreshGen;   // chống đua render: chỉ áp kết quả của lần refresh mới nhất
+
     private async Task RefreshAsync()
     {
         if (!WordAvailable || S.Runtime is null) return;
+        int gen = ++_refreshGen;
         Busy = true;
         try
         {
@@ -262,13 +265,14 @@ public partial class Step3PreviewViewModel : StepViewModel
             else { JumpText = ""; NavText = "(không có dữ liệu mẫu)"; HasMoreThanPreview = false; }
             RaiseExportInfo();
             var pages = await GetPagesAsync(ShowFilled, _index, SelectedHighlight);
+            if (gen != _refreshGen) return;   // đã có lần điều hướng mới hơn → bỏ kết quả cũ (tránh lệch ảnh↔NavText)
             PreviewPages.Clear();
             foreach (var p in pages) PreviewPages.Add(p);
             HasPreview = PreviewPages.Count > 0;
             StatusText = ShowFilled ? "Xem trước (dữ liệu mẫu) — đúng như file sẽ xuất." : "Xem Template (placeholder).";
         }
-        catch (Exception ex) { StatusText = "Lỗi render: " + ex.Message; }
-        finally { Busy = false; }
+        catch (Exception ex) { if (gen == _refreshGen) StatusText = "Lỗi render: " + ex.Message; }
+        finally { if (gen == _refreshGen) Busy = false; }
     }
 
     /// <summary>Render trước toàn bộ hồ sơ (chế độ Xem trước, không tô sáng) ở nền, tuần tự, có thể huỷ.</summary>

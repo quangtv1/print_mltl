@@ -1,4 +1,5 @@
 using System;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using MucLucHoSo.App.ViewModels;
@@ -57,4 +58,11 @@ public partial class Step3PreviewView : UserControl
     }
 
     private static void Exec(ICommand c) { if (c.CanExecute(null)) c.Execute(null); }
+
+    // Mở cửa sổ toàn màn hình xem ảnh render (dùng chung VM → điều hướng hồ sơ tự đồng bộ preview).
+    private void OnFullscreenClick(object sender, RoutedEventArgs e)
+    {
+        if (Vm is null) return;
+        new FullscreenPreviewWindow { DataContext = Vm, Owner = Window.GetWindow(this) }.ShowDialog();
+    }
 }

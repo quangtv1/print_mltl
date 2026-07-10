@@ -39,6 +39,18 @@ public sealed class InverseBoolToVisibilityConverter : IValueConverter
     public object ConvertBack(object v, Type t, object p, CultureInfo c) => throw new NotSupportedException();
 }
 
+/// <summary>Trừ một hằng số khỏi giá trị double (ConverterParameter). Dùng chừa lề khi fit ảnh theo kích thước vùng chứa.</summary>
+public sealed class SubtractConverter : IValueConverter
+{
+    public object Convert(object v, Type t, object p, CultureInfo c)
+    {
+        double d = v is double x ? x : 0;
+        double sub = double.TryParse(p as string, NumberStyles.Any, CultureInfo.InvariantCulture, out var s) ? s : 0;
+        return Math.Max(0, d - sub);
+    }
+    public object ConvertBack(object v, Type t, object p, CultureInfo c) => throw new NotSupportedException();
+}
+
 /// <summary>
 /// Chip biến ở Bước 3: tô nền/chữ theo NHÓM màu và trạng thái đang chọn.
 /// values[0] = tên biến của chip; values[1] = SelectedHighlight của VM; values[2] = mã màu nhóm (Tag: "purple"/…, mặc định accent).
