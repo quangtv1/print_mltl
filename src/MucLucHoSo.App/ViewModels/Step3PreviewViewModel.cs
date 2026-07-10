@@ -2,6 +2,8 @@ using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Threading;
+using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -32,6 +34,23 @@ public partial class Step3PreviewViewModel : StepViewModel
     [ObservableProperty] private bool _busy;
     [ObservableProperty] private string? _selectedHighlight;
     [ObservableProperty] private double _zoomFactor = 0.7;
+
+    // Cầu nối lệnh điều hướng wizard cho code-behind (Wizard là protected). Ctrl+Enter tiến, Shift+Enter lùi.
+    public ICommand WizardNext => Wizard.NextCommand;
+    public ICommand WizardBack => Wizard.BackCommand;
+
+    // Ẩn/hiện cột "Biến của mẫu" để xem preview rộng hơn (icon góc trên phải).
+    [ObservableProperty] private bool _sidebarCollapsed;
+    public GridLength SidebarWidth => SidebarCollapsed ? new GridLength(0) : new GridLength(320);
+    public string SidebarToggleGlyph => SidebarCollapsed ? "" : "";   // ‹ hiện / › ẩn
+    public string SidebarToggleTip => SidebarCollapsed ? "Hiện cột biến" : "Ẩn cột biến";
+    partial void OnSidebarCollapsedChanged(bool value)
+    {
+        OnPropertyChanged(nameof(SidebarWidth));
+        OnPropertyChanged(nameof(SidebarToggleGlyph));
+        OnPropertyChanged(nameof(SidebarToggleTip));
+    }
+    [RelayCommand] private void ToggleSidebar() => SidebarCollapsed = !SidebarCollapsed;
 
     public ObservableCollection<ImageSource> PreviewPages { get; } = new();
     public string ZoomText => $"{ZoomFactor * 100:0}%";

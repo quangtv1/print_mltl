@@ -1,6 +1,7 @@
 <UserControl x:Class="MucLucHoSo.App.Views.Step3PreviewView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Focusable="True"><!-- Focusable để Focus() nhận keyboard focus → phím tắt Ctrl/Shift+Enter, Ctrl ←/→ chạy ngay -->
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -12,7 +13,7 @@
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="320"/>
+                    <ColumnDefinition Width="{Binding SidebarWidth}"/>
                 </Grid.ColumnDefinitions>
 
                 <!-- Toolbar phía trên khung Preview -->
@@ -47,17 +48,26 @@
                                    ToolTip="Thay đổi số lượng dòng đọc ở màn input"/>
                     </StackPanel>
 
-                    <!-- Nút Tạo file (bên phải) — mở hộp thoại giữa màn hình bên dưới -->
+                    <!-- Nút Tạo file (bên phải) — chừa lề phải cho icon ẩn/hiện cột biến (tránh đè khi thu gọn) -->
                     <Button Content="Tạo file" Style="{StaticResource TealButton}"
-                            HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0"
+                            HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,44,0"
                             Command="{Binding OpenCreatePopupCommand}"/>
                 </Grid>
 
-                <!-- Tiêu đề sidebar: ngang hàng với thanh zoom -->
-                <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="16,0,0,0" TextTrimming="CharacterEllipsis">
+                <!-- Tiêu đề sidebar: ngang hàng với thanh zoom (ẩn khi thu gọn) -->
+                <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="16,0,44,0" TextTrimming="CharacterEllipsis"
+                           Visibility="{Binding SidebarCollapsed, Converter={StaticResource InverseBoolToVis}}">
                     <Run Text="Biến của mẫu · " FontWeight="SemiBold"/>
                     <Run Text="{Binding TemplateName, Mode=OneWay}" FontWeight="SemiBold" Foreground="{StaticResource Ink}"/>
                 </TextBlock>
+
+                <!-- Icon ẩn/hiện cột biến — luôn nổi ở góc trên bên phải (kể cả khi cột đã thu gọn) -->
+                <Button Grid.ColumnSpan="2" HorizontalAlignment="Right" VerticalAlignment="Center" Panel.ZIndex="5"
+                        Style="{StaticResource GhostButton}" Padding="0" Width="34" Height="30"
+                        Command="{Binding ToggleSidebarCommand}" ToolTip="{Binding SidebarToggleTip}"
+                        AutomationProperties.Name="Ẩn/hiện cột biến">
+                    <TextBlock Text="{Binding SidebarToggleGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="15"/>
+                </Button>
             </Grid>
         </Border>
 
@@ -65,7 +75,7 @@
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="320"/>
+                <ColumnDefinition Width="{Binding SidebarWidth}"/>
             </Grid.ColumnDefinitions>
 
             <!-- Khung Preview -->
@@ -92,8 +102,9 @@
                              Visibility="{Binding Busy, Converter={StaticResource BoolToVis}}"/>
             </Grid>
 
-            <!-- Sidebar biến (tiêu đề đã đưa lên toolbar) -->
-            <Border Grid.Column="1" Background="White" BorderBrush="{StaticResource Line}" BorderThickness="1,0,0,0">
+            <!-- Sidebar biến (tiêu đề đã đưa lên toolbar) — ẩn hẳn khi thu gọn để preview rộng hết cỡ -->
+            <Border Grid.Column="1" Background="White" BorderBrush="{StaticResource Line}" BorderThickness="1,0,0,0"
+                    Visibility="{Binding SidebarCollapsed, Converter={StaticResource InverseBoolToVis}}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
                     <StackPanel>
                         <!-- Cảnh báo thiếu Word: chỉ mất Preview/PDF, vẫn xuất DOCX (không chặn Tiếp theo) -->
