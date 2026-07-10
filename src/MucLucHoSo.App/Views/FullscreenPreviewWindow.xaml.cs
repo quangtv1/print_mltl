@@ -29,5 +29,9 @@ public partial class FullscreenPreviewWindow : Window
 
     private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
 
+    // Bấm mũi tên đổi hồ sơ (song song phím tắt ←/→) — dùng chung lệnh với OnKeyDown.
+    private void OnPrevClick(object sender, RoutedEventArgs e) { if (Vm is not null) Exec(Vm.PrevCommand); }
+    private void OnNextClick(object sender, RoutedEventArgs e) { if (Vm is not null) Exec(Vm.NextCommand); }
+
     private static void Exec(ICommand c) { if (c.CanExecute(null)) c.Execute(null); }
 }

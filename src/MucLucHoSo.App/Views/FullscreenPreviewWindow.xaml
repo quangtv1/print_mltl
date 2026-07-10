@@ -4,6 +4,32 @@
         WindowStyle="None" WindowState="Maximized" ResizeMode="NoResize"
         ShowInTaskbar="False" Background="#FF1B1B1B" WindowStartupLocation="CenterScreen"
         Title="Xem toàn màn hình">
+    <Window.Resources>
+        <!-- Mũi tên đổi hồ sơ: nền trong suốt, chữ đậm + sáng hơn khi rê chuột -->
+        <Style x:Key="FsArrow" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="#FFBFBFBF"/>
+            <Setter Property="FontSize" Value="22"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="Transparent" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="FontWeight" Value="Bold"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
     <Grid x:Name="Root">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -14,8 +40,14 @@
         <Border Grid.Row="0" Background="#DD000000" Padding="16,8">
             <Grid>
                 <TextBlock Text="{Binding NavText}" Foreground="White" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#FFCFCFCF"
-                           Text="Esc để thoát  ·  ← / →  đổi hồ sơ"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Button Content="&#x2190;" Style="{StaticResource FsArrow}" Click="OnPrevClick"
+                            ToolTip="Hồ sơ trước (←)" AutomationProperties.Name="Hồ sơ trước"/>
+                    <TextBlock Foreground="#FFCFCFCF" VerticalAlignment="Center" Margin="8,0"
+                               Text="Esc để thoát  ·  bấm mũi tên đổi hồ sơ"/>
+                    <Button Content="&#x2192;" Style="{StaticResource FsArrow}" Click="OnNextClick"
+                            ToolTip="Hồ sơ sau (→)" AutomationProperties.Name="Hồ sơ sau"/>
+                </StackPanel>
                 <Button Content="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="14" HorizontalAlignment="Right"
                         Foreground="White" Background="Transparent" BorderThickness="0" Width="34" Height="30"
                         Cursor="Hand" Click="OnCloseClick" ToolTip="Thoát (Esc)" AutomationProperties.Name="Thoát toàn màn hình"/>
