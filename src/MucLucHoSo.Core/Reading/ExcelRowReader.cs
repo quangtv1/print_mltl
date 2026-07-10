@@ -1,5 +1,6 @@
 using ExcelDataReader;
 using MucLucHoSo.Core.Models;
+using System.Globalization;
 using System.Text;
 
 namespace MucLucHoSo.Core.Reading;
@@ -35,9 +36,25 @@ public sealed class ExcelRowReader : IRowReader
     private bool CurrentRowHasContent(int fieldCount)
     {
         for (int i = 0; i < fieldCount; i++)
-            if (((_reader.GetValue(i)?.ToString() ?? string.Empty).Trim()).Length > 0) return true;
+            if (FormatCell(_reader.GetValue(i)).Length > 0) return true;
         return false;
     }
+
+    // ExcelDataReader trả ô số = double, ô ngày = DateTime. Format cố định theo InvariantCulture để không
+    // phụ thuộc locale máy (tránh ngày dính "00:00:00", số ra dạng mũ, hay dấu phẩy thập phân theo vùng).
+    private static string FormatCell(object? value) => value switch
+    {
+        null => string.Empty,
+        DateTime dt => dt.TimeOfDay == TimeSpan.Zero
+            ? dt.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)
+            : dt.ToString("dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture),
+        // Số nguyên → không phần thập phân, không ký hiệu mũ, không dấu phân tách nghìn.
+        double d => d == Math.Floor(d) && !double.IsInfinity(d)
+            ? d.ToString("F0", CultureInfo.InvariantCulture)
+            : d.ToString(CultureInfo.InvariantCulture),
+        bool b => b ? "TRUE" : "FALSE",
+        _ => value.ToString()?.Trim() ?? string.Empty,
+    };
 
     // Đọc tiến tới dòng KHÔNG-trống kế tiếp; false nếu hết dòng.
     private bool MoveToNextNonEmptyRow()
@@ -55,7 +72,7 @@ public sealed class ExcelRowReader : IRowReader
                 throw new InvalidOperationException($"Không đủ dữ liệu: cần ≥ {headerRow} dòng có nội dung.");
         _headers = new List<string>(_reader.FieldCount);
         for (int i = 0; i < _reader.FieldCount; i++)
-            _headers.Add((_reader.GetValue(i)?.ToString() ?? string.Empty).Trim());
+            _headers.Add(FormatCell(_reader.GetValue(i)).Trim());
         // cắt các cột header rỗng ở đuôi
         while (_headers.Count > 0 && string.IsNullOrEmpty(_headers[^1])) _headers.RemoveAt(_headers.Count - 1);
     }
@@ -70,7 +87,7 @@ public sealed class ExcelRowReader : IRowReader
             bool anyValue = false;
             for (int i = 0; i < _headers.Count; i++)
             {
-                var v = (_reader.GetValue(i)?.ToString() ?? string.Empty).Trim();
+                var v = FormatCell(_reader.GetValue(i)).Trim();
                 if (v.Length > 0) anyValue = true;
                 dict[_headers[i]] = v;
             }
